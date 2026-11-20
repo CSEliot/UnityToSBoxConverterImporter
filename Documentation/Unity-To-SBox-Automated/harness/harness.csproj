@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<!-- Headless driver for UnityImporterPlus: compiles the tool's engine-free Editor/Core/*.cs. -->
+	<!-- Set IUP_ROOT to the unityimporterplus project folder (env var or -p:IUP_ROOT=...). -->
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<TargetFramework>net10.0</TargetFramework>
+		<LangVersion>14</LangVersion>
+		<Nullable>disable</Nullable>
+		<ImplicitUsings>disable</ImplicitUsings>
+		<TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+	</PropertyGroup>
+	<Target Name="CheckIupRoot" BeforeTargets="Build">
+		<Error Condition="'$(IUP_ROOT)' == '' Or !Exists('$(IUP_ROOT)/Editor/Core/UnityImport.cs')" Text="Set IUP_ROOT to the unityimporterplus project folder (got '$(IUP_ROOT)')." />
+	</Target>
+	<ItemGroup>
+		<Compile Include="$(IUP_ROOT)/Editor/Core/*.cs" />
+		<None Include="channels.py" CopyToOutputDirectory="PreserveNewest" />
+	</ItemGroup>
+</Project>

@@ -1,0 +1,2 @@
+# The repo root ignores *.csproj; this one is source, not an editor-generated file.
+!harness.csproj

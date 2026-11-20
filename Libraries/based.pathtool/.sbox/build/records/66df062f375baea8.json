@@ -1,0 +1,187 @@
+{
+  "Source": "Materials/library_material.vmat",
+  "Job": "8a0782f6ffdc4cca955036fd3d55448c",
+  "Outputs": {
+    "materials/default/default_ao_tga_7449568e.generated.vtex_c": {
+      "Size": 1948,
+      "Time": 639307712645734245,
+      "Hash": "0b1ec3d1aebe6d79"
+    },
+    "materials/default/default_bentnormal_tga_8334dba4.generated.vtex_c": {
+      "Size": 1972,
+      "Time": 639307712646078866,
+      "Hash": "8c236464b1a6ebf6"
+    },
+    "materials/default/default_color_tga_380558b.generated.vtex_c": {
+      "Size": 1772,
+      "Time": 639307712646446894,
+      "Hash": "56513db200c9de90"
+    },
+    "materials/default/default_normal_tga_5c878876.generated.vtex_c": {
+      "Size": 2228,
+      "Time": 639307712646804845,
+      "Hash": "41d4eb8ad502b1af"
+    },
+    "materials/default/default_color_tga_29ae19a3.generated.vtex_c": {
+      "Size": 1780,
+      "Time": 639307712647129823,
+      "Hash": "eae590de474047fc"
+    },
+    "materials/library_material.vmat_c": {
+      "Size": 5810,
+      "Time": 639307712647180783,
+      "Hash": "32dc7bae44be0324"
+    }
+  },
+  "Inputs": [
+    {
+      "Path": "c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/libraries/based.pathtool/assets/materials/library_material.vmat",
+      "Exists": true,
+      "Checksum": 4029956375,
+      "Size": 849,
+      "Time": 639302786680000000
+    },
+    {
+      "Path": "d:/steamlibrary/steamapps/common/sbox/core/materials/default/default_ao.tga",
+      "Exists": true,
+      "Checksum": 922825290,
+      "Size": 812,
+      "Time": 639293104525856104
+    },
+    {
+      "Path": "d:/steamlibrary/steamapps/common/sbox/core/materials/default/default_ao.tga.meta",
+      "Exists": true,
+      "Checksum": 875217646,
+      "Size": 54,
+      "Time": 639301114870150781
+    },
+    {
+      "Path": "d:/steamlibrary/steamapps/common/sbox/core/materials/default/default_bentnormal.tga",
+      "Exists": true,
+      "Checksum": 1244337230,
+      "Size": 47,
+      "Time": 639293104775260939
+    },
+    {
+      "Path": "d:/steamlibrary/steamapps/common/sbox/core/materials/default/default_bentnormal.tga.meta",
+      "Exists": true,
+      "Checksum": 74175729,
+      "Size": 54,
+      "Time": 639301114870376775
+    },
+    {
+      "Path": "d:/steamlibrary/steamapps/common/sbox/core/materials/default/default_color.tga",
+      "Exists": true,
+      "Checksum": 2928344946,
+      "Size": 47,
+      "Time": 639293105025839433
+    },
+    {
+      "Path": "d:/steamlibrary/steamapps/common/sbox/core/materials/default/default_color.tga.meta",
+      "Exists": true,
+      "Checksum": 848111595,
+      "Size": 54,
+      "Time": 639301114870896571
+    },
+    {
+      "Path": "d:/steamlibrary/steamapps/common/sbox/core/materials/default/default_normal.tga",
+      "Exists": true,
+      "Checksum": 1244337230,
+      "Size": 47,
+      "Time": 639293104774184031
+    },
+    {
+      "Path": "d:/steamlibrary/steamapps/common/sbox/core/materials/default/default_normal.tga.meta",
+      "Exists": true,
+      "Checksum": 425136316,
+      "Size": 54,
+      "Time": 639301114871992924
+    },
+    {
+      "Path": "d:/steamlibrary/steamapps/common/sbox/core/materials/default/default_rough.tga",
+      "Exists": true,
+      "Checksum": 2143471552,
+      "Size": 47,
+      "Time": 639293104799827173
+    },
+    {
+      "Path": "d:/steamlibrary/steamapps/common/sbox/core/materials/default/default_rough.tga.meta",
+      "Exists": true,
+      "Checksum": 2185587582,
+      "Size": 54,
+      "Time": 639301114872666803
+    }
+  ],
+  "Special": [
+    {
+      "Compiler": "CompileTexture",
+      "Data": 0,
+      "Name": "Texture Compiler Version",
+      "Fingerprint": 12
+    },
+    {
+      "Compiler": "CompileTexture",
+      "Data": 0,
+      "Name": "Texture Compiler Version Mip Box",
+      "Fingerprint": 1
+    },
+    {
+      "Compiler": "CompileTexture",
+      "Data": 0,
+      "Name": "Texture Compiler Version Image NormalizeNormals",
+      "Fingerprint": 1
+    },
+    {
+      "Compiler": "CompileTexture",
+      "Data": 0,
+      "Name": "Texture Compiler Version Mip HemiOctIsoRoughness_RG_B",
+      "Fingerprint": 1
+    },
+    {
+      "Compiler": "CompileTexture",
+      "Data": 0,
+      "Name": "Texture Compiler Version Mip HemiOctAnisoRoughness",
+      "Fingerprint": 3
+    },
+    {
+      "Compiler": "CompileTexture",
+      "Data": 0,
+      "Name": "Texture Compiler Version Image Inverse",
+      "Fingerprint": 1
+    },
+    {
+      "Compiler": "ResourceCompiler",
+      "Data": 0,
+      "Name": "Compiled reads recorded",
+      "Fingerprint": 1
+    },
+    {
+      "Compiler": "CompileMaterial",
+      "Data": 0,
+      "Name": "Material Compiler Version",
+      "Fingerprint": 25
+    },
+    {
+      "Compiler": "CompileMaterial",
+      "Data": 0,
+      "Name": "shaders/complex.shader",
+      "Fingerprint": 6
+    }
+  ],
+  "Arguments": {
+    "___OverrideInputData___": null,
+    "fast": null,
+    "minmipsize": null,
+    "maxmipsize": null,
+    "materials/default/default_ao.tga": null,
+    "etc": null,
+    "maxcompiledtextureres": null,
+    "materials/default/default_bentnormal.tga": null,
+    "materials/default/default_color.tga": null,
+    "materials/default/default_normal.tga": null,
+    "materials/default/default_rough.tga": null
+  },
+  "Prerequisites": [],
+  "ChangedWhileCompiling": false,
+  "Seconds": 0.26
+}

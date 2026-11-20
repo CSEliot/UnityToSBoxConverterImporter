@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>package.library.based.pathtool</name>
+    </assembly>
+    <members>
+        <member name="M:PathTool.Path.GetPosition(System.Single)">
+            <summary>
+            Get position at specified index, decimal points = between points.
+            </summary>
+        </member>
+    </members>
+</doc>
