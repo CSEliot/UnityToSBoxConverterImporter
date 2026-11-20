@@ -1,0 +1,36 @@
+## Status: STARTED? NO! CLARIFIED? NO! HISTORY? NO! REVIEWED? NO! DONE? NO! WORKER: NONE OTHER: backlog
+
+## Task
+	Resolve material overrides that target Unity's fixed model-prefab renderer and mesh IDs, so model-wrapper prefabs and scenes using them get their materials.
+
+### Description
+	Model-wrapper prefabs assign materials through PrefabInstance modifications whose targets are Unity's fixed model-prefab IDs: GameObject 100000, Transform 400000, MeshRenderer 2300000/2300002/2300004..., Mesh 4300000/4300002/4300004... The 323 "unsupported or unidentified renderer" warnings come from the direct lookup `asset.ModelInfo.RendererSlots.GetValueOrDefault(IdOf(target))` at Editor/Core/UnityPrefabBindings.cs:151, whose RendererSlots dictionary is keyed by the hashed renderer IDs built in UnityFbxBindings.cs:80-81. Binding() at UnityPrefabBindings.cs:34 is used for skinned renderer detection (:129) and MeshFilter/MeshCollider references (:162, :170), not for these modification targets, so extending Binding() will not clear the warnings. The old_school baseline has 323 prefab-material-assignment warnings, 445 unassigned-material issues, and 1270 material-array overrides in the 346 prefabs. Scene instances add 405 more material overrides in MergeV2 (339 data[0], 56 data[1], 8 data[2], 2 data[3]) and 1 in Test_Range.
+
+## Notes
+	Implementation:
+	- Extend the model metadata to map fixed model-prefab renderer IDs to the FBX mesh they render. Unity numbers them 2300000, 2300002, 2300004... in renderer order, and the mesh sub-assets 4300000, 4300002, 4300004... in the same order; hashed IDs can still appear beside them. Verify the pairing against the FBX node list before relying on order.
+	- Feed that map into the modification loop before the RendererSlots.GetValueOrDefault lookup at UnityPrefabBindings.cs:151, or add the fixed IDs to the dictionary that lookup uses. Pass the resolved binding to Assign so a wrapper override lands on the same slot the model's prefab assignment uses. Keep per-mesh slot resolution (MeshSlotMaterials) for models whose meshes take different materials.
+	- Apply the same lookup to scene-level PrefabInstance modifications in UnitySceneExport, including m_Materials.Array.data[1], [2] and [3] where the renderer has that many slots.
+	- Do not guess when a target cannot be identified; keep the existing warning path. Do not change the neutral fallback for genuinely missing materials.
+
+	Acceptance:
+	- old_school baseline: 323 prefab-material-assignment warnings drop to 0. Remaining unassigned-material issues, if any, name a real missing material or texture, not an unidentified renderer.
+	- Doorplate_03_Snaps014, Chair_01_Snaps014 and one multi-renderer wrapper show the material the Unity prefab assigns in the generated prefab and VMDL remaps.
+	- A building or city import is byte-identical where it already converted.
+	- Editor/Core builds with 0 warnings, 0 errors.
+
+## Clarification Q&A
+
+
+## Relevant History 
+	Unity model prefabs use fixed fileIDs for their generated objects: 100000 root GameObject, 400000 root Transform, 2300000+n MeshRenderer, 4300000+n Mesh. The old_school package uses 410 references to 2300000, 313 to 2300002, 267 to 2300004, and 98 to 2300006. The existing binding path is documented in tasks/unity-expert-research.md.
+
+	Related backlog: tasks-todo-sbox/01 item 3 covers the same material modifications from the parallel sbox-expert research; this task owns the binding fix and is authoritative for the fixed-ID mapping. tasks-todo-sbox/03 covers plain-scene-object material assignment, which this task does not.
+
+## Stylistic Task Notes:
+References to variables like X and Y automatically imply that these are to be exposed properties for developer tweaking.
+
+## Skills To Know: for you and/or subagents:
+	unityimporterplus
+
+## Post-Task Follow Ups
