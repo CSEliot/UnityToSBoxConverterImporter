@@ -41,6 +41,41 @@ internal static class UnityPrefabBindings
 		return recycled.Length == 1 ? recycled[0] : null;
 	}
 
+	/// <summary>
+	/// The FBX mesh a model-prefab renderer id draws. Unity numbers a model prefab's renderers and mesh
+	/// sub-assets 2300000+2n / 4300000+2n in the model's own node order, so the legacy recycle map — or, when
+	/// there is none, the model's sole mesh — names the FBX mesh that renderer stands for. This is the fixed-id
+	/// map a model wrapper's material and collision overrides are read through.
+	/// </summary>
+	internal static UnityModel.RendererBinding WrapperRenderer( UnityAsset asset, long rendererId, out int index )
+	{
+		index = rendererId >= 2300000 && rendererId < 2400000 && (rendererId - 2300000) % 2 == 0 ? (int)((rendererId - 2300000) / 2) : -1;
+		if ( index < 0 ) return null;
+		var model = asset.ModelInfo;
+		if ( !model.RecycleNames.TryGetValue( 4300000 + 2 * index, out var name ) )
+		{
+			// Without a recycle map the id order is not recoverable; a single-renderer model is unambiguous.
+			if ( model.RendererSlots.Count == 1 ) { index = 0; return model.RendererSlots.Values.First(); }
+			if ( model.Meshes.Count == 1 ) { index = 0; return new UnityModel.RendererBinding( model.Meshes[0], Array.Empty<string>() ); }
+			return null;
+		}
+		return model.RendererSlots.Values.FirstOrDefault( b => b.Mesh.Equals( name, StringComparison.Ordinal ) )
+			?? (model.Meshes.Contains( name ) ? new UnityModel.RendererBinding( name, Array.Empty<string>() ) : null);
+	}
+
+	/// <summary>
+	/// The index into a ModelRenderer's Materials list for one slot of a generated model: the model's own
+	/// material order, which is what ModelDoc compiles and what the renderer's indexed overrides address.
+	/// </summary>
+	internal static int? WrapperMaterialSlot( UnityAsset asset, UnityModel.RendererBinding binding, int slot )
+	{
+		var slots = binding.EffectiveSlots.ToArray();
+		if ( slot < 0 || slot >= slots.Length ) return null;
+		var rendered = asset.ModelInfo.RenderedMaterials;
+		var index = Array.FindIndex( rendered, s => s.Equals( slots[slot], StringComparison.OrdinalIgnoreCase ) );
+		return index < 0 ? null : index;
+	}
+
 	internal static void Apply( UnityArchive archive )
 	{
 		var models = archive.Assets.Where( a => a.Kind == UnityAssetKind.Model ).ToDictionary( a => a.Guid, StringComparer.OrdinalIgnoreCase );
@@ -88,6 +123,10 @@ internal static class UnityPrefabBindings
 			}
 			var blocks = Regex.Matches( text, @"(?ms)^--- !u!(?<type>[0-9]+) &(?<id>-?[0-9]+)[^\r\n]*\r?\n(?<body>.*?)(?=^--- !u!|\z)" ).Cast<Match>()
 				.Select( m => (Type: m.Groups["type"].Value, Id: long.TryParse( m.Groups["id"].Value, out var id ) ? id : 0, Body: m.Groups["body"].Value) ).ToArray();
+			// A model wrapper stores its whole content as one PrefabInstance of an FBX and has no Transform of its
+			// own; its overrides and colliders then address Unity's fixed model-prefab ids (100000, 400000,
+			// 2300000+2n) instead of blocks that appear in the file.
+			var hasRootTransform = blocks.Any( b => b.Type is "4" or "224" && Regex.IsMatch( b.Body, @"(?m)^\s*m_Father:" ) && IdOf( Field( b.Body, "m_Father" ) ) == 0 );
 			// A skinned mesh shows in Unity when its object and every parent are active; the parent chain runs through the transforms.
 			var inactive = blocks.Where( b => b.Type == "1" && Regex.IsMatch( b.Body, @"(?m)^\s*m_IsActive:\s*0\s*$" ) ).Select( b => b.Id ).ToHashSet();
 			var transformObject = blocks.Where( b => b.Type is "4" or "224" ).GroupBy( b => b.Id ).ToDictionary( g => g.Key, g => IdOf( Field( g.First().Body, "m_GameObject" ) ) );
@@ -108,7 +147,18 @@ internal static class UnityPrefabBindings
 				var guid = GuidOf( mesh );
 				if ( block.Type == "64" )
 				{
-					if ( models.ContainsKey( guid ) ) colliders.Add( guid );
+					if ( models.ContainsKey( guid ) )
+					{
+						colliders.Add( guid );
+						// A wrapper's MeshCollider names the FBX sub-asset it collides with, which is the only
+						// collision evidence such a file carries: it has no MeshFilter to pair the collider with.
+						if ( !hasRootTransform && Binding( models[guid], IdOf( mesh ) ) is UnityModel.RendererBinding colliderMesh )
+						{
+							var collided = For( guid );
+							collided.CollisionMeshes.Add( colliderMesh.Mesh );
+							if ( Regex.IsMatch( block.Body, @"(?m)^\s*m_Convex:\s*1\s*$" ) ) collided.ConvexCollisionMeshes.Add( colliderMesh.Mesh );
+						}
+					}
 					// Unity usually points a MeshCollider at a baked convex .asset, so the mesh it gets
 					// collision for is identified by the MeshFilter sharing its GameObject, not by this reference.
 					var owner = IdOf( Field( block.Body, "m_GameObject" ) );
@@ -148,8 +198,11 @@ internal static class UnityPrefabBindings
 				if ( !property.Success || !models.TryGetValue( guid, out var asset ) ) continue;
 				visible.Add( guid );
 				if ( !int.TryParse( property.Groups[1].Value, out var index ) ) continue;
-				Assign( guid, asset.ModelInfo.RendererSlots.GetValueOrDefault( IdOf( target ) ), index,
-					GuidOf( Field( modification.Groups["body"].Value, "objectReference" ) ) );
+				var targetId = IdOf( target );
+				// A wrapper's override names a fixed model-prefab renderer id (2300000+2n), not a block.
+				var binding = asset.ModelInfo.RendererSlots.GetValueOrDefault( targetId )
+					?? (hasRootTransform ? null : WrapperRenderer( asset, targetId, out _ ));
+				Assign( guid, binding, index, GuidOf( Field( modification.Groups["body"].Value, "objectReference" ) ) );
 			}
 			// Explicit MeshRenderer + MeshFilter (or SkinnedMeshRenderer) blocks in non-variant prefabs.
 			foreach ( var block in blocks.Where( b => b.Type is "23" or "137" ) )

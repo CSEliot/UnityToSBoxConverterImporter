@@ -559,6 +559,60 @@ internal static class UnityPrefabExport
 		return model.Meshes.Count == 1 ? model.Meshes[0] : null;
 	}
 
+	/// <summary>Unity's fixed object ids inside a model prefab: the FBX root object and its transform, and the
+	/// MeshRenderer/mesh sub-asset pairs 2300000+2n / 4300000+2n in the model's own node order.</summary>
+	internal const long ModelRootObject = 100000, ModelRootTransform = 400000;
+	internal static bool IsModelRenderer( long id ) => id >= 2300000 && id < 2400000 && (id - 2300000) % 2 == 0;
+	internal static long ModelRendererId( int index ) => 2300000 + 2 * index;
+
+	/// <summary>One m_Modifications entry: the source object it targets, the property, its value and the object
+	/// reference when the entry carries one (older packages omit the line entirely).</summary>
+	static readonly Regex ModificationPattern = new( @"(?ms)^\s*- target:\s*\{(?<target>[^}]+)\}\s*\r?\n\s*propertyPath:\s*(?<path>[^\r\n]+?)\s*\r?\n\s*value:[ 	]*(?<value>[^\r\n]*?)[ 	]*\r?$(?:\r?\n\s*objectReference:\s*\{(?<reference>[^}]*)\})?" );
+
+	/// <summary>
+	/// The fileID of a reference field. Unlike <see cref="Field"/> this tolerates a reference Unity folds onto
+	/// two lines, which it does whenever the guid makes the line long ("{fileID: 100000, guid: …, type: 3}").
+	/// </summary>
+	internal static long Reference( string text, string name ) =>
+		long.TryParse( Regex.Match( text ?? "", @"(?m)^\s*" + Regex.Escape( name ) + @":\s*\{fileID:\s*(-?[0-9]+)" ).Groups[1].Value, out var id ) ? id : 0;
+
+	/// <summary>A model-prefab instance's root: what its m_Modifications say about the FBX root object and transform.</summary>
+	internal sealed record ModelRoot( UnityTransform Transform, string Name, bool Active, double StaticFlags );
+
+	/// <summary>
+	/// Reads the root of a model-prefab instance: the transform overrides on the model's root Transform (400000),
+	/// and the name, active state and static flags on its root object (100000). A model-wrapper prefab is exactly
+	/// one such instance, so its own root and a nested instance's root are read the same way.
+	/// </summary>
+	internal static ModelRoot RootOf( Block instance, string fallbackName )
+	{
+		var name = fallbackName ?? "";
+		var active = true;
+		var flags = 0.0;
+		// A fresh identity: NoTransform is shared, and the override writes below go into these arrays.
+		var unity = new UnityTransform( new double[3], new[] { 0d, 0d, 0d, 1d }, new[] { 1d, 1d, 1d } );
+		foreach ( Match modification in ModificationPattern.Matches( instance.Body ) )
+		{
+			var target = IdOf( modification.Groups["target"].Value );
+			var path = modification.Groups["path"].Value.Trim( '\'' );
+			var value = Unquote( modification.Groups["value"].Value );
+			if ( target == ModelRootObject )
+			{
+				if ( path == "m_Name" ) name = value;
+				else if ( path == "m_IsActive" ) active = value != "0";
+				else if ( path == "m_StaticEditorFlags" && double.TryParse( value, NumberStyles.Float, CultureInfo.InvariantCulture, out var parsed ) ) flags = parsed;
+				continue;
+			}
+			if ( target != ModelRootTransform ) continue;
+			var axis = path.Length > 2 && path[^2] == '.' ? "xyzw".IndexOf( path[^1] ) : -1;
+			if ( axis < 0 || !double.TryParse( value, NumberStyles.Float, CultureInfo.InvariantCulture, out var component ) ) continue;
+			if ( path.StartsWith( "m_LocalRotation." ) ) unity.Rotation[axis] = component;
+			else if ( path.StartsWith( "m_LocalScale." ) ) unity.Scale[axis] = component;
+			else if ( path.StartsWith( "m_LocalPosition." ) && axis < 3 ) unity.Position[axis] = component;
+		}
+		return new( unity, name, active, flags );
+	}
+
 	internal sealed class Result
 	{
 		public string Json;
@@ -669,6 +723,11 @@ internal static class UnityPrefabExport
 		public readonly Dictionary<long, long> StrippedInstance;
 		/// <summary>Transforms without a parent, in file order; a prefab has exactly one.</summary>
 		public readonly List<Block> Roots;
+		/// <summary>The one top-level PrefabInstance of a model wrapper, or null. A model wrapper is a prefab whose
+		/// whole content is a PrefabInstance of an FBX model prefab, so it has no Transform block of its own.</summary>
+		public readonly Block Wrapper;
+		/// <summary>The model a wrapper's top-level instance sources, or null when it is absent or not a model.</summary>
+		public readonly UnityAsset WrapperModel;
 		/// <summary>Baked placements by GameObject fileID (see <see cref="BakedChains"/>).</summary>
 		public readonly Dictionary<long, UnityTransform> Chains;
 		/// <summary>Each GameObject's parent GameObject fileID (0 at the top).</summary>
@@ -704,6 +763,13 @@ internal static class UnityPrefabExport
 			StrippedInstance = Blocks.Where( b => b.Stripped && b.Type is "4" or "224" )
 				.ToDictionary( b => b.Id, b => IdOf( Field( b.Body, "m_PrefabInstance" ) ) );
 			Roots = Transforms.Values.Where( t => IdOf( Field( t.Body, "m_Father" ) ) == 0 ).ToList();
+			// A model wrapper is a prefab whose content is one PrefabInstance of an FBX model: Unity strips the
+			// model's own root objects, so the file has no Transform block and nothing for Roots to hold.
+			Wrapper = Roots.Count == 0
+				? Instances.Values.Where( i => IdOf( Field( i.Body, "m_TransformParent" ) ) == 0 ).OrderBy( i => i.Id ).FirstOrDefault()
+				: null;
+			WrapperModel = Wrapper != null && byGuid.TryGetValue( GuidOf( Field( Wrapper.Body, "m_SourcePrefab" ) ), out var wrapperSource ) && wrapperSource.Kind == UnityAssetKind.Model
+				? wrapperSource : null;
 			Chains = BakedChains( ById, Transforms.Values, objectId => MeshFbx( Components, objectId, byGuid ), out ParentOf );
 			// Baking assumes the top mesh of a same-FBX run is the FBX's root node, placed at the model origin.
 			// Below a root that is not certain, and a node placement there would be applied twice.
@@ -766,6 +832,19 @@ internal static class UnityPrefabExport
 			public Block Root;
 			public long RootObject;
 			public Block RootObjectBlock;
+			/// <summary>True when the source prefab is a model wrapper, whose root is an FBX model's root object.</summary>
+			public bool IsWrapper;
+			/// <summary>The root's Unity transform id: 400000 inside a model wrapper, the root Transform's fileID otherwise.</summary>
+			public long RootTransformId;
+			/// <summary>The root's Unity local transform, with the source prefab's own root overrides applied.</summary>
+			public UnityTransform RootTransform = NoTransform;
+			/// <summary>The root object's name and active state as the source prefab sets them.</summary>
+			public string RootName;
+			public bool RootActive = true;
+			/// <summary>The root object's Unity static flags; an override carrying the same value changes nothing.</summary>
+			public double RootFlags;
+			/// <summary>A wrapper's fixed renderer ids (2300000+2n), one per mesh node in the order the models were written.</summary>
+			public long[] RendererIds = Array.Empty<long>();
 			public Dictionary<long, UnityTransform> Chains;
 			public Dictionary<long, long> Parents;
 			/// <summary>Every GUID of the converted prefab, root first.</summary>
@@ -818,12 +897,39 @@ internal static class UnityPrefabExport
 				source.Key = mirrorAxis < 0 ? asset.Guid.ToLowerInvariant() : $"{asset.Guid.ToLowerInvariant()}:mirror{MirrorName( mirrorAxis )}";
 				source.Blocks = UnityPrefabExport.Blocks( UnityImport.ReadText( asset.Source ) );
 				source.Root = source.Blocks.FirstOrDefault( b => b.Type is "4" or "224" && !b.Stripped && IdOf( Field( b.Body, "m_Father" ) ) == 0 );
-				if ( source.Root == null ) source.Problem = $"Nested prefab {asset.Path} has no root transform; instance skipped.";
+				// A model wrapper's root is the FBX model's root object, which the file names only through its
+				// top-level PrefabInstance: that instance's overrides are what place, name and switch it.
+				var wrapper = source.Root == null
+					? source.Blocks.FirstOrDefault( b => b.Type == "1001" && IdOf( Field( b.Body, "m_TransformParent" ) ) == 0 ) : null;
+				var wrapperModel = wrapper == null ? null : byGuid.GetValueOrDefault( GuidOf( Field( wrapper.Body, "m_SourcePrefab" ) ) );
+				if ( source.Root == null && wrapperModel is not { Kind: UnityAssetKind.Model } )
+					source.Problem = $"Nested prefab {asset.Path} has no root transform; instance skipped.";
 				else
 				{
-					source.RootObject = IdOf( Field( source.Root.Body, "m_GameObject" ) );
-					source.RootObjectBlock = source.Blocks.FirstOrDefault( b => b.Id == source.RootObject );
 					source.ById = source.Blocks.GroupBy( b => b.Id ).ToDictionary( g => g.Key, g => g.First() );
+					if ( wrapperModel is { Kind: UnityAssetKind.Model } )
+					{
+						source.IsWrapper = true;
+						source.RootTransformId = ModelRootTransform;
+						var root = RootOf( wrapper, Path.GetFileNameWithoutExtension( wrapperModel.Path ) );
+						source.RootTransform = root.Transform;
+						source.RootName = root.Name;
+						source.RootActive = root.Active;
+						source.RootFlags = root.StaticFlags;
+						source.RootObject = ModelRootObject;
+						source.RootObjectBlock = source.Blocks.FirstOrDefault( b => b.Type == "1" && b.Stripped && Reference( b.Body, "m_CorrespondingSourceObject" ) == ModelRootObject );
+						source.RendererIds = Enumerable.Range( 0, wrapperModel.ModelInfo.RenderedMeshes.Length ).Select( ModelRendererId ).ToArray();
+					}
+					else
+					{
+						source.RootObject = IdOf( Field( source.Root.Body, "m_GameObject" ) );
+						source.RootObjectBlock = source.Blocks.FirstOrDefault( b => b.Id == source.RootObject );
+						source.RootTransformId = source.Root.Id;
+						source.RootTransform = Local( source.Root.Body );
+						source.RootName = source.RootObjectBlock == null ? Path.GetFileNameWithoutExtension( asset.Path ) : Scalar( source.RootObjectBlock.Body, "m_Name" );
+						source.RootActive = source.RootObjectBlock == null || Scalar( source.RootObjectBlock.Body, "m_IsActive" ) != "0";
+						source.RootFlags = source.RootObjectBlock == null ? 0 : Number( source.RootObjectBlock.Body, "m_StaticEditorFlags" );
+					}
 					source.Transforms = source.Blocks.Where( b => b.Type is "4" or "224" && !b.Stripped ).GroupBy( b => IdOf( Field( b.Body, "m_GameObject" ) ) ).ToDictionary( g => g.Key, g => g.First() );
 					// Objects of the source prefab whose placement its converted form moved into the model: an instance
 					// override of their transform would fight the zeroing, so those overrides are dropped (see BakedChains).
@@ -837,12 +943,163 @@ internal static class UnityPrefabExport
 		/// <summary>The GUID of an instance's root object in this file.</summary>
 		public Guid InstanceGuid( long instanceId ) => StableGuid( $"{Key}:{instanceId}" );
 
+		/// <summary>Path counts as one line, so a property over many objects is reported once with its count.</summary>
+		static string Summary( Dictionary<string, int> counts ) =>
+			string.Join( ", ", counts.OrderBy( c => c.Key, StringComparer.Ordinal ).Select( c => $"{c.Key} ({c.Value})" ) );
+
+		/// <summary>
+		/// Converts a model wrapper: a prefab whose whole content is one top-level PrefabInstance of an FBX model,
+		/// with Unity's model prefab stripped out of the file. The root is rebuilt from that instance, which places,
+		/// names and switches the model's root object; it gets one ModelRenderer per generated model of the FBX's
+		/// meshes, the colliders the wrapper adds to model objects, and the prefab instances nested under it.
+		/// Unity numbers the objects of a model prefab 100000 (root), 400000 (its transform), then 2300000+2n and
+		/// 4300000+2n for each node's renderer and mesh, and the overrides address exactly those ids.
+		/// </summary>
+		public JsonObject WrapperRoot()
+		{
+			var sourceGuid = GuidOf( Field( Wrapper.Body, "m_SourcePrefab" ) );
+			if ( sourceGuid.Length == 0 ) throw new InvalidDataException( "Prefab has a top-level prefab instance with a missing prefab reference." );
+			if ( !byGuid.TryGetValue( sourceGuid, out var model ) ) throw new InvalidDataException( $"Prefab has a top-level prefab instance with a missing prefab reference ({sourceGuid})." );
+			// A top-level instance that sources another prefab is a prefab variant: the base would have to be
+			// merged first, which this converter does not do.
+			if ( model.Kind == UnityAssetKind.Prefab ) throw new InvalidDataException( "Prefab has no root transform (prefab variants are not supported)." );
+			if ( model.Kind != UnityAssetKind.Model ) throw new InvalidDataException( $"Prefab's top-level prefab instance instances {model.Path}, which is not a model; the wrapper cannot be converted." );
+			var info = model.ModelInfo;
+			var root = RootOf( Wrapper, Path.GetFileNameWithoutExtension( model.Path ) );
+
+			// One renderer per generated model. A model written per mesh (meshes whose Unity materials differ
+			// inside one FBX slot) brings its own renderer each; otherwise one model shows every mesh it holds.
+			var meshes = info.RenderedMeshes;
+			var explicitMeshes = Blocks.Where( b => !b.Stripped && b.Type == "23" )
+				.Select( b => MeshName( model, IdOf( Field( b.Body, "m_Mesh" ) ) ) ).Where( m => m != null ).ToArray();
+			if ( explicitMeshes.Length > 0 ) meshes = meshes.Where( m => explicitMeshes.Contains( m, StringComparer.OrdinalIgnoreCase ) ).ToArray();
+			var models = meshes.Select( m => Context.ModelFor( model, m ) ).ToArray();
+			var renderers = new List<(string Path, string Mesh)>();
+			var rendererOf = new int[meshes.Length];
+			for ( var i = 0; i < meshes.Length; i++ )
+			{
+				rendererOf[i] = -1;
+				if ( models[i] == null )
+				{
+					Result.Warnings.Add( $"{root.Name}: no generated model for mesh '{meshes[i]}' of {model.Path}; its renderer was skipped." );
+					continue;
+				}
+				var known = renderers.FindIndex( r => r.Path.Equals( models[i], StringComparison.OrdinalIgnoreCase ) );
+				if ( known < 0 ) renderers.Add( (models[i], meshes[i]) );
+				rendererOf[i] = known < 0 ? renderers.Count - 1 : known;
+			}
+			var sharedModel = renderers.Count == 1;
+
+			var node = GameObject( StableGuid( $"{Key}:{ModelRootObject}" ), root.Name,
+				ToSbox( new UnityTransform( new double[3], root.Transform.Rotation, root.Transform.Scale ) ), root.Active );
+			if ( root.StaticFlags != 0 ) node["Flags"] = StaticFlag;
+			var components = (JsonArray)node["Components"];
+			var materials = new Dictionary<int, Dictionary<int, string>>();
+			var subObject = new Dictionary<string, int>();
+			var unknown = new Dictionary<string, int>();
+			var unresolvedMaterials = 0;
+			static string PathKey( string path ) => Regex.Replace( path, @"Array\.data\[[0-9]+\]", "Array.data[i]" );
+			static string ComponentName( string type ) => type switch { "23" => "MeshRenderer", "33" => "MeshFilter", "95" => "Animator", "20" => "Camera", "108" => "Light", _ => $"Unity type {type}" };
+			foreach ( Match modification in ModificationPattern.Matches( Wrapper.Body ) )
+			{
+				var target = IdOf( modification.Groups["target"].Value );
+				var path = modification.Groups["path"].Value.Trim( '\'' );
+				var slot = Regex.Match( path, @"^m_Materials\.Array\.data\[([0-9]+)\]$" );
+				// The root object's namesake paths are already applied (see RootOf); hints have no counterpart.
+				if ( target == ModelRootObject || target == ModelRootTransform || path.StartsWith( "m_LocalEulerAnglesHint" ) || path == "m_RootOrder" ) continue;
+				var meshIndex = IsModelRenderer( target ) ? (int)((target - 2300000) / 2) : -1;
+				if ( meshIndex >= 0 && slot.Success )
+				{
+					var unitySlot = int.Parse( slot.Groups[1].Value, CultureInfo.InvariantCulture );
+					var assigned = GuidOf( modification.Groups["reference"].Value );
+					var renderer = meshIndex < rendererOf.Length ? rendererOf[meshIndex] : -1;
+					var binding = renderer < 0 ? null : UnityPrefabBindings.WrapperRenderer( model, target, out _ );
+					// One model: the slot is its own material-list position. A model per mesh: the mesh's own slot.
+					var materialSlot = binding == null ? -1 : (sharedModel ? UnityPrefabBindings.WrapperMaterialSlot( model, binding, unitySlot ) ?? -1 : unitySlot);
+					var material = materialSlot < 0 ? null : Context.MaterialFor?.Invoke( assigned );
+					if ( material == null ) { unresolvedMaterials++; continue; }
+					if ( !materials.TryGetValue( renderer, out var map ) ) materials[renderer] = map = new();
+					map[materialSlot] = material;
+					continue;
+				}
+				// A model object other than the root: its placement and components are the model's own.
+				if ( meshIndex >= 0 || target >= 100000 && target < 300000 || target >= 400000 && target < 500000 ) subObject[PathKey( path )] = subObject.GetValueOrDefault( PathKey( path ) ) + 1;
+				else unknown[PathKey( path )] = unknown.GetValueOrDefault( PathKey( path ) ) + 1;
+			}
+			for ( var i = 0; i < renderers.Count; i++ )
+			{
+				var renderer = ModelRenderer( StableGuid( $"{Key}:{ModelRendererId( i )}" ), renderers[i].Path, true );
+				if ( materials.TryGetValue( i, out var map ) && map.Count > 0 )
+				{
+					var indexed = new JsonObject();
+					foreach ( var (slot, material) in map.OrderBy( m => m.Key ) ) indexed[slot.ToString( CultureInfo.InvariantCulture )] = material;
+					renderer["Materials"] = new JsonObject { ["indexed"] = indexed };
+				}
+				components.Add( renderer );
+			}
+
+			// The wrapper's own components sit on model objects. A collider on a sub-object still covers the whole
+			// model (its shape list is generated from the collided mesh), so it is added to the root.
+			var meshColliders = 0;
+			var subObjectColliders = 0;
+			var colliderFallbacks = 0;
+			var reportedRotation = false;
+			foreach ( var component in Blocks.Where( b => !b.Stripped && b.Type is "64" or "65" or "135" or "136" ) )
+			{
+				var id = StableGuid( $"{Key}:{component.Id}" );
+				var enabled = Scalar( component.Body, "m_Enabled" ) != "0";
+				var owner = ById.GetValueOrDefault( IdOf( Field( component.Body, "m_GameObject" ) ) );
+				if ( owner != null && Reference( owner.Body, "m_CorrespondingSourceObject" ) != ModelRootObject ) subObjectColliders++;
+				if ( component.Type == "64" )
+				{
+					meshColliders++;
+					// Several Unity colliders (e.g. one convex piece each) map to the model's one hull.
+					if ( meshColliders > 1 ) continue;
+					var meshName = MeshName( model, IdOf( Field( component.Body, "m_Mesh" ) ) );
+					var collider = meshName == null ? null : Context.ModelFor( model, meshName );
+					if ( collider == null && renderers.Count > 0 ) { collider = renderers[0].Path; colliderFallbacks++; }
+					if ( collider == null ) { Result.Warnings.Add( $"{root.Name}: a MeshCollider's mesh is not a converted model; the collider was skipped." ); continue; }
+					components.Add( ModelCollider( id, collider, enabled ) );
+				}
+				else if ( PrimitiveCollider( component, id, enabled, null, root.Name, ref reportedRotation ) is JsonObject collider ) components.Add( collider );
+			}
+
+			// Prefabs nested under the model. Unity hangs them off the model's objects, whose placement the model
+			// carries, so they attach to the root; their own overrides place them.
+			var children = (JsonArray)node["Children"];
+			foreach ( var nested in Instances.Values.Where( i => i.Id != Wrapper.Id ).OrderBy( i => i.Id ) )
+			{
+				var parentTransform = ById.GetValueOrDefault( IdOf( Field( nested.Body, "m_TransformParent" ) ) );
+				var parentObject = parentTransform == null ? 0 : Reference( parentTransform.Body, "m_CorrespondingSourceObject" );
+				if ( parentObject != 0 && parentObject != ModelRootObject )
+					Result.Information.Add( $"{root.Name}: a nested prefab instance hangs under model object {parentObject}; that placement lives in the model, so the instance is attached to the wrapper root." );
+				if ( Instance( nested, null ) is JsonObject child ) children.Add( child );
+			}
+
+			if ( subObject.Count > 0 ) Result.Information.Add( $"{root.Name}: overrides of model sub-objects are part of the model and were not applied again: {Summary( subObject )}." );
+			if ( unknown.Count > 0 ) Result.Information.Add( $"{root.Name}: prefab overrides not converted: {Summary( unknown )}." );
+			if ( unresolvedMaterials > 0 ) Result.Information.Add( $"{root.Name}: {unresolvedMaterials} material override(s) could not be mapped to a generated model slot and were not converted." );
+			if ( meshColliders > 1 ) Result.Information.Add( $"{root.Name}: {meshColliders} MeshColliders on the model are represented by one s&box ModelCollider, which collides with the whole model." );
+			if ( subObjectColliders > 0 ) Result.Information.Add( $"{root.Name}: {subObjectColliders} collider(s) sit on model sub-objects; the generated collider covers the whole model, so their local offset is not applied again." );
+			if ( colliderFallbacks > 0 ) Result.Information.Add( $"{root.Name}: {colliderFallbacks} MeshCollider(s) name a mesh with no generated model; their collider uses the model's own shapes instead." );
+			// Anything else the wrapper adds to a model object has to be named too, or it is dropped silently.
+			var other = Blocks.Where( b => !b.Stripped && b.Type is not ("1" or "4" or "224" or "1001" or "64" or "65" or "135" or "136" or "114") )
+				.GroupBy( b => ComponentName( b.Type ) ).OrderBy( g => g.Key, StringComparer.Ordinal ).Select( g => $"{g.Count()} {g.Key}" ).ToArray();
+			if ( other.Length > 0 ) Result.Information.Add( $"{root.Name}: components on the model that s&box has no counterpart for were not converted: {string.Join( ", ", other )}." );
+			// Scripts cannot be converted, and nothing on the wrapper may be dropped without a line in the report.
+			var scripts = Blocks.Count( b => !b.Stripped && b.Type == "114" );
+			if ( scripts > 0 ) Result.Information.Add( $"{root.Name}: {scripts} MonoBehaviour (script) component(s) attached to the model are not converted." );
+			var addedComponents = Regex.Matches( Section( Wrapper.Body, "m_AddedComponents" ), @"(?m)^\s*-\s" ).Count;
+			if ( addedComponents > 0 ) Result.Information.Add( $"{root.Name}: m_AddedComponents lists {addedComponents} component(s) added to the model; they are not converted." );
+			return node;
+		}
+
 		/// <summary>An instance's name as Unity shows it: its m_Name override, else the source prefab's root name or file name.</summary>
 		public string InstanceName( Block instance )
 		{
 			var source = SourceOf( GuidOf( Field( instance.Body, "m_SourcePrefab" ) ) );
 			if ( source.Problem != null ) return byGuid.TryGetValue( GuidOf( Field( instance.Body, "m_SourcePrefab" ) ), out var asset ) ? Path.GetFileNameWithoutExtension( asset.Path ) : instance.Id.ToString( CultureInfo.InvariantCulture );
-			var name = source.RootObjectBlock == null ? Path.GetFileNameWithoutExtension( source.Asset.Path ) : Scalar( source.RootObjectBlock.Body, "m_Name" );
+			var name = string.IsNullOrEmpty( source.RootName ) ? Path.GetFileNameWithoutExtension( source.Asset.Path ) : source.RootName;
 			var renamed = Regex.Match( instance.Body, @"(?ms)^\s*- target:\s*\{fileID:\s*" + source.RootObject + @"\b[^}]*\}\s*\r?\n\s*propertyPath:\s*m_Name\s*\r?\n\s*value:[ \t]*([^\r\n]*?)[ \t]*\r?$" );
 			return renamed.Success ? Unquote( renamed.Groups[1].Value ) : name;
 		}
@@ -985,12 +1242,12 @@ internal static class UnityPrefabExport
 				Result.Warnings.Add( plain.Problem );
 				return null;
 			}
-			var sourceRoot = plain.Root;
 			var sourceRootObject = plain.RootObject;
-			var sourceObject = plain.RootObjectBlock;
-			var unity = Local( sourceRoot.Body );
-			string name = sourceObject == null ? Path.GetFileNameWithoutExtension( plain.Asset.Path ) : Scalar( sourceObject.Body, "m_Name" );
-			var active = sourceObject == null || Scalar( sourceObject.Body, "m_IsActive" ) != "0";
+			// The root's own values, which the instance's overrides replace; copied so editing them cannot reach
+			// the cached source prefab.
+			var unity = new UnityTransform( (double[])plain.RootTransform.Position.Clone(), (double[])plain.RootTransform.Rotation.Clone(), (double[])plain.RootTransform.Scale.Clone() );
+			string name = plain.RootName;
+			var active = plain.RootActive;
 			var skipped = new List<string>();
 			var sourceById = plain.ById;
 			var sourceChains = plain.Chains;
@@ -1009,13 +1266,20 @@ internal static class UnityPrefabExport
 				var axis = path.Length > 2 && path[^2] == '.' ? "xyzw".IndexOf( path[^1] ) : -1;
 				var component = sourceById.GetValueOrDefault( target );
 				var slot = Regex.Match( path, @"^m_Materials\.Array\.data\[([0-9]+)\]$" );
-				if ( target == sourceRoot.Id && path.StartsWith( "m_LocalPosition." ) && axis is >= 0 and < 3 ) unity.Position[axis] = Parse();
-				else if ( target == sourceRoot.Id && path.StartsWith( "m_LocalRotation." ) && axis >= 0 ) unity.Rotation[axis] = Parse();
-				else if ( target == sourceRoot.Id && path.StartsWith( "m_LocalScale." ) && axis is >= 0 and < 3 ) unity.Scale[axis] = Parse();
+				// A wrapper's own objects have no block in its file: Unity addresses them by an id derived from
+				// the instance, which the file never contains. Its one model root takes those transform
+				// overrides, and an object override names a stripped object, whose source is the model's root.
+				var targetObject = component is { Type: "1", Stripped: true } ? Reference( component.Body, "m_CorrespondingSourceObject" )
+					: plain.IsWrapper && component == null ? sourceRootObject : target;
+				var rootTransform = target == plain.RootTransformId
+					|| plain.IsWrapper && !plain.ById.ContainsKey( target ) && path.StartsWith( "m_Local" ) && !path.StartsWith( "m_LocalEulerAnglesHint" );
+				if ( rootTransform && path.StartsWith( "m_LocalPosition." ) && axis is >= 0 and < 3 ) unity.Position[axis] = Parse();
+				else if ( rootTransform && path.StartsWith( "m_LocalRotation." ) && axis >= 0 ) unity.Rotation[axis] = Parse();
+				else if ( rootTransform && path.StartsWith( "m_LocalScale." ) && axis is >= 0 and < 3 ) unity.Scale[axis] = Parse();
 				// Editor-only hints: euler display angles and sibling order (children keep Unity's order).
 				else if ( path.StartsWith( "m_LocalEulerAnglesHint" ) || path == "m_RootOrder" ) { }
-				else if ( target == sourceRootObject && path == "m_Name" ) name = value;
-				else if ( target == sourceRootObject && path == "m_IsActive" ) active = value != "0";
+				else if ( targetObject == sourceRootObject && path == "m_Name" ) name = value;
+				else if ( targetObject == sourceRootObject && path == "m_IsActive" ) active = value != "0";
 				else if ( component is { Type: "4" or "224", Stripped: false } && axis >= 0
 					&& (path.StartsWith( "m_LocalPosition." ) && axis < 3 || path.StartsWith( "m_LocalRotation." ) || path.StartsWith( "m_LocalScale." ) && axis < 3) )
 				{
@@ -1041,6 +1305,30 @@ internal static class UnityPrefabExport
 					if ( current.Length != 1 || Context.MaterialFor?.Invoke( assigned ) is not string material ) { skipped.Add( path ); continue; }
 					componentOverrides.Add( (target, "Materials", new JsonObject { ["indexed"] = new JsonObject { [index.ToString( CultureInfo.InvariantCulture )] = material } }) );
 				}
+				else if ( plain.IsWrapper && slot.Success && (IsModelRenderer( target ) || plain.RendererIds.Length == 1) )
+				{
+					// A wrapper's renderers keep Unity's model-prefab ids, so the override names the generated
+					// component directly; a file that only addresses it indirectly falls back to the one renderer.
+					var rendererId = IsModelRenderer( target ) ? target : plain.RendererIds[0];
+					var index = int.Parse( slot.Groups[1].Value, CultureInfo.InvariantCulture );
+					var assigned = GuidOf( modification.Groups["reference"].Value );
+					var binding = UnityPrefabBindings.WrapperRenderer( plain.Asset, rendererId, out _ );
+					var slotName = binding?.EffectiveSlots.ElementAtOrDefault( index );
+					// An override equal to the source value changes nothing.
+					var assignedByModel = slotName == null ? null
+						: plain.Asset.ModelInfo.MeshSlotMaterials.TryGetValue( binding.Mesh, out var meshSlots ) && meshSlots.TryGetValue( slotName, out var perMesh ) ? perMesh
+						: plain.Asset.ModelInfo.PrefabSlotMaterials.GetValueOrDefault( slotName );
+					if ( assignedByModel != null && assignedByModel.Equals( assigned, StringComparison.OrdinalIgnoreCase ) ) { }
+					else
+					{
+						var materialSlot = binding == null ? (int?)null : UnityPrefabBindings.WrapperMaterialSlot( plain.Asset, binding, index );
+						var material = materialSlot == null ? null : Context.MaterialFor?.Invoke( assigned );
+						if ( material == null ) skipped.Add( path );
+						else componentOverrides.Add( (rendererId, "Materials", new JsonObject { ["indexed"] = new JsonObject { [materialSlot.Value.ToString( CultureInfo.InvariantCulture )] = material } }) );
+					}
+				}
+				// s&box keeps one static flag per object, and an instance root carries the source prefab's.
+				else if ( targetObject == sourceRootObject && path == "m_StaticEditorFlags" && Parse() == plain.RootFlags ) { }
 				else skipped.Add( path );
 			}
 			if ( skipped.Count > 0 ) Result.Information.Add( $"{name}: nested prefab overrides not converted: {string.Join( ", ", skipped.Distinct() )}." );
@@ -1073,7 +1361,7 @@ internal static class UnityPrefabExport
 			Override( "Rotation", Join( transform.Rotation ) );
 			// Overrides replace the source prefab's root values; the source root keeps Unity's scale (made positive, see
 			// Unmirror), so an instance needs a Scale override whenever its scale differs from that, including back to 1.
-			var sourceScale = Scale( Local( sourceRoot.Body ).Scale.Select( Math.Abs ).ToArray() );
+			var sourceScale = Scale( plain.RootTransform.Scale.Select( Math.Abs ).ToArray() );
 			if ( transform.Scale.Zip( sourceScale ).Any( s => Math.Abs( s.First - s.Second ) > 1e-6 ) ) Override( "Scale", Join( transform.Scale ) );
 			Override( "Name", name );
 			if ( !active ) Override( "Enabled", false );
@@ -1169,9 +1457,12 @@ internal static class UnityPrefabExport
 		var text = UnityImport.ReadText( prefab.Source );
 		var converter = new Converter( prefab, text, context, result, mirrorAxis );
 		var root = converter.Roots.FirstOrDefault();
-		// Prefab variants store only a stripped root and a PrefabInstance of their base; they are not converted yet.
-		if ( root == null ) throw new InvalidDataException( "Prefab has no root transform (prefab variants are not supported)." );
-		var rootNode = converter.Node( root, true );
+		// A model wrapper has no Transform block at all: its whole content is one PrefabInstance of an FBX
+		// model, which WrapperRoot rebuilds. Anything else without a root is an unsupported prefab variant.
+		JsonObject rootNode;
+		if ( root != null ) rootNode = converter.Node( root, true );
+		else if ( converter.Wrapper != null ) rootNode = converter.WrapperRoot();
+		else throw new InvalidDataException( "Prefab has no root transform (prefab variants are not supported)." );
 		rootNode["__properties"] = SceneProperties();
 		rootNode["__variables"] = new JsonArray();
 		var document = new JsonObject
