@@ -53,6 +53,34 @@
 	c1941e5a5b2e57921b72f2fc2903e1b4236bab34  eliots-agentics/tasks-todo-unity/03-scene-model-instance-placement.md
 	85ca50e5d9639b2014f23068dcf2352cd3be9f13  eliots-agentics/tasks-todo-unity/04-scene-loss-reporting.md
 
+	2026-11-20 23:34 - Verdict: changes required
+
+	Cross-review round: the adopted sbox-derived additions checked against source and against the sbox files themselves, not the round-5 summary. All four adopted details are accurate. 01: ModelRenderer at Editor/Core/UnityPrefabExport.cs:262 really does set `["MaterialOverride"] = null` and `["Materials"] = null`; static flags are applied at :904 (`if ( go != null && Number( go.Body, "m_StaticEditorFlags" ) != 0 ) node["Flags"] = StaticFlag;`); the mirrored-variant sentence matches the `_mirror_{axis}` naming at UnityPrefabExport.cs:396 for prefabs and UnityImport.cs:385 for VMDLs. 02: the fixed-ID usage counts (410/313/267/98) and the 323/445/1270/405 baseline are repeated verbatim in tasks-todo-sbox/02, so the "near-twin" claim holds for this pair. 03: `Node( Block transform, bool isRoot, ... )` is at :882 and the indexed override shape is exactly `["Materials"] = { ["indexed"] = { [i] = material } }` at :1041-1042; UnitsPerMetre = 39.37 at :27 backs 05's "39.37 model modifier". 04: :68 null-root count, the dead `is not var` guards at :116 and :127, the live `data == null` guard at :134, the silent child-loop drop at :961 and the throw at :1173 all match on re-read; sbox/05 now states the identical merged schema (TotalInstances/LostInstances beside Roots/Instances/Skipped, SkipCauses, MaxSampleNames as a named constant of 10) and claims sole ownership of it, which unity/04 honours by saying "work one task, not both" rather than defining a parallel shape. 05: no invented engine path survived the port — sbox/04's `D:/SteamLibrary/...` hint is gone and replaced by "confirm any engine model path in the installed engine, never guess it"; the primitive fileIDs are hedged with "verify every ID against the Unity 6 built-in resources before coding", the only one asserted as observed (Plane 10209, guid 0000000000000000e000000000000000) is confirmed in the source scene YAML at test_range.unity:7493, and the e000/f000 split matches UnitySceneExport.cs:35 using f000 for the built-in skybox. No contradictions introduced between 01/02/03/04/05: each names non-goals that match the actual split (01 prefab root, 02 fixed-ID materials, 03 scene instances/plain objects, 04 loss reporting, 05 primitives).
+
+	1. [Low] tasks-todo-unity/03-scene-model-instance-placement.md:38 misstates the sbox twin. "tasks-todo-sbox/01 acceptance also expects the 2861/201 stubs" is false: sbox/01's Acceptance bullets (:22-27) contain no stub expectation at all, and the stub claim sits in its Notes (:36) with the opposite ordering — "expect the stubs only once 03 lands" — reinforced by its Follow Ups ("Task 03 then resolves scene instances"). The substantive point of the sentence (both sets must agree on the final 2861/201 counts) is correct and unity/03's own acceptance carries those numbers. Fix: replace that clause with "tasks-todo-sbox/01 notes the 2861/201 stubs as expected once its task 03 lands; both sets must agree on the final counts."
+
+	Everything else is clean: no finding against 01, 02, 04 or 05, and the round-3 guard citations remain correct. Scope respected: only the task file and the five unity backlog files were reviewed; no file outside eliots-agentics/ was touched; nothing under .humans-only/ read; no harness run and no package re-extraction (the extracted source scene already on hand was read for the Plane reference).
+
+	Tree: main @ 35dde86, five unity backlog files tracked and modified vs HEAD (round-5 edits), tasks-todo-unity/05 still untracked (no commit made)
+	ca79b64e84339fdfef090435f92ad370ed3bcfbd  eliots-agentics/tasks-todo-unity/01-model-prefab-root-conversion.md
+	5a656ae43c167c1d47b4e7539d7581ba44e069e3  eliots-agentics/tasks-todo-unity/02-model-prefab-material-slots.md
+	ed2de7856d3ab8674bfdea11f81f32f368b3bcb4  eliots-agentics/tasks-todo-unity/03-scene-model-instance-placement.md
+	4f011bf1ae0dd9bb7569be41aef026382ba4f8eb  eliots-agentics/tasks-todo-unity/04-scene-loss-reporting.md
+	a261077a460d11bf2aa3261895358ae09d830a45  eliots-agentics/tasks-todo-unity/05-builtin-primitive-meshes.md
+
+	2026-11-20 23:35 - Verdict: no further changes
+
+	Cross-review fix verified on disk; the corrected cross-reference is accurate. tasks-todo-unity/03:38 now reads "tasks-todo-sbox/01 Notes says to expect the 2861/201 stubs only once task 03 lands, so both sets must agree on the final counts." sbox/01's Acceptance (:22-27) carries no stub expectation — it covers 346 .prefab outputs, Doorplate_03's single ModelCollider, the script-bearing files, byte-identical re-runs and a clean build — while the stub claim sits in its Notes (:36): "Scene side after this task: MergeV2 2,861 instances and Test_Range 201 become resolvable, but task 03 owns placing direct model instances and plain objects; expect the stubs only once 03 lands," reinforced by its Follow Ups ("task 03 then resolves scene instances of these prefabs and direct model instances"). The clause now names Notes, keeps the correct ordering, and preserves the original point that both sets must agree on the final counts, which unity/03's own acceptance (:28) states as Instances 2861 / Skipped 0 and 201 / 0. The same line's other half also holds: sbox/03 is a reconciled twin of this task (:27 repeats the 2,861/201 / 0 acceptance, :18 the same fixture, :36 the same fixture-placement guidance).
+
+	No unexpected change. 01/02/04/05 are byte-identical to the round-5 hashes (ca79b64…, 5a656ae…, 4f011bf…, a261077…) with mtimes still at 23:30-23:32; only 03 moved (ed2de785… → 80f989a…) at 23:35:14, and its one edited sentence is the clause the finding named, with the rest of the file matching what round 5 verified. The five unity backlog files remain the only task work: tasks-todo-sbox was rewritten by the sbox expert earlier (23:25) and is untouched by this round, nothing outside eliots-agentics/ changed, and nothing under .humans-only/ was read, listed or staged. No harness run and no package extraction on this pass. No commit made.
+
+	Tree: main @ 35dde86, five unity backlog files tracked and modified vs HEAD (round-5 edits plus this fix); tasks-todo-unity/05 still untracked (no commit made)
+	ca79b64e84339fdfef090435f92ad370ed3bcfbd  eliots-agentics/tasks-todo-unity/01-model-prefab-root-conversion.md
+	5a656ae43c167c1d47b4e7539d7581ba44e069e3  eliots-agentics/tasks-todo-unity/02-model-prefab-material-slots.md
+	80f989ae8173e99eda3ba2a22b1e47d7266990ed  eliots-agentics/tasks-todo-unity/03-scene-model-instance-placement.md
+	4f011bf1ae0dd9bb7569be41aef026382ba4f8eb  eliots-agentics/tasks-todo-unity/04-scene-loss-reporting.md
+	a261077a460d11bf2aa3261895358ae09d830a45  eliots-agentics/tasks-todo-unity/05-builtin-primitive-meshes.md
+
 ## Notes
 	Plan:
 	1. Reproduce the old_school import headlessly with Documentation/Unity-To-SBox-Automated/harness.
@@ -60,11 +88,12 @@
 	3. Write ordered backlog tasks under tasks-todo-unity, each with baseline evidence and acceptance criteria.
 	4. Send the tree to a Review Critic, fix findings, commit.
 
-	Result: four tasks, ordered by dependency:
+	Result: five tasks, ordered by dependency:
 	 01-model-prefab-root-conversion.md
 	 02-model-prefab-material-slots.md
 	 03-scene-model-instance-placement.md
 	 04-scene-loss-reporting.md
+	 05-builtin-primitive-meshes.md
 
 	The task premise is inaccurate for this package: both scenes use prefab instances heavily. The real failure is that every prefab in the package is a model-wrapper prefab (a PrefabInstance of an FBX), which UnityPrefabExport rejects as an unsupported prefab variant, leaving the scenes empty.
 
@@ -73,6 +102,10 @@
 	Review round 2 (changes required, applied): corrected the scene-loss mechanism to the silent child-loop drop at UnityPrefabExport.cs:961 and the dead `is not var` guards at UnitySceneExport.cs:113/127/134; added the third Binding() call site (:129); corrected wrapper component evidence (240 MeshColliders/218 files, 59 BoxColliders/58 files, 270 MonoBehaviours/221 files, no Sphere/Capsule); recorded the durable harness command and baseline metrics instead of committing generated reports; named tasks-todo-sbox/05 as the owner of the grouped SkipCauses extension on the SceneConversions fields this set adds.
 
 	Review round 3 (changes required, applied): corrected the guard citations. The unreachable `is not var` guard is UnitySceneExport.cs:127 (and :116); :134 is a live `data == null` check and is left intact. Task 04 and this file's Relevant History now say so.
+
+	Review round 5 (user-requested cross-review of tasks-todo-sbox, applied): the sbox expert rewrote their backlog at 23:23-23:25 and reconciled it against this research. Their 01/02/03/05 now mirror unity 01/02/03/04 and add useful detail; their 04 (built-in Unity primitive meshes) was a gap here. Adopted into the unity set: m_StaticEditorFlags and grouped unknown-path reporting plus mirrored-variant preservation (01); fixed-ID usage counts and non-goals (02); plain-scene-object renderer materials and a richer fixture (03); SkipCauses/MaxSampleNames schema detail (04); new unity 05 for built-in primitive meshes. The sbox set's 01/02/03/05 are near-twins of ours; work one set, not both. Its earlier 328-direct/18-chained counts were a parse error and its own files now use the verified 346/322/24 split.
+
+	Cross-review round (changes required, applied): corrected the unity/03 cross-reference. sbox/01 has no stub acceptance; its Notes say to expect the 2861/201 stubs only once task 03 lands.
 
 ## Clarification Q&A
 
@@ -90,9 +123,11 @@
 	- Scene overrides: MergeV2 has 405 material-array overrides (339 data[0], 56 data[1], 8 data[2], 2 data[3]), 3654 static-flag overrides, 2861 transform/name instances; Test_Range has 201 instances, 1 material override, 2 MeshCollider blocks. All instances are parented to plain non-prefab Transform objects.
 	- Scene skip warnings: 459 lines (255 MergeV2 + 204 Test_Range, 455 distinct) because SourceOf caches per prefab guid; they do not count instances and are not unresolved errors.
 	- Scene loss mechanism: a null top-level root is counted at UnitySceneExport.cs:68, but the 2861+201 instances are children dropped silently in UnityPrefabExport.Node's child loop at UnityPrefabExport.cs:961. The `Owner(...) is not var (...)` guard at UnitySceneExport.cs:127 (and :116) can never match, so the `skipped++` at :127 is dead; :134 is a live `data == null` check, not part of this bug.
+	- Plain-object gap: ModelRenderer is built with Materials and MaterialOverride null (Editor/Core/UnityPrefabExport.cs:262), so a plain scene MeshRenderer's assigned material is dropped. No fixture covers a scene whose only model reference is a plain MeshFilter.
+	- Built-in primitives: Test_Range.unity's two plain MeshFilters reference Unity's built-in Plane (fileID 10209, guid 0000000000000000e000000000000000). Converter.Node finds no package asset and warns "mesh ... is not a converted model; renderer skipped" (Editor/Core/UnityPrefabExport.cs:915-920); the scene has no ModelRenderer.
 	- UnityPrefabExport.Convert: Roots is built from non-stripped Transform blocks (Editor/Core/UnityPrefabExport.cs:706) and throws when empty (line 1173). UnityPrefabBindings maps renderer IDs through UnityModel.RendererSlots hashes and legacy recycle IDs only; Unity's fixed model-prefab IDs (100000, 400000, 2300000, 4300000/4300002) are not mapped.
 	- Direct FBX instances in a scene fail the same way: UnitySceneExport resolves instances only through prefabPaths/Converted and warns "Nested prefab ... is not in the package or was not converted; instance skipped" when the source is an FBX.
-	- tasks-todo-sbox holds a parallel sbox-expert backlog generated from tasks/sbox-expert-research.md. It overlaps this set but its chain counts conflict with the YAML (it says 328 direct / 18 chained; the verified split is 346 top-level FBX, 24 with nested prefab instances, 18 with a non-empty m_AddedComponents list, and 221 carrying 270 script components). Neither set supersedes the other: this unity set owns model-wrapper conversion, material-slot mapping, scene model instances and loss reporting; the sbox set additionally covers plain-object material assignment, built-in primitive meshes, and grouped skip diagnostics. Reconcile before starting.
+	- tasks-todo-sbox holds the parallel sbox-expert backlog. As of the 2026-11-20 23:23 rewrite it is reconciled with this research: sbox 01/02/03/05 are near-twins of unity 01/02/03/04, and sbox 04 (built-in primitive meshes) is mirrored here as unity 05. Its earlier 328-direct / 18-chained split was a parse error and its own files now use the verified 346/322/24 split. Work one set, not both.
 
 ## Stylistic Task Notes:
 References to variables like X and Y automatically imply that these are to be exposed properties for developer tweaking.
