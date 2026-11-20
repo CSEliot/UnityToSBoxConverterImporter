@@ -169,6 +169,10 @@ You can also import from inside the s&box editor (Editor menu, UnityImporterPlus
 
 With `--scenes`, step 4 already wrote `Assets/imported/scenes/samplescene.scene` (and `imported/polygoncity/scenes/demo.scene` for the city package): a complete scene with the camera, the sun, the default sky and every prefab instance, in Unity's root order. Open it in the editor as it is. The report's `SceneConversions` table gives the counts (roots, instances, nested instances written as `AddedObjects`, added components, removed objects, skipped). For the city's `Demo.unity` expect 4 329 roots, 5 326 instances, 836 nested, 0 skipped; the two added MeshColliders point at a baked Unity mesh asset and are reported, not converted.
 
+A scene that places no `.prefab` assets converts the same way. Unity keeps an implicit prefab for every model asset, so an instance whose `m_SourcePrefab` is the FBX itself is rebuilt by the same wrapper builder (`UnityPrefabExport.ModelRoot`) and written beside the model as `<name>.fbx.prefab`; its overrides address Unity's fixed model-prefab ids (100000 name, 400000 transform, 2300000+2n renderers) and its `m_Materials` entries resolve through the same slot map a wrapper prefab uses. A plain `MeshRenderer` in a scene keeps its own assignment: each slot becomes an indexed `Materials` override on the generated `ModelRenderer`, and a slot with no converted material is left to the model and reported once per object. Zero prefab instances is a normal scene, not a warning.
+
+`Documentation/Unity-To-SBox-Automated/fixtures/prefab-free-scene/` is the tiny tracked fixture for that path (one ASCII FBX and its meta, two materials, one scene with plain objects and a direct FBX instance, all hand-written). `fixtures/pack_fixture.py <folder> <out.unitypackage>` packs it reproducibly into `fixtures/prefab-free-scene.unitypackage`, which runs through the harness like any other package.
+
 The rest of this step is only for patching a scene you made by hand (the reference `manual-imported-example.scene`) instead of using the generated one. Make a backup, then run the scene tool on the target s&box scene:
 
 ```bash

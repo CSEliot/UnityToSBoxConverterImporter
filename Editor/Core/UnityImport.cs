@@ -374,6 +374,8 @@ public static class UnityImport
 			// Variants are made on demand, named after the Unity axis they mirror along.
 			var mirroredModels = new Dictionary<string, string>( StringComparer.OrdinalIgnoreCase );
 			var mirroredPrefabs = new Dictionary<string, (string Path, string Json)?>( StringComparer.OrdinalIgnoreCase );
+			// Generated prefabs of models a scene places directly, by model guid (null: not convertible).
+			var modelPrefabs = new Dictionary<string, (string Path, string Json)?>( StringComparer.OrdinalIgnoreCase );
 			UnityPrefabExport.Context context = null;
 			string MirroredModelFor( UnityAsset model, string mesh, int axis )
 			{
@@ -409,10 +411,33 @@ public static class UnityImport
 					return null;
 				}
 			}
+			(string Path, string Json)? ModelPrefabFor( UnityAsset model )
+			{
+				if ( modelPrefabs.TryGetValue( model.Guid, out var known ) ) return known;
+				modelPrefabs[model.Guid] = null; // a model prefab that instances itself stops here
+				try
+				{
+					// Unity keeps an implicit prefab for every model asset; the wrapper builder writes it, so a
+					// scene's direct instance resolves through the same path a converted prefab does. The name
+					// keeps the FBX's own extension, which a Unity prefab of the same stem cannot claim.
+					var converted = UnityPrefabExport.ConvertModel( model, context );
+					var relative = GeneratedPath( model.Path ) + ".prefab";
+					documents.Add( (Output( relative ), converted.Json) );
+					conversions++;
+					warnings.AddRange( converted.Warnings.Select( w => $"{model.Path}: {w}" ) );
+					information.AddRange( converted.Information.Select( m => $"{model.Path}: {m}" ) );
+					return modelPrefabs[model.Guid] = (DocumentPath( prefix + relative ), converted.Json);
+				}
+				catch ( InvalidDataException ex )
+				{
+					Issue( model.Path, "conversion-skipped", $"Model prefab conversion skipped. {ex.Message}" );
+					return null;
+				}
+			}
 			context = new UnityPrefabExport.Context( byGuid, ( model, mesh ) => generatedModels.GetValueOrDefault( (model.Guid, mesh) ),
 				guid => prefabPaths.TryGetValue( guid, out var path ) ? DocumentPath( prefix + path ) : null, convertedPrefabs,
 				guid => materialPaths.TryGetValue( guid, out var path ) && outputs.Contains( path + ".vmat" ) ? DocumentPath( prefix + path + ".vmat" ) : null )
-			{ MirroredModelFor = MirroredModelFor, MirroredPrefabFor = MirroredPrefabFor };
+			{ MirroredModelFor = MirroredModelFor, MirroredPrefabFor = MirroredPrefabFor, ModelPrefabFor = ModelPrefabFor };
 			foreach ( var asset in UnityPrefabExport.Order( plan.Assets.Where( a => a.Prefab ).Select( a => a.Asset ) ) )
 			{
 				cancel.ThrowIfCancellationRequested();

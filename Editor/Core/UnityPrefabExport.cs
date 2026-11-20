@@ -632,6 +632,10 @@ internal static class UnityPrefabExport
 		public Func<UnityAsset, string, int, string> MirroredModelFor { get; init; }
 		/// <summary>A prefab's variant mirrored along a Unity axis, converted on demand: its resource path and JSON, or null.</summary>
 		public Func<string, int, (string Path, string Json)?> MirroredPrefabFor { get; init; }
+		/// <summary>The generated prefab of a model asset a scene instances directly, built on demand: its resource
+		/// path and JSON, or null. Unity keeps such a prefab implicitly for every FBX, so a scene's direct model
+		/// instance resolves through the same path a wrapper prefab does.</summary>
+		public Func<UnityAsset, (string Path, string Json)?> ModelPrefabFor { get; init; }
 	}
 
 	/// <summary>+1/-1 per Unity axis: the mirror a subtree still owes. Identity when no component is negative.</summary>
@@ -739,6 +743,10 @@ internal static class UnityPrefabExport
 		/// <summary>Set by a caller that converts an instance's added and removed objects itself (a scene does);
 		/// otherwise <see cref="Instance"/> reports them as not converted.</summary>
 		public bool ConvertsAdditions { get; set; }
+		/// <summary>Set by a caller that converts a scene, whose plain objects are not prefab evidence: a
+		/// MeshRenderer's own material assignment is then emitted on its ModelRenderer. A prefab's renderers
+		/// already feed the model's slot remaps (<see cref="UnityPrefabBindings"/>), so prefab output does not move.</summary>
+		public bool ConvertsRendererMaterials { get; set; }
 		readonly SkinnedConversion skinned;
 		readonly Dictionary<string, Source> sources = new( StringComparer.OrdinalIgnoreCase );
 		readonly long mainCamera;
@@ -885,11 +893,37 @@ internal static class UnityPrefabExport
 			var source = new Source { MirrorAxis = mirrorAxis };
 			string path = null, json = null;
 			var found = byGuid.TryGetValue( guid, out var asset );
-			if ( found && mirrorAxis < 0 ) { path = Context.PrefabPathFor( guid ); Context.Converted.TryGetValue( guid, out json ); }
-			else if ( found && Context.MirroredPrefabFor?.Invoke( guid, mirrorAxis ) is var (variantPath, variantJson) ) (path, json) = (variantPath, variantJson);
+			// A scene may instance an FBX directly, with no .prefab asset in between: the model's own generated
+			// prefab stands in for it, built by the wrapper builder and cached like a converted prefab.
+			var isModel = found && asset.Kind == UnityAssetKind.Model;
+			if ( isModel && mirrorAxis < 0 )
+			{
+				if ( Context.ModelPrefabFor?.Invoke( asset ) is { } synthesized ) (path, json) = synthesized;
+			}
+			else if ( found && mirrorAxis < 0 ) { path = Context.PrefabPathFor( guid ); Context.Converted.TryGetValue( guid, out json ); }
+			else if ( found && !isModel && Context.MirroredPrefabFor?.Invoke( guid, mirrorAxis ) is var (variantPath, variantJson) ) (path, json) = (variantPath, variantJson);
 			if ( !found || path == null || json == null )
 				source.Problem = mirrorAxis < 0 ? $"Nested prefab {guid} is not in the package or was not converted; instance skipped."
 					: $"Nested prefab {(found ? asset.Path : guid)} has no variant mirrored along {MirrorName( mirrorAxis )}; mirrored instance skipped.";
+			else if ( isModel )
+			{
+				// An FBX carries no prefab YAML: its prefab is the model root at the identity, named after the
+				// file, and every object an instance overrides is one of Unity's fixed model-prefab ids.
+				source.Asset = asset;
+				source.SboxPath = path;
+				source.Key = asset.Guid.ToLowerInvariant();
+				source.IsWrapper = true;
+				source.RootTransformId = ModelRootTransform;
+				source.RootObject = ModelRootObject;
+				source.RootName = Path.GetFileNameWithoutExtension( asset.Path );
+				source.RendererIds = Enumerable.Range( 0, asset.ModelInfo.RenderedMeshes.Length ).Select( ModelRendererId ).ToArray();
+				// No objects of its own below the root: everything an instance addresses lives in the model.
+				source.ById = new();
+				source.Transforms = new();
+				source.Chains = new();
+				source.Parents = new();
+				source.Ids = PrefabGuids( json );
+			}
 			else
 			{
 				source.Asset = asset;
@@ -947,6 +981,57 @@ internal static class UnityPrefabExport
 		static string Summary( Dictionary<string, int> counts ) =>
 			string.Join( ", ", counts.OrderBy( c => c.Key, StringComparer.Ordinal ).Select( c => $"{c.Key} ({c.Value})" ) );
 
+		/// <summary>What <see cref="ModelRoot"/> built: the root object, the models its renderers draw, those
+		/// renderer components in the same order, which renderer a fixed id (2300000+2n) points at, and whether
+		/// one model shows every mesh of the FBX.</summary>
+		internal sealed record ModelParts( JsonObject Node, List<(string Path, string Mesh)> Renderers, JsonObject[] RendererNodes, int[] RendererOf, bool SharedModel );
+
+		/// <summary>
+		/// The root object of an FBX's generated prefab: one ModelRenderer per generated model of the meshes Unity
+		/// renders. Unity keeps such a prefab implicitly for every model asset, so this builds both a model
+		/// wrapper's root and the prefab a scene's direct model instance resolves through.
+		/// <paramref name="extra"/> holds a wrapper file's own blocks, whose MeshFilters narrow the meshes it
+		/// shows; it is null for a model with no prefab file. Unity numbers those objects 100000 (root) and
+		/// 2300000+2n (renderers), which is what an instance's overrides address.
+		/// </summary>
+		public ModelParts ModelRoot( UnityAsset model, UnityTransform rootTransform, string name, bool active, double staticFlags, IReadOnlyList<Block> extra )
+		{
+			var meshes = model.ModelInfo.RenderedMeshes;
+			var explicitMeshes = (extra ?? Array.Empty<Block>()).Where( b => !b.Stripped && b.Type == "23" )
+				.Select( b => MeshName( model, IdOf( Field( b.Body, "m_Mesh" ) ) ) ).Where( m => m != null ).ToArray();
+			if ( explicitMeshes.Length > 0 ) meshes = meshes.Where( m => explicitMeshes.Contains( m, StringComparer.OrdinalIgnoreCase ) ).ToArray();
+			// One renderer per generated model. A model written per mesh (meshes whose Unity materials differ
+			// inside one FBX slot) brings its own renderer each; otherwise one model shows every mesh it holds.
+			var models = meshes.Select( m => Context.ModelFor( model, m ) ).ToArray();
+			var renderers = new List<(string Path, string Mesh)>();
+			var rendererOf = new int[meshes.Length];
+			for ( var i = 0; i < meshes.Length; i++ )
+			{
+				rendererOf[i] = -1;
+				if ( models[i] == null )
+				{
+					Result.Warnings.Add( $"{name}: no generated model for mesh '{meshes[i]}' of {model.Path}; its renderer was skipped." );
+					continue;
+				}
+				var known = renderers.FindIndex( r => r.Path.Equals( models[i], StringComparison.OrdinalIgnoreCase ) );
+				if ( known < 0 ) renderers.Add( (models[i], meshes[i]) );
+				rendererOf[i] = known < 0 ? renderers.Count - 1 : known;
+			}
+			// Unity keeps a model prefab's root rotation and scale but places nothing: an instance's own
+			// override supplies the position, exactly as it does for a wrapper prefab.
+			var node = GameObject( StableGuid( $"{Key}:{ModelRootObject}" ), name,
+				ToSbox( new UnityTransform( new double[3], rootTransform.Rotation, rootTransform.Scale ) ), active );
+			if ( staticFlags != 0 ) node["Flags"] = StaticFlag;
+			var components = (JsonArray)node["Components"];
+			var nodes = new JsonObject[renderers.Count];
+			for ( var i = 0; i < renderers.Count; i++ )
+			{
+				nodes[i] = ModelRenderer( StableGuid( $"{Key}:{ModelRendererId( i )}" ), renderers[i].Path, true );
+				components.Add( nodes[i] );
+			}
+			return new( node, renderers, nodes, rendererOf, renderers.Count == 1 );
+		}
+
 		/// <summary>
 		/// Converts a model wrapper: a prefab whose whole content is one top-level PrefabInstance of an FBX model,
 		/// with Unity's model prefab stripped out of the file. The root is rebuilt from that instance, which places,
@@ -964,35 +1049,12 @@ internal static class UnityPrefabExport
 			// merged first, which this converter does not do.
 			if ( model.Kind == UnityAssetKind.Prefab ) throw new InvalidDataException( "Prefab has no root transform (prefab variants are not supported)." );
 			if ( model.Kind != UnityAssetKind.Model ) throw new InvalidDataException( $"Prefab's top-level prefab instance instances {model.Path}, which is not a model; the wrapper cannot be converted." );
-			var info = model.ModelInfo;
 			var root = RootOf( Wrapper, Path.GetFileNameWithoutExtension( model.Path ) );
-
-			// One renderer per generated model. A model written per mesh (meshes whose Unity materials differ
-			// inside one FBX slot) brings its own renderer each; otherwise one model shows every mesh it holds.
-			var meshes = info.RenderedMeshes;
-			var explicitMeshes = Blocks.Where( b => !b.Stripped && b.Type == "23" )
-				.Select( b => MeshName( model, IdOf( Field( b.Body, "m_Mesh" ) ) ) ).Where( m => m != null ).ToArray();
-			if ( explicitMeshes.Length > 0 ) meshes = meshes.Where( m => explicitMeshes.Contains( m, StringComparer.OrdinalIgnoreCase ) ).ToArray();
-			var models = meshes.Select( m => Context.ModelFor( model, m ) ).ToArray();
-			var renderers = new List<(string Path, string Mesh)>();
-			var rendererOf = new int[meshes.Length];
-			for ( var i = 0; i < meshes.Length; i++ )
-			{
-				rendererOf[i] = -1;
-				if ( models[i] == null )
-				{
-					Result.Warnings.Add( $"{root.Name}: no generated model for mesh '{meshes[i]}' of {model.Path}; its renderer was skipped." );
-					continue;
-				}
-				var known = renderers.FindIndex( r => r.Path.Equals( models[i], StringComparison.OrdinalIgnoreCase ) );
-				if ( known < 0 ) renderers.Add( (models[i], meshes[i]) );
-				rendererOf[i] = known < 0 ? renderers.Count - 1 : known;
-			}
-			var sharedModel = renderers.Count == 1;
-
-			var node = GameObject( StableGuid( $"{Key}:{ModelRootObject}" ), root.Name,
-				ToSbox( new UnityTransform( new double[3], root.Transform.Rotation, root.Transform.Scale ) ), root.Active );
-			if ( root.StaticFlags != 0 ) node["Flags"] = StaticFlag;
+			var parts = ModelRoot( model, root.Transform, root.Name, root.Active, root.StaticFlags, Blocks );
+			var node = parts.Node;
+			var renderers = parts.Renderers;
+			var rendererOf = parts.RendererOf;
+			var sharedModel = parts.SharedModel;
 			var components = (JsonArray)node["Components"];
 			var materials = new Dictionary<int, Dictionary<int, string>>();
 			var subObject = new Dictionary<string, int>();
@@ -1028,14 +1090,10 @@ internal static class UnityPrefabExport
 			}
 			for ( var i = 0; i < renderers.Count; i++ )
 			{
-				var renderer = ModelRenderer( StableGuid( $"{Key}:{ModelRendererId( i )}" ), renderers[i].Path, true );
-				if ( materials.TryGetValue( i, out var map ) && map.Count > 0 )
-				{
-					var indexed = new JsonObject();
-					foreach ( var (slot, material) in map.OrderBy( m => m.Key ) ) indexed[slot.ToString( CultureInfo.InvariantCulture )] = material;
-					renderer["Materials"] = new JsonObject { ["indexed"] = indexed };
-				}
-				components.Add( renderer );
+				if ( !materials.TryGetValue( i, out var map ) || map.Count == 0 ) continue;
+				var indexed = new JsonObject();
+				foreach ( var (slot, material) in map.OrderBy( m => m.Key ) ) indexed[slot.ToString( CultureInfo.InvariantCulture )] = material;
+				parts.RendererNodes[i]["Materials"] = new JsonObject { ["indexed"] = indexed };
 			}
 
 			// The wrapper's own components sit on model objects. A collider on a sub-object still covers the whole
@@ -1130,6 +1188,32 @@ internal static class UnityPrefabExport
 		}
 
 		/// <summary>
+		/// A MeshRenderer's own material assignments as the indexed overrides a ModelRenderer takes: Unity's slot i
+		/// is the mesh's i-th submesh material, which the generated model carries at the position of the FBX slot
+		/// it names (see <see cref="UnityPrefabBindings.WrapperMaterialSlot"/>). A slot with no converted material
+		/// stays unset, so the model's own assignment shows there, and is reported once for the object.
+		/// </summary>
+		JsonObject MaterialSlots( Block renderer, UnityAsset meshAsset, string meshNode, string owner )
+		{
+			var references = Regex.Matches( Section( renderer.Body, "m_Materials" ), @"\{([^}]*)\}" ).Select( m => GuidOf( m.Value ) ).ToArray();
+			if ( references.Length == 0 ) return null;
+			var binding = meshAsset == null || meshNode == null ? null
+				: meshAsset.ModelInfo.RendererSlots.Values.FirstOrDefault( b => b.Mesh.Equals( meshNode, StringComparison.OrdinalIgnoreCase ) );
+			var indexed = new JsonObject();
+			var unresolved = 0;
+			for ( var slot = 0; slot < references.Length; slot++ )
+			{
+				var material = references[slot].Length == 0 ? null : Context.MaterialFor?.Invoke( references[slot] );
+				var position = binding == null ? null : UnityPrefabBindings.WrapperMaterialSlot( meshAsset, binding, slot );
+				if ( material == null || position == null ) { unresolved++; continue; }
+				indexed[position.Value.ToString( CultureInfo.InvariantCulture )] = material;
+			}
+			if ( unresolved > 0 ) Result.Information.Add( $"{owner}: {unresolved} of {references.Length} material slot(s) have no converted material; the model's own material is used there." );
+			if ( indexed.Count == 0 ) return null;
+			return new JsonObject { ["indexed"] = indexed };
+		}
+
+		/// <summary>
 		/// One GameObject with its components and children. <paramref name="isRoot"/> is a prefab root, whose position
 		/// is zeroed because an instance replaces it; a scene root keeps its full transform. <paramref name="inherited"/>:
 		/// a baked parent emitted an identity, so its non-baked children fold that placement into their own local
@@ -1163,6 +1247,9 @@ internal static class UnityPrefabExport
 			if ( go != null && Scalar( go.Body, "m_TagString" ) == "MainCamera" ) tags.Add( "maincamera" );
 			var list = (JsonArray)node["Components"];
 			string model = null;
+			// The FBX and mesh the object's renderer draws, for the material slots it assigns.
+			UnityAsset meshSource = null;
+			string meshNode = null;
 			foreach ( var component in Components.GetValueOrDefault( objectId ) ?? Array.Empty<Block>() )
 			{
 				// A SkinnedMeshRenderer on an unskinned mesh (blend shapes only) is a plain renderer here.
@@ -1177,6 +1264,7 @@ internal static class UnityPrefabExport
 					var meshName = MeshName( source, IdOf( mesh ) );
 					model = meshName == null ? null : ModelThrough( owed, source, meshName, Context.ModelFor( source, meshName ) );
 					if ( model == null ) Result.Warnings.Add( $"{name}: no generated model for mesh '{meshName ?? IdOf( mesh ).ToString( CultureInfo.InvariantCulture )}' of {source.Path}; renderer skipped." );
+					else { meshSource = source; meshNode = meshName; }
 				}
 			}
 			var reportedRotation = false;
@@ -1184,7 +1272,12 @@ internal static class UnityPrefabExport
 			{
 				var enabled = Scalar( component.Body, "m_Enabled" ) != "0";
 				var id = StableGuid( $"{Key}:{component.Id}" );
-				if ( component.Type is "23" or "137" && model != null && !skinned.FoldedRenderers.Contains( component.Id ) ) list.Add( ModelRenderer( id, model, enabled ) );
+				if ( component.Type is "23" or "137" && model != null && !skinned.FoldedRenderers.Contains( component.Id ) )
+				{
+					var renderer = ModelRenderer( id, model, enabled );
+					if ( ConvertsRendererMaterials && MaterialSlots( component, meshSource, meshNode, name ) is JsonObject assigned ) renderer["Materials"] = assigned;
+					list.Add( renderer );
+				}
 				if ( component.Type == "95" ) Result.Information.Add( $"{name}: Animator not converted; s&box animates a SkinnedModelRenderer through an animation graph or sequences." );
 				// Unity bakes MeshCollider shapes into separate assets; the generated model carries the
 				// equivalent hull, so the collider points at the same model. Several Unity colliders
@@ -1305,6 +1398,11 @@ internal static class UnityPrefabExport
 					if ( current.Length != 1 || Context.MaterialFor?.Invoke( assigned ) is not string material ) { skipped.Add( path ); continue; }
 					componentOverrides.Add( (target, "Materials", new JsonObject { ["indexed"] = new JsonObject { [index.ToString( CultureInfo.InvariantCulture )] = material } }) );
 				}
+				// A renderer's enabled flag is the one other property an instance switches by fixed model id. The
+				// target must be a renderer id: the single-renderer fallback the material branch uses would put an
+				// override meant for another component onto the wrapper's only renderer.
+				else if ( plain.IsWrapper && path == "m_Enabled" && IsModelRenderer( target ) )
+					componentOverrides.Add( (target, "__enabled", value != "0") );
 				else if ( plain.IsWrapper && slot.Success && (IsModelRenderer( target ) || plain.RendererIds.Length == 1) )
 				{
 					// A wrapper's renderers keep Unity's model-prefab ids, so the override names the generated
@@ -1435,6 +1533,10 @@ internal static class UnityPrefabExport
 		/// What <see cref="Instance"/> writes as the Position/Rotation/Scale overrides, before the axis change.</summary>
 		public UnityTransform InstanceRootTransform( Block instance, Source source )
 		{
+			// A direct model instance has no prefab file to read a root from: its root is the model's own
+			// transform, which Instance() overrides. Copied, because the source's transform is shared state.
+			if ( source.Root == null )
+				return new UnityTransform( (double[])source.RootTransform.Position.Clone(), (double[])source.RootTransform.Rotation.Clone(), (double[])source.RootTransform.Scale.Clone() );
 			var unity = Local( source.Root.Body );
 			foreach ( Match modification in Regex.Matches( instance.Body, @"(?ms)^\s*- target:\s*\{fileID:\s*" + source.Root.Id + @"\b[^}]*\}\s*\r?\n\s*propertyPath:\s*m_Local(?<field>Position|Rotation|Scale)\.(?<axis>[xyzw])\s*\r?\n\s*value:[ \t]*(?<value>[^\r\n]*?)[ \t]*\r?$" ) )
 			{
@@ -1463,6 +1565,28 @@ internal static class UnityPrefabExport
 		if ( root != null ) rootNode = converter.Node( root, true );
 		else if ( converter.Wrapper != null ) rootNode = converter.WrapperRoot();
 		else throw new InvalidDataException( "Prefab has no root transform (prefab variants are not supported)." );
+		result.Json = Document( rootNode );
+		return result;
+	}
+
+	/// <summary>
+	/// The generated prefab of an FBX that a scene instances directly, with no .prefab asset in between.
+	/// Unity keeps an implicit prefab for every model asset; this rebuilds it with the same builder a model
+	/// wrapper uses (<see cref="Converter.ModelRoot"/>), so a scene's instance resolves through the same
+	/// <see cref="Converter.SourceOf"/> path and its overrides address the same fixed model-prefab ids.
+	/// </summary>
+	internal static Result ConvertModel( UnityAsset model, Context context )
+	{
+		var result = new Result();
+		// An FBX has no YAML of its own: the converter reads the model's fixed ids and nothing else.
+		var converter = new Converter( model, "", context, result );
+		result.Json = Document( converter.ModelRoot( model, NoTransform, Path.GetFileNameWithoutExtension( model.Path ), true, 0, null ).Node );
+		return result;
+	}
+
+	/// <summary>Wraps a converted root object in the prefab document the editor writes, with its properties.</summary>
+	internal static string Document( JsonObject rootNode )
+	{
 		rootNode["__properties"] = SceneProperties();
 		rootNode["__variables"] = new JsonArray();
 		var document = new JsonObject
@@ -1476,8 +1600,7 @@ internal static class UnityPrefabExport
 			["__references"] = new JsonArray(),
 			["__version"] = 2
 		};
-		result.Json = document.ToJsonString( new JsonSerializerOptions { WriteIndented = true } );
-		return result;
+		return document.ToJsonString( new JsonSerializerOptions { WriteIndented = true } );
 	}
 
 	/// <summary>Source prefabs before the prefabs that nest them. Cycles (invalid in Unity) are dropped.</summary>

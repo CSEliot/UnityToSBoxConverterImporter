@@ -52,7 +52,7 @@ internal static class UnitySceneExport
 		var result = new Result();
 		var byGuid = context.ByGuid;
 		var text = UnityImport.ReadText( scene.Source, TextLimit );
-		var c = new Converter( scene, text, context, result ) { ConvertsAdditions = true };
+		var c = new Converter( scene, text, context, result ) { ConvertsAdditions = true, ConvertsRendererMaterials = true };
 		// Before Unity 2018.3 a scene serialized every object of an instance in full next to a Prefab block.
 		if ( c.Instances.Values.Any( i => Scalar( i.Body, "m_IsPrefabParent" ) == "0" || Field( i.Body, "m_SourcePrefab" ).Length == 0 && Field( i.Body, "m_ParentPrefab" ).Length > 0 ) )
 			throw new InvalidDataException( "The scene stores prefab instances in the Unity 2018.2 (and earlier) format, which is not supported yet." );
