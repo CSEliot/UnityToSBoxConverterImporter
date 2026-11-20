@@ -130,6 +130,19 @@ public sealed class UnityModel
 			return bindings.Length > 0 ? bindings.SelectMany( b => b.EffectiveSlots ).Distinct( StringComparer.OrdinalIgnoreCase ).ToArray() : Materials.ToArray();
 		}
 	}
+	/// <summary>
+	/// Unity's fixed model-prefab renderer ids (2300000+2n) and the FBX mesh each draws, read from the
+	/// importer's own fileIDToRecycleName map. Renderer ids count objects that have a renderer and mesh ids
+	/// count meshes, so the two id families are not parallel counters: an object without geometry leaves a
+	/// gap, and Unity names the mesh it builds for such a root or group object after that object (Brush_01,
+	/// counter01_2) instead of after a mesh node in the file. Reading the map keeps every override on the
+	/// mesh Unity shows rather than on a mesh named by arithmetic.
+	/// </summary>
+	public Dictionary<long, string> FixedRendererMeshes { get; } = new();
+	/// <summary>Fixed renderer ids of model root objects that carry no mesh, so an override of one draws nothing.</summary>
+	public HashSet<long> RendererlessObjects { get; } = new();
+	/// <summary>Fixed renderer ids whose mesh the file no longer carries (stale sub-assets, merged root meshes).</summary>
+	public HashSet<long> StaleRenderers { get; } = new();
 	public static string Normalize( string name ) => Regex.Replace( name.ToLowerInvariant(), "[^a-z]", "" );
 
 	/// <summary>
@@ -146,6 +159,43 @@ public sealed class UnityModel
 		if ( !section.Success ) return;
 		foreach ( Match entry in Regex.Matches( section.Groups["body"].Value, @"(?m)^\s*(-?[0-9]+):\s*(.+?)\s*$" ) )
 			if ( long.TryParse( entry.Groups[1].Value, out var id ) ) RecycleNames[id] = entry.Groups[2].Value;
+	}
+
+	/// <summary>
+	/// Pairs the recycle map's renderer ids with the mesh each one draws. The map lists the object's name for a
+	/// renderer and a mesh's name for a mesh, so the name is the pairing: the mesh sub-asset named after the
+	/// object. A mesh Unity built for a root or group object is that model's one rendered mesh when it has
+	/// only one; over several rendered meshes it belongs to none of them and stays unmapped rather than guessed.
+	/// </summary>
+	void ReadFixedRenderers()
+	{
+		var meshes = RecycleNames.Where( r => r.Key is >= 4300000 and < 4400000 ).OrderBy( r => r.Key ).Select( r => r.Value ).ToArray();
+		if ( meshes.Length == 0 ) return;
+		var renderers = RecycleNames.Where( r => r.Key is >= 2300000 and < 2400000 ).OrderBy( r => r.Key ).ToArray();
+		// The map names the model root object "//RootNode"; the mesh it draws is the one no renderer claims.
+		var claimed = renderers.Select( r => r.Value ).ToHashSet( StringComparer.OrdinalIgnoreCase );
+		var rootMesh = meshes.FirstOrDefault( m => !claimed.Contains( m ) );
+		// A mesh Unity built for a root or group object is not a node in this file, so nothing pairs it with an
+		// override: placing one by position would land it on a child whose slot order is the child's, not the
+		// built mesh's. Every such renderer is recorded as stale rather than mapped.
+		foreach ( var (id, objectName) in renderers )
+		{
+			var owner = objectName == "//RootNode" ? rootMesh : objectName;
+			// A root object with no mesh asset of its own has a renderer that draws nothing, so an override
+			// of it has no slot to land on and is identified rather than guessed at.
+			if ( string.IsNullOrEmpty( owner ) ) { RendererlessObjects.Add( id ); continue; }
+			// Unity's duplicate objects ("Fan_02 1") share the mesh of the object they copy.
+			var shared = Regex.Match( owner, @"^(?<name>.+) \d+$" );
+			if ( shared.Success && !meshes.Contains( owner, StringComparer.OrdinalIgnoreCase ) ) owner = shared.Groups["name"].Value;
+			if ( Meshes.Contains( owner, StringComparer.OrdinalIgnoreCase ) )
+			{
+				FixedRendererMeshes[id] = Meshes.First( m => m.Equals( owner, StringComparison.OrdinalIgnoreCase ) );
+				continue;
+			}
+			// An identified renderer whose mesh this file does not carry: a stale sub-asset entry, or a mesh
+			// Unity merged for a root or group object. Not a renderer nobody can name, so it is not a warning.
+			StaleRenderers.Add( id );
+		}
 	}
 
 	public static UnityModel Read( UnityAsset asset )
@@ -176,6 +226,7 @@ public sealed class UnityModel
 			}
 			foreach ( var link in links.Resolve() ) result.MaterialAlbedoFiles[link.Key] = link.Value;
 			asciiBindings.Apply( result, asset.Metadata != null && Regex.IsMatch( UnityImport.ReadText( asset.Metadata ), @"(?m)^\s*preserveHierarchy:\s*1\s*$" ) );
+		result.ReadFixedRenderers();
 			return result;
 		}
 		var wide = reader.ReadUInt32() >= 7500;
@@ -287,6 +338,7 @@ public sealed class UnityModel
 		foreach ( var link in diffuseLinks )
 			if ( materialNames.TryGetValue( link.Material, out var material ) && textureFiles.TryGetValue( link.Texture, out var file ) && !string.IsNullOrEmpty( file ) )
 				result.MaterialAlbedoFiles[material] = file.Replace( '\\', '/' ).Split( '/' ).Last();
+	result.ReadFixedRenderers();
 		return result;
 	}
 

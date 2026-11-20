@@ -42,25 +42,24 @@ internal static class UnityPrefabBindings
 	}
 
 	/// <summary>
-	/// The FBX mesh a model-prefab renderer id draws. Unity numbers a model prefab's renderers and mesh
-	/// sub-assets 2300000+2n / 4300000+2n in the model's own node order, so the legacy recycle map — or, when
-	/// there is none, the model's sole mesh — names the FBX mesh that renderer stands for. This is the fixed-id
-	/// map a model wrapper's material and collision overrides are read through.
+	/// The FBX mesh a model-prefab renderer id draws. Unity's recycle map pairs each 2300000+2n renderer with
+	/// the mesh sub-asset named after its object, which is the same mesh the wrapper's override addresses
+	/// (see UnityModel.FixedRendererMeshes). Without that map the id order is all there is, which only a
+	/// single-mesh model makes unambiguous, so anything else stays unidentified rather than guessed.
 	/// </summary>
 	internal static UnityModel.RendererBinding WrapperRenderer( UnityAsset asset, long rendererId, out int index )
 	{
 		index = rendererId >= 2300000 && rendererId < 2400000 && (rendererId - 2300000) % 2 == 0 ? (int)((rendererId - 2300000) / 2) : -1;
 		if ( index < 0 ) return null;
 		var model = asset.ModelInfo;
-		if ( !model.RecycleNames.TryGetValue( 4300000 + 2 * index, out var name ) )
-		{
-			// Without a recycle map the id order is not recoverable; a single-renderer model is unambiguous.
-			if ( model.RendererSlots.Count == 1 ) { index = 0; return model.RendererSlots.Values.First(); }
-			if ( model.Meshes.Count == 1 ) { index = 0; return new UnityModel.RendererBinding( model.Meshes[0], Array.Empty<string>() ); }
-			return null;
-		}
-		return model.RendererSlots.Values.FirstOrDefault( b => b.Mesh.Equals( name, StringComparison.Ordinal ) )
-			?? (model.Meshes.Contains( name ) ? new UnityModel.RendererBinding( name, Array.Empty<string>() ) : null);
+		if ( model.FixedRendererMeshes.TryGetValue( rendererId, out var mesh ) )
+			return model.RendererSlots.Values.FirstOrDefault( b => b.Mesh.Equals( mesh, StringComparison.Ordinal ) )
+				?? new UnityModel.RendererBinding( mesh, Array.Empty<string>() );
+		if ( model.FixedRendererMeshes.Count > 0 ) return null;
+		// Without a recycle map the id order is not recoverable; a single-renderer model is unambiguous.
+		if ( model.RendererSlots.Count == 1 ) { index = 0; return model.RendererSlots.Values.First(); }
+		if ( model.Meshes.Count == 1 ) { index = 0; return new UnityModel.RendererBinding( model.Meshes[0], Array.Empty<string>() ); }
+		return null;
 	}
 
 	/// <summary>
@@ -80,6 +79,8 @@ internal static class UnityPrefabBindings
 	{
 		var models = archive.Assets.Where( a => a.Kind == UnityAssetKind.Model ).ToDictionary( a => a.Guid, StringComparer.OrdinalIgnoreCase );
 		var materialIds = archive.Assets.Where( a => a.Kind == UnityAssetKind.Material ).Select( a => a.Guid ).ToHashSet( StringComparer.OrdinalIgnoreCase );
+		// A warning names the materials that compete for a slot, so a reader can act on it without the package.
+		var materialNames = archive.Assets.Where( a => a.Kind == UnityAssetKind.Material ).ToDictionary( a => a.Guid, a => Path.GetFileNameWithoutExtension( a.Path ), StringComparer.OrdinalIgnoreCase );
 		var candidates = new Dictionary<string, List<Candidate>>( StringComparer.OrdinalIgnoreCase );
 		var visible = new HashSet<string>( StringComparer.OrdinalIgnoreCase );
 		var colliders = new HashSet<string>( StringComparer.OrdinalIgnoreCase );
@@ -102,7 +103,7 @@ internal static class UnityPrefabBindings
 				if ( model.HighestDetailMeshes.Length > 0 && !model.HighestDetailMeshes.Contains( binding.Mesh ) ) return;
 				if ( index < 0 || index >= Math.Max( 1, binding.Slots.Length ) )
 				{
-					candidate.Warnings.Add( "A prefab material override references a missing FBX material slot." );
+					candidate.Warnings.Add( $"A prefab material override puts '{materialNames.GetValueOrDefault( material, material )}' in slot {index} of mesh '{binding.Mesh}', which the FBX gives no material slot for." );
 					// Extra Unity material passes cannot be represented by this mesh's implicit slot.
 					if ( binding.Slots.Length == 0 )
 					{
@@ -202,6 +203,9 @@ internal static class UnityPrefabBindings
 				// A wrapper's override names a fixed model-prefab renderer id (2300000+2n), not a block.
 				var binding = asset.ModelInfo.RendererSlots.GetValueOrDefault( targetId )
 					?? (hasRootTransform ? null : WrapperRenderer( asset, targetId, out _ ));
+				// A model root object that carries no mesh draws nothing, and a renderer whose mesh the file no longer
+				// carries has no slot either; both are identified, so neither is an unidentified-renderer warning.
+				if ( binding == null && (asset.ModelInfo.RendererlessObjects.Contains( targetId ) || asset.ModelInfo.StaleRenderers.Contains( targetId )) ) continue;
 				Assign( guid, binding, index, GuidOf( Field( modification.Groups["body"].Value, "objectReference" ) ) );
 			}
 			// Explicit MeshRenderer + MeshFilter (or SkinnedMeshRenderer) blocks in non-variant prefabs.
@@ -266,7 +270,8 @@ internal static class UnityPrefabBindings
 					if ( values.All( v => materialIds.Contains( v ) ) && model.MeshSlotMaterials.SelectMany( m => m.Value.Values ).Distinct( StringComparer.OrdinalIgnoreCase ).OrderBy( v => v, StringComparer.OrdinalIgnoreCase )
 							.SequenceEqual( values.OrderBy( v => v, StringComparer.OrdinalIgnoreCase ), StringComparer.OrdinalIgnoreCase ) )
 						continue;
-					model.AssignmentWarnings.Add( $"Prefab assignment for slot '{slot}' is missing or conflicting; no material was guessed." );
+					var competing = string.Join( " vs ", values.Select( v => materialNames.GetValueOrDefault( v, v ) ).OrderBy( v => v, StringComparer.OrdinalIgnoreCase ) );
+					model.AssignmentWarnings.Add( $"Prefab assignment for slot '{slot}' is missing or conflicting ({competing}); no material was guessed." );
 				}
 			}
 			model.PrefabMaterials.AddRange( chosen.SelectMany( c => c.Materials ).Distinct( StringComparer.OrdinalIgnoreCase ) );
