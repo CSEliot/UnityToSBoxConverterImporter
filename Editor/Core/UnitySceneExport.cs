@@ -47,6 +47,8 @@ internal static class UnitySceneExport
 	{
 		public string Json;
 		public Statistics Statistics;
+		/// <summary>The HDRP components this scene declares, for the import's one-line summary.</summary>
+		public HdrpCounts Hdrp;
 		public List<string> Information;
 		public List<string> Warnings;
 	}
@@ -182,14 +184,15 @@ internal static class UnitySceneExport
 			if ( component.Stripped || component.Type is "1" or "4" or "224" or "1001" ) continue;
 			var objectId = IdOf( Field( component.Body, "m_GameObject" ) );
 			if ( objectId == 0 || c.ById.GetValueOrDefault( objectId ) is not { Type: "1", Stripped: true } strippedObject ) continue;
-			if ( Owner( strippedObject, $"added {TypeName( component.Type )}" ) is not var (owner, source, g) ) continue;
+			if ( Owner( strippedObject, $"added {TypeName( component.Type, component.Body )}" ) is not var (owner, source, g) ) continue;
 			var label = $"{c.InstanceName( owner )} / {source.NameOf( g )}";
 			if ( component.Type is not ("64" or "65" or "135" or "136") )
 			{
-				unconvertedAdded[TypeName( component.Type )] = unconvertedAdded.GetValueOrDefault( TypeName( component.Type ) ) + 1;
+				var name = TypeName( component.Type, component.Body );
+				unconvertedAdded[name] = unconvertedAdded.GetValueOrDefault( name ) + 1;
 				continue;
 			}
-			if ( !NestAddedObjects ) { result.Information.Add( $"{label}: added {TypeName( component.Type )} not converted; the instance was flattened." ); continue; }
+			if ( !NestAddedObjects ) { result.Information.Add( $"{label}: added {TypeName( component.Type, component.Body )} not converted; the instance was flattened." ); continue; }
 			var id = StableGuid( $"{c.Key}:{component.Id}" );
 			var enabled = Scalar( component.Body, "m_Enabled" ) != "0";
 			var (parent, chain, pending) = Anchor( source, g, label );
@@ -305,7 +308,8 @@ internal static class UnitySceneExport
 		{
 			if ( block.Stripped || block.Type is "1" or "4" or "224" or "1001" or "29" or "104" or "157" or "196" or "1660057539" || Convertible( block.Type ) ) continue;
 			if ( c.ById.GetValueOrDefault( IdOf( Field( block.Body, "m_GameObject" ) ) ) is not { Type: "1", Stripped: false } go ) continue;
-			if ( !unconverted.TryGetValue( TypeName( block.Type ), out var owners ) ) unconverted[TypeName( block.Type )] = owners = new();
+			var name = TypeName( block.Type, block.Body );
+			if ( !unconverted.TryGetValue( name, out var owners ) ) unconverted[name] = owners = new();
 			owners.Add( Scalar( go.Body, "m_Name" ) );
 		}
 		foreach ( var (type, owners) in unconverted.OrderBy( u => u.Key, StringComparer.Ordinal ) )
@@ -315,6 +319,10 @@ internal static class UnitySceneExport
 		}
 		result.Information.Add( "Lightmaps, light probes, the navigation mesh, occlusion culling data and post-processing volumes are not converted." );
 		c.ReportBuiltins();
+		// Counted here from every non-stripped type-114 block. The census names only blocks it can attribute
+		// to a GameObject, so on a lossy scene its component lines can be lower than this total; HDRP keeps
+		// light units, probe settings and Volume overrides in these MonoBehaviours, not in the Unity components.
+		var hdrp = UnityHdrp.Count( c.Blocks.Where( b => !b.Stripped && b.Type == "114" ).Select( b => GuidOf( Field( b.Body, "m_Script" ) ) ) );
 
 		var properties = SceneProperties();
 		((JsonObject)properties["Metadata"])["Title"] = Path.GetFileNameWithoutExtension( scene.Path );
@@ -337,6 +345,7 @@ internal static class UnitySceneExport
 		{
 			Json = document.ToJsonString( new JsonSerializerOptions { WriteIndented = true } ),
 			Statistics = new( roots, c.Stubs.Count, nested, addedComponents, removed, skipped, placements.Count, skips.Count, skips ),
+			Hdrp = hdrp,
 			Information = result.Information,
 			Warnings = result.Warnings
 		};
@@ -402,9 +411,14 @@ internal static class UnitySceneExport
 
 	static bool Convertible( string type ) => type is "33" or "23" or "64" or "65" or "135" or "136" or "137" or "95" or "20" or "81" or "108";
 
-	static string TypeName( string type ) => type switch
+	/// <summary>
+	/// A Unity class id as the report names it. A MonoBehaviour only means something through the script
+	/// it names, so <paramref name="body"/> is consulted for the known pipeline components; without it
+	/// the line stays the generic one.
+	/// </summary>
+	static string TypeName( string type, string body = null ) => type switch
 	{
-		"114" => "MonoBehaviour (script)", "124" => "Behaviour (flare layer)", "215" => "ReflectionProbe", "82" => "AudioSource",
+		"114" => (body == null ? null : UnityHdrp.ComponentName( GuidOf( Field( body, "m_Script" ) ) )) ?? "MonoBehaviour (script)", "124" => "Behaviour (flare layer)", "215" => "ReflectionProbe", "82" => "AudioSource",
 		"198" => "ParticleSystem", "199" => "ParticleSystemRenderer", "223" => "Canvas", "54" => "Rigidbody", "111" => "Animation",
 		"218" => "Terrain", "154" => "TerrainCollider", "212" => "SpriteRenderer", "102" => "TextMesh", "120" => "LineRenderer",
 		"96" => "TrailRenderer", "146" => "WheelCollider", "143" => "CharacterController", "258" => "LightProbeGroup", "89" => "Cubemap",

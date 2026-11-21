@@ -156,6 +156,10 @@ public static class UnityImport
 		// Each generated model's output path and ModelDoc text, for the mirrored variants instances with a negative scale need.
 		var modelOutputs = new Dictionary<string, (string Relative, string Text)>( StringComparer.OrdinalIgnoreCase );
 		var conversions = 0;
+		// HDRP is detected, never converted: one line for the whole import says what a project is,
+		// because an HDRP scene has hundreds of these components and a material line each would drown it.
+		var hdrpMaterials = 0;
+		var hdrpComponents = new HdrpCounts( 0, 0, 0, 0 );
 		var operation = "creating the staging folder";
 		string currentAsset = null;
 		Exception failure = null;
@@ -209,6 +213,7 @@ public static class UnityImport
 							if ( !shaderText.TryGetValue( shader.Guid, out var source ) ) shaderText[shader.Guid] = source = ReadText( shader.Source );
 							material.ConfigureShader( source );
 						}
+						if ( material.Pipeline == UnityPipeline.Hdrp ) hdrpMaterials++;
 						if ( extractChannel != null || extractChannels != null )
 						{
 							material.PrepareChannels( (guid, channel, scale, invert) =>
@@ -496,6 +501,7 @@ public static class UnityImport
 					} );
 					warnings.AddRange( scene.Warnings.Select( w => $"{asset.Path}: {w}" ) );
 					information.AddRange( scene.Information.Select( m => $"{asset.Path}: {m}" ) );
+					hdrpComponents += scene.Hdrp;
 					// One grouped Error per scene: the losses are already counted by cause, so the report names the
 					// scene, how much of it is missing and why, instead of one line per lost instance.
 					if ( s.LostInstances > 0 )
@@ -503,6 +509,8 @@ public static class UnityImport
 				}
 				catch ( InvalidDataException ex ) { Issue( asset.Path, "conversion-skipped", $"Scene conversion skipped. {ex.Message}" ); }
 			}
+			var hdrp = hdrpComponents + new HdrpCounts( hdrpMaterials, 0, 0, 0 );
+			if ( hdrp.Total > 0 ) information.Add( hdrp.Report );
 			var variants = mirroredPrefabs.Values.Count( v => v != null );
 			if ( variants > 0 ) information.Add( $"{variants} mirrored prefab variant(s) and {mirroredModels.Count} mirrored model(s) were generated for placements with a negative scale (s&box would draw those inside out)." );
 			operation = "extracting texture channels";

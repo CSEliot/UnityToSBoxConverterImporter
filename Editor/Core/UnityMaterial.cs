@@ -31,6 +31,9 @@ public sealed class UnityMaterial
 	bool Translucent => shaderTranslucent || Number( "_Mode", 0 ) >= 2 || Number( "_Surface", 0 ) == 1;
 	public string ShaderName { get; private set; }
 	public string ShaderGuid { get; private set; }
+	/// <summary>The pipeline the material's shader belongs to. HDRP's shader source lives in Packages/,
+	/// which Unity never exports, so its guid in the known-pipeline table is the only evidence there is.</summary>
+	public UnityPipeline Pipeline { get; private set; }
 	static readonly Regex GuidPattern = new( @"guid:\s*([a-fA-F0-9]{32})" );
 
 	public static IEnumerable<string> References( string text ) => GuidPattern.Matches( text )
@@ -43,6 +46,10 @@ public sealed class UnityMaterial
 			throw new InvalidDataException( "Material is not Unity text YAML. Re-export it with Asset Serialization set to Force Text in Unity." );
 		var result = new UnityMaterial();
 		result.ShaderGuid = Regex.Match( text, @"m_Shader:[^\r\n]*guid:\s*([a-fA-F0-9]{32})" ).Groups[1].Value;
+		// An HDRP shader is never in the archive, so it is recognised by guid and named from the table;
+		// ConfigureShader cannot run for it and its property parsing below stays exactly as it was.
+		result.Pipeline = UnityHdrp.PipelineOf( result.ShaderGuid );
+		if ( UnityHdrp.Shader( result.ShaderGuid ) is { } pipeline ) result.ShaderName = pipeline.Name;
 		string property = null;
 		foreach ( var line in text.Split( '\n' ) )
 		{
