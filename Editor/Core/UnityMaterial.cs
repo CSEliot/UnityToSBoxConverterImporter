@@ -20,6 +20,7 @@ public sealed class UnityMaterial
 	readonly Dictionary<string, string> channelImages = new();
 	readonly Dictionary<string, double[]> textureScale = new();
 	readonly Dictionary<string, double[]> textureOffset = new();
+	readonly HashSet<string> keywords = new( StringComparer.Ordinal );
 	bool shaderAlphaTest;
 	bool shaderBackfaces;
 	bool shaderTranslucent;
@@ -27,8 +28,19 @@ public sealed class UnityMaterial
 	HashSet<string> declaredProperties;
 	static readonly string[] ColorProperties = { "_BaseMap", "_Diffuse", "_MainTex", "_Albedo", "_BaseColorMap" };
 	public IEnumerable<string> ColorTextureGuids => ColorProperties.Where( Textures.ContainsKey ).Select( p => Textures[p] );
-	bool AlphaTest => shaderAlphaTest || Number( "_Mode", 0 ) == 1 || Number( "_AlphaClip", 0 ) == 1;
-	bool Translucent => shaderTranslucent || Number( "_Mode", 0 ) >= 2 || Number( "_Surface", 0 ) == 1;
+	bool Hdrp => Pipeline == UnityPipeline.Hdrp;
+	// HDRP writes its surface flags as a property pair plus a feature keyword; either one enables the
+	// feature, and the property is the authority when they disagree. A material from another pipeline
+	// never consults the HDRP pair, so a stale keyword of its own cannot turn a feature on.
+	bool HdrpFeature( string keyword, string property ) => Hdrp && (keywords.Contains( keyword ) || Number( property, 0 ) == 1);
+	bool AlphaTest => shaderAlphaTest || Number( "_Mode", 0 ) == 1 || Number( "_AlphaClip", 0 ) == 1 || HdrpFeature( "_ALPHATEST_ON", "_AlphaCutoffEnable" );
+	bool Translucent => shaderTranslucent || Number( "_Mode", 0 ) >= 2 || Number( "_Surface", 0 ) == 1 || HdrpFeature( "_SURFACE_TYPE_TRANSPARENT", "_SurfaceType" );
+	// HDRP has no Cull Off ShaderLab state: _CullMode 0 is CullMode.Off, and _DoubleSidedEnable mirrors
+	// the keyword. _CullMode defaults to 2 (back-face culling) when the property is absent.
+	bool Backfaces => shaderBackfaces || Number( "_Cull", 2 ) == 0 || HdrpFeature( "_DOUBLESIDED_ON", "_DoubleSidedEnable" ) || Hdrp && Number( "_CullMode", 2 ) == 0;
+	/// <summary>HDRP keeps the authored cutoff in _AlphaCutoff and mirrors it to _Cutoff for GI baking;
+	/// prefer the original, and fall back to Standard's _Cutoff for everything else.</summary>
+	double AlphaCutoff => Hdrp && Numbers.ContainsKey( "_AlphaCutoff" ) ? Numbers["_AlphaCutoff"] : Number( "_Cutoff", 0.5 );
 	public string ShaderName { get; private set; }
 	public string ShaderGuid { get; private set; }
 	/// <summary>The pipeline the material's shader belongs to. HDRP's shader source lives in Packages/,
@@ -50,6 +62,7 @@ public sealed class UnityMaterial
 		// ConfigureShader cannot run for it and its property parsing below stays exactly as it was.
 		result.Pipeline = UnityHdrp.PipelineOf( result.ShaderGuid );
 		if ( UnityHdrp.Shader( result.ShaderGuid ) is { } pipeline ) result.ShaderName = pipeline.Name;
+		ReadKeywords( text, result.keywords );
 		string property = null;
 		foreach ( var line in text.Split( '\n' ) )
 		{
@@ -85,6 +98,37 @@ public sealed class UnityMaterial
 			result.Warnings.Add( "Packed metallic/smoothness or HDRP mask maps need channel separation; scalar metallic/roughness values were used." );
 		result.Information.Add( "Review the converted material: custom shaders, normal-map conventions and advanced Unity settings are not reproduced exactly." );
 		return result;
+	}
+
+	/// <summary>
+	/// HDRP 17 stores feature keywords as a YAML list under m_ValidKeywords and writes no
+	/// m_ShaderKeywords line at all; older serializations write one space-separated m_ShaderKeywords
+	/// line. m_InvalidKeywords names features that are off, so it is never read.
+	/// </summary>
+	static void ReadKeywords( string text, HashSet<string> keywords )
+	{
+		bool listed = false;
+		foreach ( var raw in text.Split( '\n' ) )
+		{
+			var line = raw.Trim();
+			if ( line.StartsWith( "m_ValidKeywords:", StringComparison.Ordinal ) )
+			{
+				listed = true;
+				foreach ( var keyword in line["m_ValidKeywords:".Length..].Trim( '[', ']' ).Split( new[] { ' ', ',' }, StringSplitOptions.RemoveEmptyEntries ) )
+					keywords.Add( keyword );
+				continue;
+			}
+			if ( listed && line.StartsWith( "- ", StringComparison.Ordinal ) )
+			{
+				var keyword = line[2..].Trim();
+				if ( keyword.Length > 0 ) keywords.Add( keyword );
+				continue;
+			}
+			listed = false;
+			if ( line.StartsWith( "m_ShaderKeywords:", StringComparison.Ordinal ) )
+				foreach ( var keyword in line["m_ShaderKeywords:".Length..].Split( new[] { ' ', ',' }, StringSplitOptions.RemoveEmptyEntries ) )
+					keywords.Add( keyword );
+		}
 	}
 
 	public void ConfigureShader( string source )
@@ -126,7 +170,10 @@ public sealed class UnityMaterial
 		if ( Textures.TryGetValue( "_OcclusionMap", out var ao ) ) Channel( "ao", ao, 1 );
 		if ( AlphaTest || Translucent )
 		{
-			foreach ( var property in ColorProperties )
+			// HDRP keeps a _MainTex mirror of the base-colour map for GI baking; the base-colour alpha is
+			// the authored opacity, so it is tried first even though both usually name one texture.
+			IEnumerable<string> sources = Hdrp ? ColorProperties.Prepend( "_BaseColorMap" ) : ColorProperties;
+			foreach ( var property in sources )
 			{
 				if ( !Textures.TryGetValue( property, out var guid ) ) continue;
 				Channel( "opacity", guid, 3 );
@@ -192,7 +239,7 @@ public sealed class UnityMaterial
 		var emission = Texture( resolve, "_EmissionMap", "_EmissiveColorMap" );
 		if ( metal != null ) Feature( "F_METALNESS_TEXTURE 1" );
 		if ( AlphaTest ) Feature( "F_ALPHA_TEST 1" );
-		if ( shaderBackfaces || Number( "_Cull", 2 ) == 0 ) Feature( "F_RENDER_BACKFACES 1" );
+		if ( Backfaces ) Feature( "F_RENDER_BACKFACES 1" );
 		if ( Translucent ) Feature( "F_TRANSLUCENT 1" );
 		if ( emission != null ) Feature( "F_SELF_ILLUM 1" );
 
@@ -204,7 +251,7 @@ public sealed class UnityMaterial
 		if ( AlphaTest )
 		{
 			var alpha = Section( "Alpha Test" );
-			alpha.Add( ("g_flAlphaTestReference", Quote( F( Number( "_Cutoff", 0.5 ) ) )) );
+			alpha.Add( ("g_flAlphaTestReference", Quote( F( AlphaCutoff ) )) );
 			alpha.Add( ("g_flAntiAliasedEdgeStrength", Quote( F( 1 ) )) );
 		}
 
@@ -296,6 +343,9 @@ public sealed class UnityMaterial
 		var normal = Texture( resolve, "_BumpMap", "_Normal", "_NormalMap" ) ?? "materials/default/default_normal.tga";
 		var text = new StringBuilder( "// THIS FILE IS AUTO-GENERATED\n\nLayer0\n{\n	shader \"shaders/glass.shader\"\n" );
 		text.Append( "\n	//---- Blending ----\n	F_ADDITIVE_BLEND 1\n" );
+		// glass.shader takes its CullMode from F_RENDER_BACKFACES (common/features.hlsl); without it a
+		// double-sided pane loses every back face, exactly as HDRP did.
+		if ( Backfaces ) text.Append( "\n	//---- Rendering ----\n	F_RENDER_BACKFACES 1\n" );
 		text.Append( "\n	//---- Glass ----\n	F_GLASS_QUALITY 1 // Simple Glass ( Faster To Render )\n" );
 		text.Append( "\n	//---- Fog ----\n	g_bFogEnabled \"1\"\n" );
 		text.Append( "\n	//---- Glass ----\n	g_flRefractionStrength \"1.005\"\n" );
