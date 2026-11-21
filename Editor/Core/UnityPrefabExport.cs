@@ -636,6 +636,9 @@ internal static class UnityPrefabExport
 		/// path and JSON, or null. Unity keeps such a prefab implicitly for every FBX, so a scene's direct model
 		/// instance resolves through the same path a wrapper prefab does.</summary>
 		public Func<UnityAsset, (string Path, string Json)?> ModelPrefabFor { get; init; }
+		/// <summary>The generated model of one of Unity's built-in primitive shapes, by shape name (see
+		/// <see cref="UnityPrimitives"/>); null when the run generated none.</summary>
+		public Func<string, string> PrimitiveModelFor { get; init; }
 	}
 
 	/// <summary>+1/-1 per Unity axis: the mirror a subtree still owes. Identity when no component is negative.</summary>
@@ -747,6 +750,19 @@ internal static class UnityPrefabExport
 		/// MeshRenderer's own material assignment is then emitted on its ModelRenderer. A prefab's renderers
 		/// already feed the model's slot remaps (<see cref="UnityPrefabBindings"/>), so prefab output does not move.</summary>
 		public bool ConvertsRendererMaterials { get; set; }
+
+		/// <summary>Objects drawing a built-in mesh that is not a primitive, counted so one line reports them.</summary>
+		int builtinRenderers;
+		/// <summary>Set once the grouped line for those objects is written.</summary>
+		bool builtinReported;
+
+		/// <summary>Writes the one line a converted file owes for built-in meshes it could not draw.</summary>
+		public void ReportBuiltins()
+		{
+			if ( builtinReported || builtinRenderers == 0 ) return;
+			builtinReported = true;
+			Result.Information.Add( $"{builtinRenderers} object(s) draw a Unity built-in mesh that is not a primitive (a sprite or skybox quad); those renderers were skipped." );
+		}
 		readonly SkinnedConversion skinned;
 		readonly Dictionary<string, Source> sources = new( StringComparer.OrdinalIgnoreCase );
 		readonly long mainCamera;
@@ -1214,6 +1230,22 @@ internal static class UnityPrefabExport
 		}
 
 		/// <summary>
+		/// A primitive model has exactly one mesh and one material slot, which Unity's primitive mesh also has: the
+		/// renderer's first material becomes slot 0 of the ModelRenderer. A primitive whose material did not convert keeps
+		/// the model's placeholder material.
+		/// </summary>
+		JsonObject PrimitiveMaterialSlots( Block renderer )
+		{
+			var references = Regex.Matches( Section( renderer.Body, "m_Materials" ), @"\{([^}]*)\}" ).Select( m => GuidOf( m.Value ) ).Where( g => g.Length > 0 ).ToArray();
+			if ( references.Length == 0 ) return null;
+			var material = Context.MaterialFor?.Invoke( references[0] );
+			// Unity's own Default-Material is engine content, so an unassigned primitive keeps the model's
+			// placeholder material instead of reporting a missing conversion on every such object.
+			if ( material == null ) return null;
+			return new JsonObject { ["indexed"] = new JsonObject { ["0"] = material } };
+		}
+
+		/// <summary>
 		/// One GameObject with its components and children. <paramref name="isRoot"/> is a prefab root, whose position
 		/// is zeroed because an instance replaces it; a scene root keeps its full transform. <paramref name="inherited"/>:
 		/// a baked parent emitted an identity, so its non-baked children fold that placement into their own local
@@ -1250,12 +1282,25 @@ internal static class UnityPrefabExport
 			// The FBX and mesh the object's renderer draws, for the material slots it assigns.
 			UnityAsset meshSource = null;
 			string meshNode = null;
+			// The built-in primitive this object renders, when its mesh is one.
+			UnityPrimitives.Shape primitive = null;
 			foreach ( var component in Components.GetValueOrDefault( objectId ) ?? Array.Empty<Block>() )
 			{
 				// A SkinnedMeshRenderer on an unskinned mesh (blend shapes only) is a plain renderer here.
 				if ( component.Type == "33" || component.Type == "137" && !skinned.FoldedRenderers.Contains( component.Id ) )
 				{
 					var mesh = Field( component.Body, "m_Mesh" );
+					// Unity's built-in primitives have no package asset: each shape has a generated model of its own,
+					// already in s&box units, so the object keeps a ModelRenderer.
+					if ( UnityPrimitives.Find( GuidOf( mesh ), IdOf( mesh ) ) is UnityPrimitives.Shape shape )
+					{
+						primitive = shape;
+						model = Context.PrimitiveModelFor?.Invoke( shape.Name );
+						if ( model == null ) Result.Warnings.Add( $"{name}: no model was generated for Unity's built-in {shape.Name} mesh; renderer skipped." );
+						continue;
+					}
+					// Any other built-in mesh (a sprite or skybox quad) has no shape to draw; reported once, below.
+					if ( UnityPrimitives.IsBuiltin( GuidOf( mesh ) ) ) { builtinRenderers++; continue; }
 					if ( !byGuid.TryGetValue( GuidOf( mesh ), out var source ) || source.Kind != UnityAssetKind.Model )
 					{
 						Result.Warnings.Add( $"{name}: mesh {GuidOf( mesh )} is not a converted model; renderer skipped." );
@@ -1275,13 +1320,25 @@ internal static class UnityPrefabExport
 				if ( component.Type is "23" or "137" && model != null && !skinned.FoldedRenderers.Contains( component.Id ) )
 				{
 					var renderer = ModelRenderer( id, model, enabled );
-					if ( ConvertsRendererMaterials && MaterialSlots( component, meshSource, meshNode, name ) is JsonObject assigned ) renderer["Materials"] = assigned;
+					// A primitive model has a fixed slot 0, so its renderer material carries over in a prefab as well as in a
+					// scene; the converted FBX material table a prefab feeds stays untouched by it.
+					if ( (primitive != null || ConvertsRendererMaterials)
+						&& (primitive != null ? PrimitiveMaterialSlots( component ) : MaterialSlots( component, meshSource, meshNode, name )) is JsonObject assigned ) renderer["Materials"] = assigned;
 					list.Add( renderer );
 				}
 				if ( component.Type == "95" ) Result.Information.Add( $"{name}: Animator not converted; s&box animates a SkinnedModelRenderer through an animation graph or sequences." );
 				// Unity bakes MeshCollider shapes into separate assets; the generated model carries the
 				// equivalent hull, so the collider points at the same model. Several Unity colliders
 				// (e.g. one per baked convex piece) all become that one hull, so only the first is kept.
+				// A MeshCollider that names a different built-in shape than the renderer would collide with the
+				// wrong mesh, so it is left out rather than pointed at the renderer's model.
+				if ( component.Type == "64" && primitive != null
+					&& UnityPrimitives.Find( GuidOf( Field( component.Body, "m_Mesh" ) ), IdOf( Field( component.Body, "m_Mesh" ) ) ) is UnityPrimitives.Shape colliderShape
+					&& colliderShape.Name != primitive.Name )
+				{
+					Result.Information.Add( $"{name}: its MeshCollider names Unity's built-in {colliderShape.Name} mesh, not the {primitive.Name} it renders; the collider was skipped." );
+					continue;
+				}
 				if ( component.Type == "64" && model != null && !list.Any( c => c?["__type"]?.GetValue<string>() == "Sandbox.ModelCollider" ) )
 					list.Add( ModelCollider( id, model, enabled ) );
 				if ( component.Type == "64" && model == null ) Result.Warnings.Add( $"{name}: MeshCollider without a converted mesh on the same object was skipped." );
@@ -1566,6 +1623,7 @@ internal static class UnityPrefabExport
 		else if ( converter.Wrapper != null ) rootNode = converter.WrapperRoot();
 		else throw new InvalidDataException( "Prefab has no root transform (prefab variants are not supported)." );
 		result.Json = Document( rootNode );
+		converter.ReportBuiltins();
 		return result;
 	}
 

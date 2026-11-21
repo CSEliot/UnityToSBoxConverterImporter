@@ -434,10 +434,32 @@ public static class UnityImport
 					return null;
 				}
 			}
+			// Unity's built-in primitives have no package asset to convert. Each shape Unity ships gets one
+			// generated model in this run's output, in s&box units, so every object drawing it can point at it;
+			// a quad, a capsule and a cylinder have no ModelDoc render primitive and carry a generated mesh too.
+			var primitiveModels = new Dictionary<string, string>( StringComparer.OrdinalIgnoreCase );
+			string PrimitiveModelFor( string shapeName )
+			{
+				if ( primitiveModels.TryGetValue( shapeName, out var known ) ) return known;
+				if ( UnityPrimitives.Find( shapeName ) is not UnityPrimitives.Shape shape ) return null;
+				string mesh = null;
+				if ( UnityPrimitives.NeedsMesh( shape ) )
+				{
+					var meshPath = GeneratedPath( "_iup_primitives/" + shape.Name + ".obj" );
+					documents.Add( (Output( meshPath ), UnityPrimitives.Mesh( shape, UnityPrefabExport.UnitsPerMetre )) );
+					mesh = DocumentPath( prefix + meshPath );
+					conversions++;
+				}
+				var relative = GeneratedPath( "_iup_primitives/" + shape.Name + ".vmdl" );
+				documents.Add( (Output( relative ), UnityPrimitives.Model( shape, mesh, UnityPrefabExport.UnitsPerMetre )) );
+				conversions++;
+				return primitiveModels[shapeName] = DocumentPath( prefix + relative );
+			}
+
 			context = new UnityPrefabExport.Context( byGuid, ( model, mesh ) => generatedModels.GetValueOrDefault( (model.Guid, mesh) ),
 				guid => prefabPaths.TryGetValue( guid, out var path ) ? DocumentPath( prefix + path ) : null, convertedPrefabs,
 				guid => materialPaths.TryGetValue( guid, out var path ) && outputs.Contains( path + ".vmat" ) ? DocumentPath( prefix + path + ".vmat" ) : null )
-			{ MirroredModelFor = MirroredModelFor, MirroredPrefabFor = MirroredPrefabFor, ModelPrefabFor = ModelPrefabFor };
+			{ MirroredModelFor = MirroredModelFor, MirroredPrefabFor = MirroredPrefabFor, ModelPrefabFor = ModelPrefabFor, PrimitiveModelFor = PrimitiveModelFor };
 			foreach ( var asset in UnityPrefabExport.Order( plan.Assets.Where( a => a.Prefab ).Select( a => a.Asset ) ) )
 			{
 				cancel.ThrowIfCancellationRequested();

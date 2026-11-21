@@ -189,8 +189,11 @@ internal static class UnitySceneExport
 				// Unity bakes the collider's mesh into an asset of its own; only a package FBX mesh has a model to point at.
 				var mesh = Field( component.Body, "m_Mesh" );
 				var meshName = byGuid.TryGetValue( GuidOf( mesh ), out var asset ) && asset.Kind == UnityAssetKind.Model ? MeshName( asset, IdOf( mesh ) ) : null;
-				var model = meshName == null ? null : context.ModelFor( asset, meshName );
-				if ( model != null && MirrorAxis( pending ) is int axis && axis >= 0 ) model = context.MirroredModelFor?.Invoke( asset, meshName, axis ) ?? model;
+				// A built-in primitive is not a package model either, but it has a generated model of its own.
+				var model = UnityPrimitives.Find( GuidOf( mesh ), IdOf( mesh ) ) is UnityPrimitives.Shape primitiveShape
+					? context.PrimitiveModelFor?.Invoke( primitiveShape.Name )
+					: meshName == null ? null : context.ModelFor( asset, meshName );
+				if ( asset != null && model != null && MirrorAxis( pending ) is int axis && axis >= 0 ) model = context.MirroredModelFor?.Invoke( asset, meshName, axis ) ?? model;
 				if ( model == null ) { result.Warnings.Add( $"{label}: added MeshCollider uses a mesh that is not a converted model; skipped." ); continue; }
 				data = ModelCollider( id, model, enabled );
 			}
@@ -294,6 +297,7 @@ internal static class UnitySceneExport
 			result.Information.Add( $"{owners.Count} {type} component(s) on scene objects not converted ({string.Join( ", ", names.Take( 5 ) )}{(names.Length > 5 ? ", …" : "")})." );
 		}
 		result.Information.Add( "Lightmaps, light probes, the navigation mesh, occlusion culling data and post-processing volumes are not converted." );
+		c.ReportBuiltins();
 
 		var properties = SceneProperties();
 		((JsonObject)properties["Metadata"])["Title"] = Path.GetFileNameWithoutExtension( scene.Path );
