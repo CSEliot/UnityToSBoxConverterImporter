@@ -35,10 +35,93 @@ internal static class UnityVolume
 		["59b6606ef2548734bb6d11b9d160bc7e"] = "HDRISky",
 		["a81bcacc415a1f743bfdf703afc52027"] = "GradientSky",
 		["2d08ce26990eb1a4a9177b860541e702"] = "Exposure",
+		// Post-processing overrides, named so an unconverted one reads as itself instead of "override <guid>".
+		["f086a068d4c5889438831b3ae9afc11c"] = "Tonemapping",
+		["24f077503be6ae942a1e1245dbd53ea9"] = "Bloom",
+		["aaa3b8214f75b354e9ba2caadd022259"] = "DepthOfField",
+		["9008a067f4d626c4d8bc4bc48f04bb89"] = "ScreenSpaceAmbientOcclusion",
+		["4b8bcdf71d7fafa419fca1ed162f5fc9"] = "ColorAdjustments",
+		["b51a78e223a2e504bb88a059b55229ea"] = "WhiteBalance",
+		["384c4d03a551c44448145f4093304119"] = "ScreenSpaceReflection",
+		["31394aa05878563408489d5c1688f3a0"] = "PathTracing",
+		["2c1be1b6c95cd2e41b27903b9270817f"] = "Vignette",
+		["7e9e4ed5a6f56fb4ebd693e39684f36f"] = "VolumetricClouds",
+		["4bff652df78c97c4f963064ad1f34619"] = "ColorCurves",
+		["da5ab44aadfb1804db5fd470983ac1b8"] = "LiftGammaGain",
+		["6b24b200358312b4fa1004e2431c2f1f"] = "ShadowsMidtonesHighlights",
+		["a7649d9368d3a5c4ab8ad01a63e04962"] = "ChannelMixer",
+		["0775cbb206825d541bf6c0297ee524ca"] = "SplitToning",
+		["5a6b00fcf518bb94a90b408492e07b44"] = "FilmGrain",
+		["bcf384b154398e341b6b29969c078198"] = "MotionBlur",
+		["9c1bfcd0f0fa7b8468f281d6bbbaf320"] = "LensDistortion",
+		["598e2d32e2c7b0c418e030c3236d663a"] = "ChromaticAberration",
+		["4b709909182ba0943abef2c49ed59205"] = "PaniniProjection",
+		["56b145d2b9ee1ac4f846968484e7485a"] = "ContactShadows",
+		["32b6af8f7ad32324cb6941c3290e5895"] = "MicroShadowing",
+		["7ddcec8a8eb2d684d833ac8f5d26aebd"] = "HDShadowSettings",
+		["29b00527f85bb3346a4d2cb710971587"] = "VolumetricFog",
+		["f034cba68ab55e046ae1445a42f18c0e"] = "IndirectLightingController",
+		["464ccca2a3ef3ce429c63a5b5cd3be58"] = "SubSurfaceScattering",
 	};
 
 	/// <summary>The overrides this step reads. Anything else in the profile is named once in the report.</summary>
 	static readonly string[] Consumed = { "VisualEnvironment", "PhysicallyBasedSky", "HDRISky", "GradientSky", "Fog", "ExponentialFog", "Exposure" };
+
+	/// <summary>The overrides that become an s&amp;box post-process effect on the volume's PostProcessVolume.</summary>
+	static readonly string[] Mapped = { "Tonemapping", "Bloom", "DepthOfField", "ScreenSpaceAmbientOcclusion" };
+
+	/// <summary>The fields of each mapped override that the s&amp;box effect actually carries; any other overridden
+	/// field on that override is reported as dropped rather than silently ignored.</summary>
+	static readonly Dictionary<string, string[]> MappedFields = new( StringComparer.OrdinalIgnoreCase )
+	{
+		["Tonemapping"] = new[] { "mode" },
+		["Bloom"] = new[] { "intensity", "threshold", "tint" },
+		["DepthOfField"] = new[] { "focusDistance", "nearFocusStart", "farFocusEnd" },
+		["ScreenSpaceAmbientOcclusion"] = new[] { "intensity" },
+	};
+
+	/// <summary>Whether an override component actually overrides any of its fields; a profile keeps entries it
+	/// switched off, and those supply no data to convert or to report.</summary>
+	static bool Overridden( string body ) => Regex.IsMatch( body, @"m_OverrideState:\s*1" );
+
+	/// <summary>
+	/// One global HDRP volume's post-processing, as the scene export emits it: a Sandbox.PostProcessVolume
+	/// carrying the Volume's priority and weight, with one child object per effect the profile overrides.
+	/// s&amp;box's effects take different fields from HDRP's, so only the values that mean the same thing are
+	/// carried over; anything else is named in <see cref="Unsupported"/> rather than guessed.
+	/// </summary>
+	internal sealed class VolumePost
+	{
+		public long ObjectId;
+		public string Name;
+		public string ProfileName;
+		public string ProfilePath;
+		public int Priority;
+		public double Weight;
+		/// <summary>HDRP Tonemapping.mode, or -1 when the profile does not override it.</summary>
+		public int TonemapMode = -1;
+		public bool Bloom;
+		public double BloomStrength = 1;
+		public bool BloomThreshold;
+		public double BloomThresholdValue = 1;
+		public double BloomTintR = 1, BloomTintG = 1, BloomTintB = 1;
+		public bool Dof;
+		public double FocalDistance, FocusRange;
+		public bool Ao;
+		public double AoIntensity = 1;
+		/// <summary>Overridden options on the mapped effects that s&amp;box has no field for, e.g. Bloom's scatter.</summary>
+		public List<string> Dropped { get; } = new();
+		public List<string> Unsupported { get; } = new();
+	}
+
+	/// <summary>s&amp;box's tonemappers by HDRP's TonemappingMode: None 0, Neutral 1, ACES 2, Custom 3, External 4.
+	/// s&amp;box has no untonemapped mode, so None falls back to its default and the report says so.</summary>
+	internal static string TonemapMode( int mode ) => mode switch
+	{
+		1 => "AgX",
+		2 or 3 => "ACES",
+		_ => "HableFilmic"
+	};
 
 	/// <summary>One override component of a profile: its name and its serialised body.</summary>
 	internal sealed record Override( string Type, string Body );
@@ -68,6 +151,9 @@ internal static class UnityVolume
 		public double[] Ambient;
 		public Fog Fog;
 		public Exposure Exposure;
+		/// <summary>One entry per global Volume whose profile resolved, in scene order: the scene export writes a
+		/// Sandbox.PostProcessVolume for it. Local volumes have no entry and are only reported.</summary>
+		public List<VolumePost> PostVolumes { get; } = new();
 		public List<string> Information { get; } = new();
 	}
 
@@ -181,7 +267,19 @@ internal static class UnityVolume
 			// priority and weight are plain scalars, not m_OverrideState parameters.
 			double ScalarNumber( string field, double fallback ) =>
 				double.TryParse( Scalar( block.Body, field ), NumberStyles.Float, CultureInfo.InvariantCulture, out var value ) ? value : fallback;
-			applied.Add( ( (int)ScalarNumber( "priority", 0 ), ScalarNumber( "weight", 1 ), name, Parse( text, Path.GetFileNameWithoutExtension( asset.Path ) ) ) );
+			var profile = Parse( text, Path.GetFileNameWithoutExtension( asset.Path ) );
+			var priority = (int)ScalarNumber( "priority", 0 );
+			var weight = ScalarNumber( "weight", 1 );
+			applied.Add( (priority, weight, name, profile) );
+			// Every global Volume with a readable profile becomes a PostProcessVolume, whatever its priority:
+			// HDRP blends them, and s&box needs one volume per profile to do the same.
+			if ( weight > 0 )
+			{
+				// The GameObject id, not the MonoBehaviour's: the scene export looks the placement up in
+				// Converter.Transforms, which is keyed by GameObject.
+				var post = Post( IdOf( Field( block.Body, "m_GameObject" ) ), name, priority, weight, asset.Path, profile );
+				motion.PostVolumes.Add( post );
+			}
 		}
 
 		if ( unresolved.Count > 0 )
@@ -320,9 +418,99 @@ internal static class UnityVolume
 				: $"HDRP fixed exposure EV100 {Ev( fixedEv )} is reported, not mapped: s&box's CameraComponent.AutoExposure has no fixed-EV mode." );
 		}
 
-		var unsupported = merged.Keys.Where( k => !Consumed.Contains( k, StringComparer.OrdinalIgnoreCase ) ).OrderBy( k => k, StringComparer.Ordinal ).ToArray();
-		if ( unsupported.Length > 0 )
-			motion.Information.Add( $"{unsupported.Length} HDRP volume override(s) are not converted by the environment step: {string.Join( ", ", unsupported.Take( 8 ) )}{(unsupported.Length > 8 ? ", …" : "")}." );
+		// Every override the environment does not read is named per volume by AddPostNotes, including the ones
+		// the post-processing step does not map, so no override goes unmentioned and none is listed twice.
 		return motion;
+	}
+
+	/// <summary>The post-processing one global Volume's profile supplies. Only the fields whose meaning is the
+	/// same in both engines are read; s&amp;box's effects take different units, so a value that would have to be
+	/// guessed (an occlusion radius in metres becoming pixels) is left at its default and named in the report.</summary>
+	static VolumePost Post( long objectId, string name, int priority, double weight, string path, Profile profile )
+	{
+		var post = new VolumePost { ObjectId = objectId, Name = name, ProfileName = profile.Name, ProfilePath = path, Priority = priority, Weight = weight };
+		if ( profile.Get( "Tonemapping" ) is { } tone && Overridden( tone.Body ) )
+			post.TonemapMode = (int)Number( tone, "mode", 0 );
+		if ( profile.Get( "Bloom" ) is { } bloom && Overridden( bloom.Body ) )
+		{
+			post.Bloom = true;
+			post.BloomStrength = Number( bloom, "intensity", 1 );
+			post.BloomThreshold = Value( bloom, "threshold" ) != null;
+			post.BloomThresholdValue = Number( bloom, "threshold", 1 );
+			var tint = Colour( bloom, "tint", 1, 1, 1 );
+			(post.BloomTintR, post.BloomTintG, post.BloomTintB) = (tint[0], tint[1], tint[2]);
+		}
+		if ( profile.Get( "DepthOfField" ) is { } dof && Overridden( dof.Body ) )
+		{
+			post.Dof = true;
+			post.FocalDistance = Number( dof, "focusDistance", 0 );
+			var near = Number( dof, "nearFocusStart", 0 );
+			var far = Number( dof, "farFocusEnd", 0 );
+			post.FocusRange = far > near ? far - near : 0;
+		}
+		if ( profile.Get( "ScreenSpaceAmbientOcclusion" ) is { } ao && Overridden( ao.Body ) )
+		{
+			post.Ao = true;
+			post.AoIntensity = Number( ao, "intensity", 1 );
+		}
+		foreach ( var @override in profile.Overrides )
+		{
+			if ( Consumed.Contains( @override.Type, StringComparer.OrdinalIgnoreCase ) ) continue;
+			if ( Mapped.Contains( @override.Type, StringComparer.OrdinalIgnoreCase ) ) continue;
+			if ( !Overridden( @override.Body ) ) continue;
+			post.Unsupported.Add( @override.Type );
+		}
+		foreach ( var type in Mapped )
+		{
+			var dropped = Dropped( profile, type ).ToArray();
+			if ( dropped.Length == 0 ) continue;
+			post.Dropped.Add( dropped.Length <= 3
+				? $"{type} {string.Join( ", ", dropped )}"
+				: $"{type} {string.Join( ", ", dropped.Take( 3 ) )} and {dropped.Length - 3} more" );
+		}
+		return post;
+	}
+
+	/// <summary>Every overridden field of a mapped override that the s&amp;box effect has no field for, as
+	/// "Field value": Bloom's scatter and anamorphic, Tonemapping's curve parameters, DOF's focus mode.</summary>
+	static IEnumerable<string> Dropped( Profile profile, string type )
+	{
+		var @override = profile.Get( type );
+		if ( @override == null || !MappedFields.TryGetValue( type, out var carried ) ) yield break;
+		foreach ( Match field in Regex.Matches( @override.Body, @"(?m)^  (?<name>[A-Za-z_][A-Za-z0-9_]*):[ 	]*\r?\n(?<body>(?:    [^\r\n]*\r?\n?)+)" ) )
+		{
+			var name = field.Groups["name"].Value;
+			if ( name == "active" || carried.Contains( name, StringComparer.OrdinalIgnoreCase ) ) continue;
+			var body = field.Groups["body"].Value;
+			if ( !Regex.IsMatch( body, @"m_OverrideState:\s*1" ) ) continue;
+			var value = Regex.Match( body, @"m_Value:[ 	]*([^\r\n]*)" );
+			var text = value.Success ? value.Groups[1].Value.Trim() : "";
+			// An unset object reference (lutTexture {fileID: 0}) carries no value to report.
+			if ( text.Length == 0 || text == "{fileID: 0}" ) continue;
+			yield return $"{name} {text}";
+		}
+	}
+
+	/// <summary>The lines one emitted PostProcessVolume owes: what it carries, the options s&amp;box has no field
+	/// for, and every override that stayed behind. The scene export calls this per volume it writes, so two Unity
+	/// Volumes that share a profile (and therefore one PostProcessVolume) are reported once.</summary>
+	internal static void AddPostNotes( VolumePost post, List<string> information )
+	{
+		var effects = new List<string>();
+		if ( post.TonemapMode >= 0 ) effects.Add( $"Tonemapping ({TonemapMode( post.TonemapMode )})" );
+		if ( post.Bloom ) effects.Add( "Bloom" );
+		if ( post.Dof ) effects.Add( "DepthOfField" );
+		if ( post.Ao ) effects.Add( "AmbientOcclusion" );
+		var weight = post.Weight.ToString( "0.##", CultureInfo.InvariantCulture );
+		information.Add( $"{post.Name} ({post.ProfileName}): post-processing converted to a Sandbox.PostProcessVolume at priority {post.Priority}, blend weight {weight}" +
+			(effects.Count > 0 ? $" with {string.Join( ", ", effects )}." : ", with no s&box effect (the profile overrides none of the supported ones).") );
+		if ( post.TonemapMode == 0 )
+			information.Add( $"{post.Name}: HDRP tonemapping is set to None; s&box has no untonemapped mode, so its HableFilmic default is used." );
+		if ( post.Ao )
+			information.Add( $"{post.Name}: ambient occlusion intensity is converted; HDRP's radius is in metres and s&box's is in screen pixels, so the radius is left at its default." );
+		if ( post.Dropped.Count > 0 )
+			information.Add( $"{post.Name}: options on the converted overrides have no s&box field and were not converted: {string.Join( ", ", post.Dropped.Take( 8 ) )}{(post.Dropped.Count > 8 ? ", …" : "")}." );
+		if ( post.Unsupported.Count > 0 )
+			information.Add( $"{post.Name} ({post.ProfileName}): {post.Unsupported.Count} HDRP override(s) have no s&box counterpart and were not converted: {string.Join( ", ", post.Unsupported.Take( 8 ) )}{(post.Unsupported.Count > 8 ? ", …" : "")}." );
 	}
 }

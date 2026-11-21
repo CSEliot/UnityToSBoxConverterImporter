@@ -790,6 +790,9 @@ internal static class UnityPrefabExport
 		public readonly Dictionary<long, Block> HdLights;
 		/// <summary>HDAdditionalCameraData blocks by GameObject fileID.</summary>
 		public readonly Dictionary<long, Block> HdCameras;
+		/// <summary>HDAdditionalReflectionData blocks by GameObject fileID: HDRP keeps a reflection probe's
+		/// influence shape, blend distances, multiplier and fade distance there, not on the Unity probe.</summary>
+		public readonly Dictionary<long, Block> HdProbes;
 		/// <summary>The grouped HDRP light and camera lines this file owes: one area-light line and one unit
 		/// line, not one report line per light.</summary>
 		internal readonly UnityHdrpLighting.Report Hdrp = new();
@@ -857,10 +860,11 @@ internal static class UnityPrefabExport
 			Blocks = UnityPrefabExport.Blocks( text );
 			ById = Blocks.GroupBy( b => b.Id ).ToDictionary( g => g.Key, g => g.First() );
 			Transforms = Blocks.Where( b => b.Type is "4" or "224" && !b.Stripped ).GroupBy( b => IdOf( Field( b.Body, "m_GameObject" ) ) ).ToDictionary( g => g.Key, g => g.First() );
-			Components = Blocks.Where( b => !b.Stripped && b.Type is "33" or "23" or "64" or "65" or "135" or "136" or "137" or "95" or "20" or "81" or "108" )
+			Components = Blocks.Where( b => !b.Stripped && b.Type is "33" or "23" or "64" or "65" or "135" or "136" or "137" or "95" or "20" or "81" or "108" or "215" )
 				.GroupBy( b => IdOf( Field( b.Body, "m_GameObject" ) ) ).ToDictionary( g => g.Key, g => g.ToArray() );
 			HdLights = HdComponents( HdrpComponentKind.Light );
 			HdCameras = HdComponents( HdrpComponentKind.Camera );
+			HdProbes = HdComponents( HdrpComponentKind.ReflectionProbe );
 			var unconverted = Blocks.Where( b => !b.Stripped ).Select( b => b.Type switch { "154" => "TerrainCollider", "146" => "WheelCollider", "143" => "CharacterController", _ => null } )
 				.Where( n => n != null ).Distinct().ToArray();
 			if ( unconverted.Length > 0 ) result.Information.Add( $"{string.Join( ", ", unconverted )} not converted." );
@@ -1469,6 +1473,9 @@ internal static class UnityPrefabExport
 					list.Add( UnitySceneExport.Camera( id, component.Body, hdCamera, enabled, component.Id == mainCamera ) );
 				}
 				if ( component.Type == "81" ) list.Add( UnitySceneExport.AudioListener( id, enabled ) );
+				// A reflection probe is a rendered object, not a light: its Unity box/resolution/importance and
+				// the HD component's influence shape become one Sandbox.EnvmapProbe on the same object.
+				if ( component.Type == "215" ) list.Add( UnitySceneExport.EnvmapProbe( id, component.Body, Hd( HdProbes, objectId ), enabled ) );
 				if ( component.Type == "108" )
 				{
 					// HDRP keeps the physical intensity, unit and dimmer in HDAdditionalLightData on this

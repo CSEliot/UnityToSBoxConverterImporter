@@ -13,9 +13,10 @@ namespace ImportUnityPackage;
 /// <summary>
 /// Converts a Unity scene (.unity) into an s&amp;box scene (.scene): every root object in Unity's order, prefab
 /// instances as stubs of the prefabs generated in the same run (with their overrides, and the objects and
-/// components Unity added to or removed from them), plain objects with their models, colliders, cameras and
-/// lights, and the scene's sky, ambient light and fog. Scripts, terrain, lightmaps, light probes, navigation
-/// and post-processing are listed in the report, not converted.
+/// components Unity added to or removed from them), plain objects with their models, colliders, cameras,
+/// lights and reflection probes, the scene's sky, ambient light and fog, and one post-process volume per
+/// global Volume profile. Scripts, terrain, lightmaps, light probes, navigation, planar probes, decal
+/// projectors and light-layer masks are listed in the report, not converted.
 /// </summary>
 internal static class UnitySceneExport
 {
@@ -353,15 +354,67 @@ internal static class UnitySceneExport
 			}
 		}
 
+		// 6b. Post-processing: one PostProcessVolume per distinct global profile, with the mapped effects on child
+		// objects. PostProcessSystem collects effects from the volume object and its descendants, so the volume
+		// itself carries only Priority, BlendWeight and an infinite (global) SceneVolume.
+		var posts = new List<UnityVolume.VolumePost>();
+		foreach ( var post in environment.PostVolumes )
+			if ( !posts.Any( p => p.ProfilePath.Equals( post.ProfilePath, StringComparison.OrdinalIgnoreCase ) ) ) posts.Add( post );
+		for ( var index = 0; index < posts.Count; index++ )
+		{
+			var post = posts[index];
+			var key = $"{c.Key}:postprocessing:{index}";
+			var volume = Component( "Sandbox.PostProcessVolume", StableGuid( $"{key}:component" ), true, new()
+			{
+				["BlendWeight"] = Single( Math.Clamp( post.Weight, 0, 1 ) ),
+				["Priority"] = post.Priority,
+				["SceneVolume"] = new JsonObject { ["Type"] = "Infinite" }
+			} );
+			// The Unity Volume's own object is already in the output (its script was not converted), so the volume
+			// component attaches to it: one object per volume, at the transform Unity gave it. A Volume inside a
+			// prefab instance has no plain node to attach to and keeps a root of its own.
+			var node = Find( objects, StableGuid( $"{c.Key}:{post.ObjectId}" ).ToString() );
+			if ( node is { } existing && existing["__PrefabInstancePatch"] == null && existing["Components"] is JsonArray existingComponents )
+			{
+				existingComponents.Add( volume );
+				if ( string.IsNullOrEmpty( existing["Tags"]?.GetValue<string>() ) ) existing["Tags"] = "postprocess";
+			}
+			else
+			{
+				var place = c.Transforms.GetValueOrDefault( post.ObjectId ) is Block volumeTransform ? ToSbox( Local( volumeTransform.Body ) ) : ToSbox( NoTransform );
+				node = SceneObject( key, post.Name, "postprocess", volume, place );
+				objects.Add( node );
+			}
+			var children = (JsonArray)node["Children"];
+			void Effect( string name, string type, Dictionary<string, JsonNode> properties ) =>
+				children.Add( SceneObject( $"{key}:{type}", name, "", Component( type, StableGuid( $"{key}:{type}" ), true, properties ) ) );
+			if ( post.TonemapMode >= 0 ) Effect( "Tonemapping", "Sandbox.Tonemapping", new() { ["Mode"] = UnityVolume.TonemapMode( post.TonemapMode ) } );
+			if ( post.Bloom )
+			{
+				var bloom = new Dictionary<string, JsonNode> { ["Strength"] = Single( post.BloomStrength ), ["Tint"] = Colour( new[] { post.BloomTintR, post.BloomTintG, post.BloomTintB } ) };
+				if ( post.BloomThreshold ) bloom["Threshold"] = Single( post.BloomThresholdValue );
+				Effect( "Bloom", "Sandbox.Bloom", bloom );
+			}
+			if ( post.Dof ) Effect( "Depth of Field", "Sandbox.DepthOfField", new()
+			{
+				["FocalDistance"] = Single( post.FocalDistance * UnitsPerMetre ),
+				["FocusRange"] = Single( post.FocusRange * UnitsPerMetre )
+			} );
+			if ( post.Ao ) Effect( "Ambient Occlusion", "Sandbox.AmbientOcclusion", new() { ["Intensity"] = Single( post.AoIntensity ) } );
+			// Reported per emitted volume, so two Unity Volumes sharing a profile (one PostProcessVolume) are one line.
+			UnityVolume.AddPostNotes( post, result.Information );
+		}
+
 		// 7. What the scene's own objects carry that has no conversion.
 		var unconverted = new Dictionary<string, List<string>>();
 		foreach ( var block in c.Blocks )
 		{
 			if ( block.Stripped || block.Type is "1" or "4" or "224" or "1001" or "29" or "104" or "157" or "196" or "1660057539" || Convertible( block.Type ) ) continue;
-			// HDRP light and camera components are read by the light and camera conversion, and Volume and
-			// StaticLightingSky by the environment step, which name them in their own lines; counting them here
-			// would report the same components twice as anonymous scripts.
-			if ( block.Type == "114" && UnityHdrp.Component( GuidOf( Field( block.Body, "m_Script" ) ) )?.Kind is HdrpComponentKind.Volume or HdrpComponentKind.StaticLightingSky or HdrpComponentKind.Light or HdrpComponentKind.Camera ) continue;
+			// HDRP light and camera components are read by the light and camera conversion, Volume and
+			// StaticLightingSky by the environment step, and planar probes and decal projectors by the HDRP
+			// report, which name them in their own lines; counting them here would report them twice as
+			// anonymous scripts.
+			if ( block.Type == "114" && UnityHdrp.Component( GuidOf( Field( block.Body, "m_Script" ) ) )?.Kind is HdrpComponentKind.Volume or HdrpComponentKind.StaticLightingSky or HdrpComponentKind.Light or HdrpComponentKind.Camera or HdrpComponentKind.PlanarReflectionProbe or HdrpComponentKind.DecalProjector or HdrpComponentKind.ReflectionProbe ) continue;
 			if ( c.ById.GetValueOrDefault( IdOf( Field( block.Body, "m_GameObject" ) ) ) is not { Type: "1", Stripped: false } go ) continue;
 			var name = TypeName( block.Type, block.Body );
 			if ( !unconverted.TryGetValue( name, out var owners ) ) unconverted[name] = owners = new();
@@ -372,7 +425,10 @@ internal static class UnitySceneExport
 			var names = owners.Distinct().ToArray();
 			result.Information.Add( $"{owners.Count} {type} component(s) on scene objects not converted ({string.Join( ", ", names.Take( 5 ) )}{(names.Length > 5 ? ", …" : "")})." );
 		}
-		result.Information.Add( "Lightmaps, light probes, the navigation mesh, occlusion culling data and post-processing volumes are not converted." );
+		result.Information.Add( "Lightmaps, light probes, the navigation mesh and occlusion culling data are not converted." );
+		// Reflection probes do convert; planar probes, decal projectors and light-layer masks do not, and are
+		// named once per scene with their counts rather than turned into a component s&box does not have.
+		UnityHdrpProbes.Report( c.Blocks, byGuid, result.Information );
 		c.ReportBuiltins();
 		c.ReportHdrp();
 		// Counted here from every non-stripped type-114 block. The census names only blocks it can attribute
@@ -457,15 +513,31 @@ internal static class UnitySceneExport
 		["Data"] = data
 	};
 
-	static JsonObject SceneObject( string key, string name, string tags, JsonObject component )
+	static JsonObject SceneObject( string key, string name, string tags, JsonObject component ) =>
+		SceneObject( key, name, tags, component, ToSbox( NoTransform ) );
+
+	static JsonObject SceneObject( string key, string name, string tags, JsonObject component, UnityTransform transform )
 	{
-		var node = GameObject( StableGuid( key ), name, ToSbox( NoTransform ), true );
+		var node = GameObject( StableGuid( key ), name, transform, true );
 		node["Tags"] = tags;
 		((JsonArray)node["Components"]).Add( component );
 		return node;
 	}
 
-	static bool Convertible( string type ) => type is "33" or "23" or "64" or "65" or "135" or "136" or "137" or "95" or "20" or "81" or "108";
+	static bool Convertible( string type ) => type is "33" or "23" or "64" or "65" or "135" or "136" or "137" or "95" or "20" or "81" or "108" or "215";
+
+	/// <summary>The node with this GUID anywhere in a scene's tree, or null. A prefab instance stub has no
+	/// Components array of its own, so a caller attaching a component must still check for one.</summary>
+	static JsonObject Find( JsonArray nodes, string guid )
+	{
+		foreach ( var entry in nodes )
+		{
+			if ( entry is not JsonObject node ) continue;
+			if ( node["__guid"]?.GetValue<string>() == guid ) return node;
+			if ( node["Children"] is JsonArray children && Find( children, guid ) is { } found ) return found;
+		}
+		return null;
+	}
 
 	/// <summary>
 	/// A Unity class id as the report names it. A MonoBehaviour only means something through the script
@@ -485,7 +557,7 @@ internal static class UnitySceneExport
 	// ---- components ----------------------------------------------------------------------------------------------
 
 	/// <summary>A component as the editor writes one: header keys, then every property and callback in name order.</summary>
-	static JsonObject Component( string type, Guid id, bool enabled, Dictionary<string, JsonNode> properties )
+	internal static JsonObject Component( string type, Guid id, bool enabled, Dictionary<string, JsonNode> properties )
 	{
 		var component = new JsonObject { ["__type"] = type, ["__guid"] = id.ToString(), ["__enabled"] = enabled, ["Flags"] = 0 };
 		foreach ( var callback in new[] { "OnComponentDestroy", "OnComponentDisabled", "OnComponentEnabled", "OnComponentFixedUpdate", "OnComponentStart", "OnComponentUpdate" } ) properties[callback] = null;
@@ -620,5 +692,95 @@ internal static class UnitySceneExport
 					["LightColor"] = lightColour, ["Radius"] = radius, ["Shadows"] = shadows
 				} );
 		}
+	}
+
+	/// <summary>
+	/// The indented YAML block under <paramref name="name"/>, e.g. the influence section of an
+	/// HDAdditionalReflectionData: its lines are more indented than the key, and the block ends at the first
+	/// line that is not. Used instead of <see cref="Section"/>, which stops at any m_ field.
+	/// </summary>
+	static string Nested( string text, string name )
+	{
+		if ( string.IsNullOrEmpty( text ) ) return "";
+		var match = Regex.Match( text, @"(?m)^(?<indent>[ 	]*)" + Regex.Escape( name ) + @":[ 	]*\r?$" );
+		if ( !match.Success ) return "";
+		var indent = match.Groups["indent"].Value.Length;
+		var lines = new List<string>();
+		foreach ( var line in text[(match.Index + match.Length)..].Split( '\n' ) )
+		{
+			var trimmed = line.TrimEnd( '\r' );
+			if ( trimmed.Trim().Length == 0 ) { lines.Add( trimmed ); continue; }
+			if ( trimmed.Length - trimmed.TrimStart( ' ', '	' ).Length <= indent ) break;
+			lines.Add( trimmed );
+		}
+		return string.Join( "\n", lines );
+	}
+
+	/// <summary>
+	/// Unity ReflectionProbe (class 215), with its HDAdditionalReflectionData (<paramref name="hd"/>, null when
+	/// the probe has none). HDRP keeps the influence shape, blend distances, intensity multiplier and fade
+	/// distance in that component; Unity keeps the box, resolution, importance and clip planes. s&amp;box's
+	/// EnvmapProbe takes both, so the bounds are remapped to its basis and scaled to engine units and the
+	/// transform stays on the object. Unity's baked cubemap is not in the package, so the probe captures in
+	/// real time: the report says so once per scene.
+	/// </summary>
+	internal static JsonObject EnvmapProbe( Guid id, string body, string hd, bool enabled )
+	{
+		var size = Vector( body, "m_BoxSize", "x", "y", "z" );
+		var offset = Vector( body, "m_BoxOffset", "x", "y", "z" );
+		var projection = Scalar( body, "m_BoxProjection" ) == "1" ? "Box" : "Sphere";
+		var resolution = (int)Number( body, "m_Resolution" );
+		var near = Number( body, "m_NearClip" );
+		var far = Number( body, "m_FarClip" );
+		var blend = Number( body, "m_BlendDistance" );
+		var priority = (int)Number( body, "m_Importance" );
+		var multiplier = 1.0;
+		if ( hd != null )
+		{
+			var settings = Nested( hd, "m_ProbeSettings" );
+			var influence = Nested( settings, "influence" );
+			var lighting = Nested( settings, "lighting" );
+			if ( influence.Length > 0 )
+			{
+				// HDRP's InfluenceVolume.shape: 0 Box, 1 Sphere.
+				var shape = (int)Number( influence, "m_Shape" );
+				projection = shape == 1 ? "Sphere" : "Box";
+				var box = Vector( influence, "m_BoxSize", "x", "y", "z" );
+				if ( box.Any( v => v > 0 ) ) size = box;
+				var radius = Number( influence, "m_SphereRadius" );
+				if ( shape == 1 && radius > 0 ) size = new[] { radius * 2, radius * 2, radius * 2 };
+				var positive = Vector( influence, "m_BoxBlendDistancePositive", "x", "y", "z" );
+				if ( positive.Any( v => v > 0 ) ) blend = positive.Max();
+			}
+			var hdResolution = (int)Number( Nested( settings, "frustum" ), "m_Resolution" );
+			if ( hdResolution > 0 ) resolution = hdResolution;
+			var hdMultiplier = Number( lighting, "m_Multiplier" );
+			if ( hdMultiplier > 0 ) multiplier = hdMultiplier;
+			// HDRP's lighting.m_FadeDistance is where a reflection fades out; s&box's MaxDistance instead
+			// gates how close the camera must be for a realtime update, so the two are not the same value
+			// and the engine's default (512) is kept.
+		}
+		if ( size.All( v => v <= 0 ) ) size = new double[] { 10, 10, 10 };
+		var half = size.Select( v => Math.Abs( v ) / 2 ).ToArray();
+		var min = new[] { offset[0] - half[0], offset[1] - half[1], offset[2] - half[2] };
+		var max = new[] { offset[0] + half[0], offset[1] + half[1], offset[2] + half[2] };
+		// Unity (Y up) to s&box (Z up): (x, y, z) becomes (z, -x, y), so the low corner takes the low Z, the
+		// negated high X and the low Y. A local box is scaled, never rotated, by that basis change.
+		var mins = new[] { min[2], -max[0], min[1] }.Select( v => v * UnitsPerMetre ).ToArray();
+		var maxs = new[] { max[2], -min[0], max[1] }.Select( v => v * UnitsPerMetre ).ToArray();
+		return Component( "Sandbox.EnvmapProbe", id, enabled, new()
+		{
+			["Bounds"] = new JsonObject { ["Mins"] = Join( mins ), ["Maxs"] = Join( maxs ) },
+			["Feathering"] = Single( Math.Max( 0, blend ) * UnitsPerMetre ),
+			["Mode"] = "Realtime",
+			["MultiBounce"] = false,
+			["Priority"] = Math.Clamp( priority, 0, 100 ),
+			["Projection"] = projection,
+			["Resolution"] = resolution switch { <= 128 => "Small", <= 256 => "Medium", <= 512 => "Large", _ => "Huge" },
+			["TintColor"] = Colour( new[] { multiplier, multiplier, multiplier } ),
+			["UpdateStrategy"] = "OnEnabled",
+			["ZFar"] = Single( Math.Max( 1, far * UnitsPerMetre ) ),
+			["ZNear"] = Single( Math.Max( 1, near * UnitsPerMetre ) )
+		} );
 	}
 }
