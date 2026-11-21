@@ -1,4 +1,4 @@
-## Status: STARTED? YES! CLARIFIED? YES! HISTORY? YES! REVIEWED? YES! DONE? YES! WORKER: sa-0-1ff9c4d0 OTHER: reviewed 20:14 no further changes; HDRP PBR and emission committed
+## Status: STARTED? YES! CLARIFIED? YES! HISTORY? YES! REVIEWED? YES! DONE? NO! WORKER: sa-0-1ff9c4d0 OTHER: reviewed 20:14 no further changes; HDRP PBR and emission committed
 
 ## Task
 
@@ -178,6 +178,27 @@ Verified: build 0/0; fixture 23/20/46/0/0, two runs identical, HDRP 19 and one t
 ## Post-Task Follow Ups
 	Unit-emission HDRP materials (peak <= 1) keep g_flSelfIllumBrightness 0, so they read dark in s&box;
 	task 08 deliberately preserves byte-identity. Revisit if the editor shows the emissive props too dark.
+
+### Review feedback appended 2026-11-22 (from task unity-expert-review-nov-22)
+
+	Attribution limit: this feedback is attached to task 08 because its shipped diff touched Editor/Core/UnityImport.cs, which owns slot-keyed material remaps — the closest live DONE task to the reported failures. The failures themselves are model material-slot resolution, the subject of "02 Model-Prefab Material Slots", which is archived under .humans-only/archive/ and off-limits to agents. No new task file was created. Every code change below is a PROPOSAL — NOT APPLIED. This review edited no project source file.
+
+	Scope reviewed: the 81 objects in the Unresolved array of Testing/old_school_project+import-report+post-hdrp-update+post-no-prefabs-update.json (report lines 2220-2707), all Severity "Warning": 44 unassigned-material, 20 prefab-material-assignment, 16 missing-texture, 1 ambiguous-material. Per-object evidence (Asset, Code, Message, report line) is in eliots-agentics/tasks/unity-expert-review-nov-22.md under "Review evidence (worker, 2026-11-22)".
+
+	What went wrong:
+	- unassigned-material (44): "No converted material was resolved for slot 'X'" (UnityImport.cs:362) for FBX default slots ('15 - Default', '16 - Default'), generic names ('lambert2', 'mesh') and repeated semantic names ('Metal', 'Glass', 'Windows') across the Windows_02/05/06 and Door_01 models. ImportPlan.cs:109 can infer a material from a slot filename, but it skips slots recorded as unresolved, so nothing fills them.
+	- prefab-material-assignment (20): 12 "Prefab assignment for slot 'X' is missing or conflicting (A vs B); no material was guessed" from UnityPrefabBindings.cs:274, and 8 "A prefab material override puts 'M' in slot N of mesh ... which the FBX gives no material slot for" from the index guard in UnityPrefabBindings.Assign (:97-121). Three of the latter name LOD01 meshes (Door_06, Windows_02_Frame, Windows_04), which UnityModel.RenderedMaterials (:124-131) never selects.
+	- missing-texture (16): the same two texture GUIDs (6012db391d795e54f8166f209f6ce80c, 8a1b6f6da87cf3c4dbeeeb50c35ed3c5) repeated across eight structure materials, two each, from ImportPlan.cs:78.
+	- ambiguous-material (1): Floor_stairs_bottom_Snaps014.fbx, color texture Wall_02_Albedo_Snaps014.tga matches more than one material at ImportPlan.cs:98.
+
+	Proposals (NOT APPLIED; names and line numbers verified against the current tree):
+	1. Conflicting prefab slots (12 warnings): UnityPrefabBindings.cs:262-275 reduces each slot's values across all candidate prefabs; a single value goes to PrefabSlotMaterials (:265), otherwise the slot is added to UnresolvedPrefabSlots (:268) and an AssignmentWarning is appended (:274), which ImportPlan.cs:91 republishes. MeshSlotMaterials (UnityModel.cs:92, populated at UnityPrefabBindings.cs:251-260) already records per-mesh evidence, and UnityImport.ModelSplit (:675-700) can emit one model per mesh when a slot maps to two materials. PROPOSAL: widen the existing per-mesh exemption at UnityPrefabBindings.cs:270-272 to compare values for that specific slot instead of the union of all slots on the mesh, so a cross-mesh conflict stays silent and ModelSplit expresses it. For a genuine single-mesh conflict, keep one warning but name the prefab asset that supplied each competing material.
+	2. Override slot index rejected (8 warnings): UnityPrefabBindings.Assign (:97-121) rejects index >= Math.Max(1, binding.Slots.Length) at :104-110. PROPOSAL: before rejecting, map the Unity MeshRenderer material index through WrapperMaterialSlot (:69) and UnityModel.EffectiveSlots (:86); accept it when it lands on a declared slot. Suppress warnings for LOD01-only meshes whose LOD0 counterpart resolves, because UnityModel.RenderedMaterials (:124-131) imports LOD0 only; still report genuinely out-of-range indices once per model with the material name.
+	3. Unassigned slots (44 warnings): UnityImport.PrepareFiles applies PrefabSlotMaterials remaps (:327-331), removes UnresolvedPrefabSlots (:332) and prunes undeclared slots (:338-340) before emitting "No converted material" at :360-362. PROPOSAL: (a) route "N - Default" slots with no Unity material to the neutral .vmat already generated at :346-352 instead of leaving them unresolved; (b) let ImportPlan.Match (:93-99) consult a deterministic PrefabSlotMaterials/MeshSlotMaterials hint before declaring no dependency for semantic names, and emit one grouped line naming all candidates when several remain, instead of one line per slot; (c) verify the _lodN alias expansion at UnityImport.cs:334-335 covers the LOD01 slot names appearing in this report.
+	4. Ambiguous texture (1 warning): ImportPlan.cs:85-86 builds byTexture from albedo filenames, and Match narrows by already-referenced materials (:95-96) before reporting at :98. PROPOSAL: before :98, consult asset.ModelInfo.MeshSlotMaterials / PrefabSlotMaterials (UnityModel.cs:92, :89) for a slot whose albedo is Wall_02_Albedo_Snaps014.tga; if exactly one candidate GUID is assigned there, link it; otherwise keep the warning but list the candidate material paths.
+	5. Missing textures (16 warnings): ImportPlan.cs:75-79 posts these for texture GUIDs not present as Texture assets in the archive. PROPOSAL: resolve the two repeated GUIDs in the source package first — if they name a texture in an unsupported format, either add a decoder path or emit an explicit unsupported-format line with the format. This may be a source-data gap rather than an importer defect; verify before changing code.
+
+	Re-check criterion for any later implementation: re-run this package and confirm the 81-object extract falls in the targeted codes while the HDRP material feature counts (F_ALPHA_TEST 13, F_RENDER_BACKFACES 11, glass 1) and the building / city--1 baselines stay unchanged.
 
 ### Work Review
 
