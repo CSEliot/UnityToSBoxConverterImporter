@@ -34,7 +34,14 @@ internal static class UnitySceneExport
 	/// <summary>Unity's built-in resources (Default-Skybox among them) share this guid.</summary>
 	const string BuiltInGuid = "0000000000000000f000000000000000";
 
-	internal sealed record Statistics( int Roots, int Instances, int Nested, int AddedComponents, int RemovedObjects, int Skipped );
+	/// <summary>
+	/// What a scene conversion placed and what it could not resolve. <see cref="Instances"/> is the number of
+	/// prefab stubs written; <see cref="TotalInstances"/> every prefab instance placement the scene refers to
+	/// (the file's PrefabInstance blocks plus any stripped object naming one the file has lost), and
+	/// <see cref="LostInstances"/> the ones that could not be placed, grouped by <see cref="Skips"/>' causes.
+	/// </summary>
+	internal sealed record Statistics( int Roots, int Instances, int Nested, int AddedComponents, int RemovedObjects, int Skipped,
+		int TotalInstances, int LostInstances, SkipCollector Skips );
 
 	internal sealed class SceneResult
 	{
@@ -51,6 +58,9 @@ internal static class UnitySceneExport
 	{
 		var result = new Result();
 		var byGuid = context.ByGuid;
+		// Every prefab instance this scene cannot place, by cause: threaded through the root loop and both
+		// layers of nesting, because Node and Instance otherwise discard the null where an instance is dropped.
+		var skips = new SkipCollector();
 		var text = UnityImport.ReadText( scene.Source, TextLimit );
 		var c = new Converter( scene, text, context, result ) { ConvertsAdditions = true, ConvertsRendererMaterials = true };
 		// Before Unity 2018.3 a scene serialized every object of an instance in full next to a Prefab block.
@@ -64,7 +74,7 @@ internal static class UnitySceneExport
 		foreach ( var id in RootOrder( c ) )
 		{
 			var block = c.ById[id];
-			var node = block.Type == "1001" ? c.Instance( block, null ) : c.Node( block, false );
+			var node = block.Type == "1001" ? c.Instance( block, null, null, skips ) : c.Node( block, false, null, null, skips );
 			if ( node == null ) { skipped++; continue; }
 			objects.Add( node );
 			roots++;
@@ -130,7 +140,7 @@ internal static class UnitySceneExport
 			int[] pending = null;
 			if ( NestAddedObjects ) (parent, prepend, pending) = Anchor( source, g, childName );
 			else prepend = Compose( ParentWorld( strippedId ), NoTransform );
-			var data = instance != null ? c.Instance( instance, prepend, pending ) : c.Node( transform, false, prepend, pending );
+			var data = instance != null ? c.Instance( instance, prepend, pending, skips ) : c.Node( transform, false, prepend, pending, skips );
 			if ( data == null ) { skipped++; return; }
 			if ( NestAddedObjects ) additions.Add( (owner.Id, AddedObject( "GameObject", Guid.Parse( data["__guid"].GetValue<string>() ), parent, "Children", data ), childName) );
 			else { objects.Add( data ); nested++; }
@@ -231,6 +241,13 @@ internal static class UnitySceneExport
 				}
 		}
 
+		// 5b. Instances conversion never reached. Every path above stubs the instances it walks to, so one that
+		// has no stub hangs under content that was lost and no root or child loop ever visited it. Counting it
+		// here makes TotalInstances and LostInstances partition the scene's placements instead of understating it.
+		foreach ( var instance in c.Instances.Values )
+			if ( !c.Stubs.ContainsKey( instance.Id ) && !skips.Has( instance.Id ) )
+				skips.Loss( instance.Id, SkipCause.Unreached, c.InstanceName( instance ) );
+
 		// 6. Sky, ambient light and fog from RenderSettings.
 		if ( c.Blocks.FirstOrDefault( b => b.Type == "104" ) is Block render )
 		{
@@ -312,10 +329,14 @@ internal static class UnitySceneExport
 			["__references"] = new JsonArray(),
 			["__version"] = 3
 		};
+		// Every placement the scene refers to: the PrefabInstance blocks it holds, plus a stripped object naming an
+		// instance the file lost (that placement is still in the scene, and conversion reports it as lost).
+		var placements = c.Instances.Keys.ToHashSet();
+		placements.UnionWith( c.StrippedInstance.Values.Where( id => id != 0 && !placements.Contains( id ) ) );
 		return new SceneResult
 		{
 			Json = document.ToJsonString( new JsonSerializerOptions { WriteIndented = true } ),
-			Statistics = new( roots, c.Stubs.Count, nested, addedComponents, removed, skipped ),
+			Statistics = new( roots, c.Stubs.Count, nested, addedComponents, removed, skipped, placements.Count, skips.Count, skips ),
 			Information = result.Information,
 			Warnings = result.Warnings
 		};

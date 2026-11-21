@@ -620,6 +620,67 @@ internal static class UnityPrefabExport
 		public List<string> Warnings { get; } = new();
 	}
 
+	/// <summary>
+	/// Why a scene could not place prefab content: the causes are the report's grouping keys, so a cause names
+	/// a reason and the guids that hit it travel as samples rather than inside the text. One lost prefab
+	/// instance counts once, whichever side of <see cref="Converter.Instance"/> saw it.
+	/// </summary>
+	internal sealed class SkipCollector
+	{
+		/// <summary>How many names one cause carries into the report.</summary>
+		internal const int MaxSampleNames = 10;
+
+		internal sealed class Cause
+		{
+			public int Count;
+			public List<string> Samples { get; } = new();
+		}
+
+		readonly Dictionary<string, Cause> causes = new( StringComparer.Ordinal );
+		readonly HashSet<long> lost = new();
+
+		/// <summary>How many prefab instances could not be placed.</summary>
+		public int Count => lost.Count;
+
+		/// <summary>The causes in name order, each with its count and up to <see cref="MaxSampleNames"/> samples.</summary>
+		public IEnumerable<(string Cause, int Count, string[] Samples)> Causes =>
+			causes.OrderBy( c => c.Key, StringComparer.Ordinal ).Select( c => (c.Key, c.Value.Count, c.Value.Samples.ToArray()) );
+
+		/// <summary>One prefab instance that could not be placed. The same instance is counted once, so the child
+		/// loop and <see cref="Converter.Instance"/> can both see the drop without doubling the loss.</summary>
+		public void Loss( long instanceId, string cause, string sample )
+		{
+			if ( instanceId != 0 && !lost.Add( instanceId ) ) return;
+			if ( !causes.TryGetValue( cause, out var entry ) ) causes[cause] = entry = new();
+			entry.Count++;
+			if ( !string.IsNullOrEmpty( sample ) && entry.Samples.Count < MaxSampleNames && !entry.Samples.Contains( sample ) ) entry.Samples.Add( sample );
+		}
+
+		/// <summary>True when this prefab instance was already counted.</summary>
+		public bool Has( long instanceId ) => lost.Contains( instanceId );
+
+		/// <summary>The grouped report line: every cause with its count and sample names, in cause order.</summary>
+		public string Summary() => string.Join( "; ", Causes.Select( c =>
+			$"{c.Cause} ({c.Count}{(c.Samples.Length == 0 ? "" : ": " + string.Join( ", ", c.Samples ))})" ) );
+	}
+
+	/// <summary>The reasons a scene loses prefab content, as the report's grouping keys.</summary>
+	internal static class SkipCause
+	{
+		/// <summary>The instance names a guid the package does not contain.</summary>
+		public const string MissingSource = "prefab source is not in the package";
+		/// <summary>The source prefab is in the package but has no converted form (it failed, or was not selected).</summary>
+		public const string UnconvertedSource = "prefab source was not converted";
+		/// <summary>The source prefab holds no root transform to place.</summary>
+		public const string MissingRoot = "prefab source has no root transform";
+		/// <summary>The mirrored variant the placement needs was never generated.</summary>
+		public const string MissingVariant = "mirrored prefab variant was not generated";
+		/// <summary>A stripped object names a PrefabInstance the scene file does not contain.</summary>
+		public const string MissingInstance = "prefab instance is missing from the scene";
+		/// <summary>The instance hangs under content that was lost, so conversion never reached it.</summary>
+		public const string Unreached = "prefab instance was not reached (its parent was lost)";
+	}
+
 	/// <summary>The GUIDs of a converted prefab, so instances can map every node (see __PrefabIdToInstanceId).</summary>
 	internal static Guid[] PrefabGuids( string json ) => Guids( JsonNode.Parse( json )?["RootObject"] ).ToArray();
 
@@ -875,6 +936,8 @@ internal static class UnityPrefabExport
 			public Guid[] Ids;
 			/// <summary>Why instances of this prefab cannot be converted, or null.</summary>
 			public string Problem;
+			/// <summary>The cause <see cref="Problem"/> names, one of <see cref="SkipCause"/>, or null when there is none.</summary>
+			public string ProblemCause;
 			readonly Dictionary<long, int[]> pendingOut = new();
 			public string NameOf( long objectId ) => ById.GetValueOrDefault( objectId ) is { Type: "1" } go ? Scalar( go.Body, "m_Name" ) : objectId.ToString( CultureInfo.InvariantCulture );
 
@@ -918,9 +981,19 @@ internal static class UnityPrefabExport
 			}
 			else if ( found && mirrorAxis < 0 ) { path = Context.PrefabPathFor( guid ); Context.Converted.TryGetValue( guid, out json ); }
 			else if ( found && !isModel && Context.MirroredPrefabFor?.Invoke( guid, mirrorAxis ) is var (variantPath, variantJson) ) (path, json) = (variantPath, variantJson);
-			if ( !found || path == null || json == null )
+			if ( !found )
+			{
+				// A guid nothing in the package names: there is no asset to have converted.
+				source.ProblemCause = SkipCause.MissingSource;
 				source.Problem = mirrorAxis < 0 ? $"Nested prefab {guid} is not in the package or was not converted; instance skipped."
-					: $"Nested prefab {(found ? asset.Path : guid)} has no variant mirrored along {MirrorName( mirrorAxis )}; mirrored instance skipped.";
+					: $"Nested prefab {guid} has no variant mirrored along {MirrorName( mirrorAxis )}; mirrored instance skipped.";
+			}
+			else if ( path == null || json == null )
+			{
+				source.ProblemCause = mirrorAxis < 0 ? SkipCause.UnconvertedSource : SkipCause.MissingVariant;
+				source.Problem = mirrorAxis < 0 ? $"Nested prefab {guid} is not in the package or was not converted; instance skipped."
+					: $"Nested prefab {asset.Path} has no variant mirrored along {MirrorName( mirrorAxis )}; mirrored instance skipped.";
+			}
 			else if ( isModel )
 			{
 				// An FBX carries no prefab YAML: its prefab is the model root at the identity, named after the
@@ -953,7 +1026,13 @@ internal static class UnityPrefabExport
 					? source.Blocks.FirstOrDefault( b => b.Type == "1001" && IdOf( Field( b.Body, "m_TransformParent" ) ) == 0 ) : null;
 				var wrapperModel = wrapper == null ? null : byGuid.GetValueOrDefault( GuidOf( Field( wrapper.Body, "m_SourcePrefab" ) ) );
 				if ( source.Root == null && wrapperModel is not { Kind: UnityAssetKind.Model } )
+				{
+					// No Transform of its own and no model behind its top-level instance: either the instance's
+					// source is absent from the package, or what it names cannot be placed.
+					var wrapperGuid = wrapper == null ? "" : GuidOf( Field( wrapper.Body, "m_SourcePrefab" ) );
+					source.ProblemCause = wrapperGuid.Length == 0 || !byGuid.ContainsKey( wrapperGuid ) ? SkipCause.MissingSource : SkipCause.MissingRoot;
 					source.Problem = $"Nested prefab {asset.Path} has no root transform; instance skipped.";
+				}
 				else
 				{
 					source.ById = source.Blocks.GroupBy( b => b.Id ).ToDictionary( g => g.Key, g => g.First() );
@@ -1059,12 +1138,11 @@ internal static class UnityPrefabExport
 		public JsonObject WrapperRoot()
 		{
 			var sourceGuid = GuidOf( Field( Wrapper.Body, "m_SourcePrefab" ) );
-			if ( sourceGuid.Length == 0 ) throw new InvalidDataException( "Prefab has a top-level prefab instance with a missing prefab reference." );
-			if ( !byGuid.TryGetValue( sourceGuid, out var model ) ) throw new InvalidDataException( $"Prefab has a top-level prefab instance with a missing prefab reference ({sourceGuid})." );
-			// A top-level instance that sources another prefab is a prefab variant: the base would have to be
-			// merged first, which this converter does not do.
-			if ( model.Kind == UnityAssetKind.Prefab ) throw new InvalidDataException( "Prefab has no root transform (prefab variants are not supported)." );
-			if ( model.Kind != UnityAssetKind.Model ) throw new InvalidDataException( $"Prefab's top-level prefab instance instances {model.Path}, which is not a model; the wrapper cannot be converted." );
+			// A top-level instance only converts when it sources an FBX model: the wrapper rebuilds that model's
+			// root. Anything else names itself in the error (missing reference, or the variant this converter
+			// does not merge) instead of every failure reading as an unsupported variant.
+			if ( sourceGuid.Length == 0 || !byGuid.TryGetValue( sourceGuid, out var model ) || model.Kind != UnityAssetKind.Model )
+				throw new InvalidDataException( WrapperProblem() );
 			var root = RootOf( Wrapper, Path.GetFileNameWithoutExtension( model.Path ) );
 			var parts = ModelRoot( model, root.Transform, root.Name, root.Active, root.StaticFlags, Blocks );
 			var node = parts.Node;
@@ -1168,11 +1246,30 @@ internal static class UnityPrefabExport
 			return node;
 		}
 
+		/// <summary>What the file's top-level prefab instance sources, in the report's words: a model prefab instance
+		/// is the only thing <see cref="WrapperRoot"/> can rebuild, a prefab variant needs a merge this converter
+		/// does not do, and an absent guid is a reference into nothing.</summary>
+		public string WrapperProblem()
+		{
+			var guid = GuidOf( Field( Wrapper.Body, "m_SourcePrefab" ) );
+			if ( guid.Length == 0 ) return "Prefab has a top-level prefab instance with a missing prefab reference; the wrapper cannot be converted.";
+			if ( !byGuid.TryGetValue( guid, out var asset ) ) return $"Prefab has a top-level prefab instance with a missing prefab reference ({guid}); the wrapper cannot be converted.";
+			return asset.Kind == UnityAssetKind.Prefab
+				? $"Prefab has a top-level prefab instance with a prefab variant ({asset.Path}); prefab variants are not supported."
+				: $"Prefab has a top-level prefab instance with a {asset.Kind.ToString().ToLowerInvariant()} instance ({asset.Path}), which is not a model; the wrapper cannot be converted.";
+		}
+
 		/// <summary>An instance's name as Unity shows it: its m_Name override, else the source prefab's root name or file name.</summary>
 		public string InstanceName( Block instance )
 		{
 			var source = SourceOf( GuidOf( Field( instance.Body, "m_SourcePrefab" ) ) );
-			if ( source.Problem != null ) return byGuid.TryGetValue( GuidOf( Field( instance.Body, "m_SourcePrefab" ) ), out var asset ) ? Path.GetFileNameWithoutExtension( asset.Path ) : instance.Id.ToString( CultureInfo.InvariantCulture );
+			if ( source.Problem != null )
+			{
+				// The source cannot be read, so the instance's own m_Name override is the only name it carries.
+				var own = Regex.Match( instance.Body, @"(?ms)^\s*-\s*target:\s*\{[^}]*\}\s*\r?\n\s*propertyPath:\s*m_Name\s*\r?\n\s*value:[ 	]*([^\r\n]*?)[ 	]*\r?$" );
+				if ( own.Success && Unquote( own.Groups[1].Value ).Length > 0 ) return Unquote( own.Groups[1].Value );
+				return byGuid.TryGetValue( GuidOf( Field( instance.Body, "m_SourcePrefab" ) ), out var asset ) ? Path.GetFileNameWithoutExtension( asset.Path ) : instance.Id.ToString( CultureInfo.InvariantCulture );
+			}
 			var name = string.IsNullOrEmpty( source.RootName ) ? Path.GetFileNameWithoutExtension( source.Asset.Path ) : source.RootName;
 			var renamed = Regex.Match( instance.Body, @"(?ms)^\s*- target:\s*\{fileID:\s*" + source.RootObject + @"\b[^}]*\}\s*\r?\n\s*propertyPath:\s*m_Name\s*\r?\n\s*value:[ \t]*([^\r\n]*?)[ \t]*\r?$" );
 			return renamed.Success ? Unquote( renamed.Groups[1].Value ) : name;
@@ -1250,9 +1347,10 @@ internal static class UnityPrefabExport
 		/// is zeroed because an instance replaces it; a scene root keeps its full transform. <paramref name="inherited"/>:
 		/// a baked parent emitted an identity, so its non-baked children fold that placement into their own local
 		/// transform to stay where Unity has them. <paramref name="pending"/>: the mirror the parent still owes this
-		/// object (see <see cref="Unmirror"/>); null for none.
+		/// object (see <see cref="Unmirror"/>); null for none. <paramref name="skips"/>: a scene's collector, which
+		/// counts a child instance dropped here; null for a prefab, which reports the drop as a warning instead.
 		/// </summary>
-		public JsonObject Node( Block transform, bool isRoot, UnityTransform inherited = null, int[] pending = null )
+		public JsonObject Node( Block transform, bool isRoot, UnityTransform inherited = null, int[] pending = null, SkipCollector skips = null )
 		{
 			pending ??= isRoot ? RootMirror : NoMirror;
 			var objectId = IdOf( Field( transform.Body, "m_GameObject" ) );
@@ -1363,12 +1461,19 @@ internal static class UnityPrefabExport
 			foreach ( Match child in Regex.Matches( Regex.Match( transform.Body, @"(?ms)^\s*m_Children:(.*?)(?=^\s*m_Father:)" ).Groups[1].Value, @"fileID:\s*(-?[0-9]+)" ) )
 			{
 				var childId = long.Parse( child.Groups[1].Value, CultureInfo.InvariantCulture );
-				if ( StrippedInstance.TryGetValue( childId, out var instanceId ) && Instances.TryGetValue( instanceId, out var instance ) )
+				if ( StrippedInstance.TryGetValue( childId, out var instanceId ) )
 				{
-					if ( Instance( instance, chain, owed ) is JsonObject nested ) children.Add( nested );
+					if ( Instances.TryGetValue( instanceId, out var instance ) )
+					{
+						// Instance reports a source it cannot resolve to the collector, so a null here is already
+						// counted; a prefab conversion (no collector) still gets its per-instance warning.
+						if ( Instance( instance, chain, owed, skips ) is JsonObject nested ) children.Add( nested );
+					}
+					// A stripped object naming an instance the file does not hold: its null was discarded here.
+					else skips?.Loss( instanceId, SkipCause.MissingInstance, $"instance {instanceId}" );
 				}
 				else if ( ById.TryGetValue( childId, out var childTransform ) && !childTransform.Stripped && !skinned.DroppedObjects.Contains( IdOf( Field( childTransform.Body, "m_GameObject" ) ) ) )
-					children.Add( Node( childTransform, false, chain, owed ) );
+					children.Add( Node( childTransform, false, chain, owed, skips ) );
 			}
 			return node;
 		}
@@ -1380,16 +1485,18 @@ internal static class UnityPrefabExport
 		/// instance root must fold that placement into its own transform override to stay where Unity has it.
 		/// <paramref name="pending"/>: the mirror the parent still owes the instance. An instance whose transform
 		/// mirrors (a negative scale) points at the source prefab's mirrored variant with a positive scale.
-		/// Returns null (with a warning) when the source prefab was not converted.
+		/// Returns null when the source prefab was not converted; <paramref name="skips"/> (a scene's) counts that
+		/// loss under its cause, while a prefab conversion reports it as a warning.
 		/// </summary>
-		public JsonObject Instance( Block instance, UnityTransform prepend, int[] pending = null )
+		public JsonObject Instance( Block instance, UnityTransform prepend, int[] pending = null, SkipCollector skips = null )
 		{
 			pending ??= NoMirror;
 			var sourceGuid = GuidOf( Field( instance.Body, "m_SourcePrefab" ) );
 			var plain = SourceOf( sourceGuid );
 			if ( plain.Problem != null )
 			{
-				Result.Warnings.Add( plain.Problem );
+				if ( skips != null ) skips.Loss( instance.Id, plain.ProblemCause ?? SkipCause.UnconvertedSource, $"{InstanceName( instance )} [{sourceGuid}]" );
+				else Result.Warnings.Add( plain.Problem );
 				return null;
 			}
 			var sourceRootObject = plain.RootObject;
@@ -1495,7 +1602,8 @@ internal static class UnityPrefabExport
 			var source = IsMirror( owed ) ? SourceOf( sourceGuid, UnityPrefabExport.MirrorAxis( owed ) ) : plain;
 			if ( source.Problem != null )
 			{
-				Result.Warnings.Add( $"{name}: {source.Problem}" );
+				if ( skips != null ) skips.Loss( instance.Id, source.ProblemCause ?? SkipCause.MissingVariant, $"{name} [{sourceGuid}]" );
+				else Result.Warnings.Add( $"{name}: {source.Problem}" );
 				return null;
 			}
 			var sourceKey = source.Key;
@@ -1616,12 +1724,18 @@ internal static class UnityPrefabExport
 		var text = UnityImport.ReadText( prefab.Source );
 		var converter = new Converter( prefab, text, context, result, mirrorAxis );
 		var root = converter.Roots.FirstOrDefault();
-		// A model wrapper has no Transform block at all: its whole content is one PrefabInstance of an FBX
-		// model, which WrapperRoot rebuilds. Anything else without a root is an unsupported prefab variant.
 		JsonObject rootNode;
 		if ( root != null ) rootNode = converter.Node( root, true );
-		else if ( converter.Wrapper != null ) rootNode = converter.WrapperRoot();
-		else throw new InvalidDataException( "Prefab has no root transform (prefab variants are not supported)." );
+		// A model wrapper has no Transform block at all: its whole content is one top-level prefab instance, and
+		// what that instance sources decides what the file is. Only a model prefab instance can be rebuilt;
+		// a prefab variant needs a merge this converter does not do, and an absent guid has nothing to resolve,
+		// so WrapperProblem names each instead of all of them reading as an unsupported variant.
+		else if ( converter.Wrapper != null )
+		{
+			if ( converter.WrapperModel == null ) throw new InvalidDataException( converter.WrapperProblem() );
+			rootNode = converter.WrapperRoot();
+		}
+		else throw new InvalidDataException( "Prefab has no root transform; the file has no object that could become an s&box root." );
 		result.Json = Document( rootNode );
 		converter.ReportBuiltins();
 		return result;

@@ -487,9 +487,19 @@ public static class UnityImport
 					documents.Add( (Output( GeneratedPath( Path.ChangeExtension( asset.Path, ".scene" ) ) ), scene.Json) );
 					conversions++;
 					var s = scene.Statistics;
-					sceneConversions.Add( new { Source = asset.Path, s.Roots, s.Instances, s.Nested, s.AddedComponents, s.RemovedObjects, s.Skipped } );
+					sceneConversions.Add( new
+					{
+						Source = asset.Path, s.Roots, s.Instances, s.Nested, s.AddedComponents, s.RemovedObjects, s.Skipped,
+						s.TotalInstances, s.LostInstances,
+						// Cause to count, each with up to SkipCollector.MaxSampleNames of the guids that hit it.
+						SkipCauses = s.Skips.Causes.ToDictionary( c => c.Cause, c => new { c.Count, Samples = c.Samples } )
+					} );
 					warnings.AddRange( scene.Warnings.Select( w => $"{asset.Path}: {w}" ) );
 					information.AddRange( scene.Information.Select( m => $"{asset.Path}: {m}" ) );
+					// One grouped Error per scene: the losses are already counted by cause, so the report names the
+					// scene, how much of it is missing and why, instead of one line per lost instance.
+					if ( s.LostInstances > 0 )
+						Issue( asset.Path, "conversion-skipped", $"Scene content is missing: {s.LostInstances} of {s.TotalInstances} prefab instance(s) could not be converted. {s.Skips.Summary()}." );
 				}
 				catch ( InvalidDataException ex ) { Issue( asset.Path, "conversion-skipped", $"Scene conversion skipped. {ex.Message}" ); }
 			}
