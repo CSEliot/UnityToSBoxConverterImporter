@@ -17,6 +17,7 @@ MonoBehaviour:
   - {fileID: 11400002}
   - {fileID: 11400003}
   - {fileID: 11400004}
+  - {fileID: 11400005}
 --- !u!114 &11400001
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -147,3 +148,43 @@ MonoBehaviour:
   maximumHeight:
     m_OverrideState: 0
     m_Value: 50
+--- !u!114 &11400005
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2d08ce26990eb1a4a9177b860541e702, type: 3}
+  m_Name: Exposure
+  m_EditorClassIdentifier: Unity.RenderPipelines.HighDefinition.Runtime::UnityEngine.Rendering.HighDefinition.Exposure
+  active: 1
+  mode:
+    m_OverrideState: 1
+    m_Value: 1
+  meteringMode:
+    m_OverrideState: 0
+    m_Value: 0
+  luminanceSource:
+    m_OverrideState: 0
+    m_Value: 0
+  fixedExposure:
+    m_OverrideState: 1
+    m_Value: 12.5
+  compensation:
+    m_OverrideState: 1
+    m_Value: 0.5
+  limitMin:
+    m_OverrideState: 1
+    m_Value: 4
+  limitMax:
+    m_OverrideState: 1
+    m_Value: 16
+  curveMap:
+    m_OverrideState: 0
+  limitMinCurveMap:
+    m_OverrideState: 0
+  limitMaxCurveMap:
+    m_OverrideState: 0
+  adaptationSpeed:
+    m_OverrideState: 0
+    m_Value: 2

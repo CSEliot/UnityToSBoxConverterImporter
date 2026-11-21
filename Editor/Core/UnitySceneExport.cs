@@ -254,6 +254,8 @@ internal static class UnitySceneExport
 		// 6. Sky, ambient light and fog: HDRP's Volume overrides first, then Unity's RenderSettings.
 		var environment = UnityVolume.Read( c.Blocks, byGuid );
 		result.Information.AddRange( environment.Information );
+		// Exposure is a Volume override, so its EV range belongs to the scene's report, not to a camera.
+		if ( environment.Exposure != null ) result.Information.Add( environment.Exposure.Note );
 		if ( environment.Sky is UnityVolume.Sky volumeSky )
 		{
 			result.Information.Add( volumeSky.Note );
@@ -356,9 +358,10 @@ internal static class UnitySceneExport
 		foreach ( var block in c.Blocks )
 		{
 			if ( block.Stripped || block.Type is "1" or "4" or "224" or "1001" or "29" or "104" or "157" or "196" or "1660057539" || Convertible( block.Type ) ) continue;
-			// Volume and StaticLightingSky are read by the environment step above, which names them in its
-			// own lines; counting them here would report the same components twice as anonymous scripts.
-			if ( block.Type == "114" && UnityHdrp.Component( GuidOf( Field( block.Body, "m_Script" ) ) )?.Kind is HdrpComponentKind.Volume or HdrpComponentKind.StaticLightingSky ) continue;
+			// HDRP light and camera components are read by the light and camera conversion, and Volume and
+			// StaticLightingSky by the environment step, which name them in their own lines; counting them here
+			// would report the same components twice as anonymous scripts.
+			if ( block.Type == "114" && UnityHdrp.Component( GuidOf( Field( block.Body, "m_Script" ) ) )?.Kind is HdrpComponentKind.Volume or HdrpComponentKind.StaticLightingSky or HdrpComponentKind.Light or HdrpComponentKind.Camera ) continue;
 			if ( c.ById.GetValueOrDefault( IdOf( Field( block.Body, "m_GameObject" ) ) ) is not { Type: "1", Stripped: false } go ) continue;
 			var name = TypeName( block.Type, block.Body );
 			if ( !unconverted.TryGetValue( name, out var owners ) ) unconverted[name] = owners = new();
@@ -371,6 +374,7 @@ internal static class UnitySceneExport
 		}
 		result.Information.Add( "Lightmaps, light probes, the navigation mesh, occlusion culling data and post-processing volumes are not converted." );
 		c.ReportBuiltins();
+		c.ReportHdrp();
 		// Counted here from every non-stripped type-114 block. The census names only blocks it can attribute
 		// to a GameObject, so on a lossy scene its component lines can be lower than this total; HDRP keeps
 		// light units, probe settings and Volume overrides in these MonoBehaviours, not in the Unity components.
@@ -526,14 +530,24 @@ internal static class UnitySceneExport
 	}
 
 	/// <summary>Unity Camera (class 20). Unity's field of view is vertical by default and stays so; near/far planes
-	/// convert to inches within the component's ranges; the sky always draws behind, so ClearFlags is All.</summary>
-	internal static JsonObject Camera( Guid id, string body, bool enabled, bool main )
+	/// convert to inches within the component's ranges; the sky always draws behind, so ClearFlags is All.
+	/// An HDRP camera carries HDAdditionalCameraData (<paramref name="hd"/>, null for a non-HDRP camera): its
+	/// clear-colour mode picks between the sky and backgroundColorHDR, clearDepth drops the depth clear, and
+	/// the antialiasing mode maps to s&amp;box's single on/off flag. The volume mask and physical camera
+	/// settings have no CameraComponent counterpart and are reported by <see cref="UnityHdrpLighting.Report"/>.</summary>
+	internal static JsonObject Camera( Guid id, string body, string hd, bool enabled, bool main )
 	{
 		var orthographic = Scalar( body, "orthographic" ) == "1";
-		return Component( "Sandbox.CameraComponent", id, enabled, new()
+		// ClearColorMode: 0 Sky, 1 Color, 2 None. Only Color carries an authored background; HDRP stores it linear.
+		var solid = hd != null && (int)Number( hd, "clearColorMode" ) == 1;
+		var background = solid
+			? Vector( hd, "backgroundColorHDR", "r", "g", "b" )
+			: Vector( body, "m_BackGroundColor", "r", "g", "b" ).Select( Linear );
+		var properties = new Dictionary<string, JsonNode>
 		{
-			["BackgroundColor"] = Colour( Vector( body, "m_BackGroundColor", "r", "g", "b" ).Select( Linear ) ),
-			["ClearFlags"] = "All",
+			["BackgroundColor"] = Colour( background ),
+			// HDRP's clearDepth 0 leaves the depth buffer alone; s&amp;box clears the color buffer only then.
+			["ClearFlags"] = hd != null && Scalar( hd, "clearDepth" ) == "0" ? "Color" : "All",
 			["FieldOfView"] = Single( Math.Clamp( Scalar( body, "field of view" ).Length == 0 ? 60 : Number( body, "field of view" ), 1, 179 ) ),
 			["FovAxis"] = Scalar( body, "m_FOVAxisMode" ) == "1" ? "Horizontal" : "Vertical",
 			["IsMainCamera"] = main,
@@ -546,26 +560,35 @@ internal static class UnitySceneExport
 			["Viewport"] = "0,0,1,1",
 			["ZFar"] = Single( Math.Clamp( Number( body, "far clip plane" ) * UnitsPerMetre, 1, 100000 ) ),
 			["ZNear"] = Single( Math.Clamp( Number( body, "near clip plane" ) * UnitsPerMetre, 1, 1000 ) )
-		} );
+		};
+		// AntialiasingMode: 0 None, 1 FXAA, 2 TAA, 3 SMAA. s&amp;box has one flag, so any non-zero mode enables it.
+		// Only an HDRP camera writes the key; a Unity camera keeps the editor's own property set byte for byte.
+		if ( hd != null ) properties["DisableAntiAliasing"] = Number( hd, "antialiasing" ) == 0;
+		return Component( "Sandbox.CameraComponent", id, enabled, properties );
 	}
 
 	/// <summary>Unity AudioListener (class 81).</summary>
 	internal static JsonObject AudioListener( Guid id, bool enabled ) => Component( "Sandbox.AudioListener", id, enabled, new() { ["UseCameraDirection"] = true } );
 
-	/// <summary>
-	/// Unity Light (class 108): directional, point and spot lights. Unity (linear colour space, as every URP
+	/// <summary>Unity Light (class 108): directional, point and spot lights. Unity (linear colour space, as every URP
 	/// project) lights with linear(m_Color) × colour temperature × intensity; s&amp;box carries the intensity in
 	/// the colour's magnitude. Point and spot brightness is approximate: Unity's intensity is a unit-based
-	/// multiplier, s&amp;box attenuates the colour over Radius. Area lights return null.
+	/// multiplier, s&amp;box attenuates the colour over Radius. An HDRP light takes its intensity from
+	/// HDAdditionalLightData through <see cref="UnityHdrpLighting"/>; <paramref name="hd"/> is that component's
+	/// body, or null for a non-HDRP light. Area lights return null.
 	/// </summary>
-	internal static JsonObject Light( Guid id, string body, bool enabled, out string tag )
+	internal static JsonObject Light( Guid id, string body, string hd, bool enabled, out string tag, out UnityHdrpLighting.Converted converted )
 	{
 		tag = null;
 		var type = (int)Number( body, "m_Type" );
+		converted = UnityHdrpLighting.Read( hd, type );
 		if ( type is not (0 or 1 or 2) ) return null;
 		var colour = Vector( body, "m_Color", "r", "g", "b" ).Select( Linear ).ToArray();
+		// Colour temperature is on the Unity Light and is applied exactly once, here; the HD component has none.
 		if ( Scalar( body, "m_UseColorTemperature" ) == "1" ) colour = Multiply( colour, Temperature( Number( body, "m_ColorTemperature" ) ) );
-		var intensity = Scalar( body, "m_Intensity" ).Length == 0 ? 1 : Number( body, "m_Intensity" );
+		var intensity = converted.Hdrp && !converted.ReportOnly
+			? converted.Intensity
+			: Scalar( body, "m_Intensity" ).Length == 0 ? 1 : Number( body, "m_Intensity" );
 		var lightColour = Colour( colour.Select( v => v * intensity ) );
 		var shadows = Regex.Match( body, @"(?ms)^\s*m_Shadows:\s*\r?\n\s*m_Type:\s*([0-9]+)" ) is { Success: true } shadow && shadow.Groups[1].Value != "0";
 		var radius = Single( Number( body, "m_Range" ) * UnitsPerMetre );
@@ -587,7 +610,10 @@ internal static class UnitySceneExport
 				tag = "light_spot,light";
 				// Unity angles are full cone angles; s&box's are half-angles. Before 2019 there was no inner angle.
 				var outer = Math.Clamp( Number( body, "m_SpotAngle" ) / 2, 0, 90 );
-				var inner = Scalar( body, "m_InnerSpotAngle" ).Length == 0 ? outer * 0.75 : Math.Clamp( Number( body, "m_InnerSpotAngle" ) / 2, 0, outer );
+				// HDRP states the inner cone as a percentage of the outer one (m_InnerSpotPercent, -1 when unset).
+				var hdInner = UnityHdrpLighting.InnerSpotAngle( hd, outer );
+				var inner = !double.IsNaN( hdInner ) ? hdInner
+					: Scalar( body, "m_InnerSpotAngle" ).Length == 0 ? outer * 0.75 : Math.Clamp( Number( body, "m_InnerSpotAngle" ) / 2, 0, outer );
 				return Component( "Sandbox.SpotLight", id, enabled, new()
 				{
 					["Attenuation"] = 1, ["ConeInner"] = Single( inner ), ["ConeOuter"] = Single( outer ), ["FogMode"] = "Enabled", ["FogStrength"] = 1,

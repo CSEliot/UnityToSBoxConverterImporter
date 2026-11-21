@@ -34,10 +34,11 @@ internal static class UnityVolume
 		["d877ec3e844f2ca46830012e8e79319b"] = "PhysicallyBasedSky",
 		["59b6606ef2548734bb6d11b9d160bc7e"] = "HDRISky",
 		["a81bcacc415a1f743bfdf703afc52027"] = "GradientSky",
+		["2d08ce26990eb1a4a9177b860541e702"] = "Exposure",
 	};
 
 	/// <summary>The overrides this step reads. Anything else in the profile is named once in the report.</summary>
-	static readonly string[] Consumed = { "VisualEnvironment", "PhysicallyBasedSky", "HDRISky", "GradientSky", "Fog", "ExponentialFog" };
+	static readonly string[] Consumed = { "VisualEnvironment", "PhysicallyBasedSky", "HDRISky", "GradientSky", "Fog", "ExponentialFog", "Exposure" };
 
 	/// <summary>One override component of a profile: its name and its serialised body.</summary>
 	internal sealed record Override( string Type, string Body );
@@ -56,12 +57,17 @@ internal static class UnityVolume
 	/// <summary>The fog a Volume override asks for, in Unity units; the scene export converts to engine units.</summary>
 	internal sealed record Fog( double[] Colour, bool SkyColour, double Distance, double BaseHeight, double HeightAttenuation, double MaximumHeight, bool Legacy, string Note );
 
+	/// <summary>HDRP's Exposure override, in EV100. s&amp;box's CameraComponent.AutoExposure is a multiplier
+	/// tonemap (its Min/MaxExposure are 1..3, not stops), so the range is reported and never guessed into it.</summary>
+	internal sealed record Exposure( bool Automatic, double FixedEv, double Compensation, double LimitMin, double LimitMax, string Note );
+
 	/// <summary>Everything the environment step found: null members mean the source supplies nothing of that kind.</summary>
 	internal sealed class Motion
 	{
 		public Sky Sky;
 		public double[] Ambient;
 		public Fog Fog;
+		public Exposure Exposure;
 		public List<string> Information { get; } = new();
 	}
 
@@ -295,6 +301,23 @@ internal static class UnityVolume
 				(legacy ? " ExponentialFog is deprecated in HDRP 17 but is the only fog record in the profile." : "") +
 				(fogType == FogVolumetric || Value( source, "enableVolumetricFog" ) == "1" ? " Volumetric fog is not reproduced; only distance and height fog are." : "") +
 				(attenuation > 0 || maximumHeight > 0 ? " Height fog maps to Sandbox.Fog's height ramp, a different falloff curve." : "") );
+		}
+
+		// Exposure lives in the Volume, not in HDAdditionalCameraData, which has no exposure field at all.
+		// s&box's CameraComponent.AutoExposure is a multiplier tonemap (Min/MaxExposure are 1..3, not EV100
+		// stops), so the authored range is reported instead of being mapped onto different units.
+		if ( merged.GetValueOrDefault( "Exposure" ) is { } exposureOverride )
+		{
+			var mode = (int)Number( exposureOverride, "mode", 0 );
+			var automatic = mode != 0;
+			var fixedEv = Number( exposureOverride, "fixedExposure", 0 );
+			var compensation = Number( exposureOverride, "compensation", 0 );
+			var minimum = Number( exposureOverride, "limitMin", -1 );
+			var maximum = Number( exposureOverride, "limitMax", 14 );
+			static string Ev( double value ) => value.ToString( "0.##", CultureInfo.InvariantCulture );
+			motion.Exposure = new( automatic, fixedEv, compensation, minimum, maximum, automatic
+				? $"HDRP auto exposure (mode {mode}, EV100 {Ev( minimum )} to {Ev( maximum )}, compensation {Ev( compensation )}) is reported, not mapped: s&box's CameraComponent.AutoExposure is a multiplier tonemap, not an EV100 range."
+				: $"HDRP fixed exposure EV100 {Ev( fixedEv )} is reported, not mapped: s&box's CameraComponent.AutoExposure has no fixed-EV mode." );
 		}
 
 		var unsupported = merged.Keys.Where( k => !Consumed.Contains( k, StringComparer.OrdinalIgnoreCase ) ).OrderBy( k => k, StringComparer.Ordinal ).ToArray();

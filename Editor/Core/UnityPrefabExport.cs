@@ -785,6 +785,14 @@ internal static class UnityPrefabExport
 		public readonly Dictionary<long, Block> Transforms;
 		/// <summary>Convertible component blocks by GameObject fileID.</summary>
 		public readonly Dictionary<long, Block[]> Components;
+		/// <summary>HDAdditionalLightData blocks by GameObject fileID: HDRP keeps a light's physical unit,
+		/// intensity and dimmer there rather than on the Unity Light.</summary>
+		public readonly Dictionary<long, Block> HdLights;
+		/// <summary>HDAdditionalCameraData blocks by GameObject fileID.</summary>
+		public readonly Dictionary<long, Block> HdCameras;
+		/// <summary>The grouped HDRP light and camera lines this file owes: one area-light line and one unit
+		/// line, not one report line per light.</summary>
+		internal readonly UnityHdrpLighting.Report Hdrp = new();
 		/// <summary>PrefabInstance blocks by fileID.</summary>
 		public readonly Dictionary<long, Block> Instances;
 		/// <summary>Stripped transform fileID → the PrefabInstance it stands in for an object of.</summary>
@@ -824,6 +832,17 @@ internal static class UnityPrefabExport
 			builtinReported = true;
 			Result.Information.Add( $"{builtinRenderers} object(s) draw a Unity built-in mesh that is not a primitive (a sprite or skybox quad); those renderers were skipped." );
 		}
+
+		/// <summary>The HDRP data components of one kind on this file's GameObjects, by GameObject fileID.</summary>
+		Dictionary<long, Block> HdComponents( HdrpComponentKind kind ) => Blocks
+			.Where( b => !b.Stripped && b.Type == "114" && UnityHdrp.Component( GuidOf( Field( b.Body, "m_Script" ) ) )?.Kind == kind )
+			.GroupBy( b => IdOf( Field( b.Body, "m_GameObject" ) ) ).ToDictionary( g => g.Key, g => g.First() );
+
+		/// <summary>One component body from an HD map, or null when the object has none.</summary>
+		static string Hd( Dictionary<long, Block> map, long objectId ) => map.TryGetValue( objectId, out var block ) ? block.Body : null;
+
+		/// <summary>Writes the grouped area-light and light-unit lines once, whichever path converted the file.</summary>
+		public void ReportHdrp() => Hdrp.Flush( Result.Information );
 		readonly SkinnedConversion skinned;
 		readonly Dictionary<string, Source> sources = new( StringComparer.OrdinalIgnoreCase );
 		readonly long mainCamera;
@@ -840,6 +859,8 @@ internal static class UnityPrefabExport
 			Transforms = Blocks.Where( b => b.Type is "4" or "224" && !b.Stripped ).GroupBy( b => IdOf( Field( b.Body, "m_GameObject" ) ) ).ToDictionary( g => g.Key, g => g.First() );
 			Components = Blocks.Where( b => !b.Stripped && b.Type is "33" or "23" or "64" or "65" or "135" or "136" or "137" or "95" or "20" or "81" or "108" )
 				.GroupBy( b => IdOf( Field( b.Body, "m_GameObject" ) ) ).ToDictionary( g => g.Key, g => g.ToArray() );
+			HdLights = HdComponents( HdrpComponentKind.Light );
+			HdCameras = HdComponents( HdrpComponentKind.Camera );
 			var unconverted = Blocks.Where( b => !b.Stripped ).Select( b => b.Type switch { "154" => "TerrainCollider", "146" => "WheelCollider", "143" => "CharacterController", _ => null } )
 				.Where( n => n != null ).Distinct().ToArray();
 			if ( unconverted.Length > 0 ) result.Information.Add( $"{string.Join( ", ", unconverted )} not converted." );
@@ -1441,13 +1462,20 @@ internal static class UnityPrefabExport
 					list.Add( ModelCollider( id, model, enabled ) );
 				if ( component.Type == "64" && model == null ) Result.Warnings.Add( $"{name}: MeshCollider without a converted mesh on the same object was skipped." );
 				if ( PrimitiveCollider( component, id, enabled, chain, name, ref reportedRotation, owed ) is JsonObject collider ) list.Add( collider );
-				if ( component.Type == "20" ) list.Add( UnitySceneExport.Camera( id, component.Body, enabled, component.Id == mainCamera ) );
+				if ( component.Type == "20" )
+				{
+					var hdCamera = Hd( HdCameras, objectId );
+					Hdrp.AddCamera( hdCamera );
+					list.Add( UnitySceneExport.Camera( id, component.Body, hdCamera, enabled, component.Id == mainCamera ) );
+				}
 				if ( component.Type == "81" ) list.Add( UnitySceneExport.AudioListener( id, enabled ) );
 				if ( component.Type == "108" )
 				{
-					var light = UnitySceneExport.Light( id, component.Body, enabled, out var tag );
-					if ( light == null ) Result.Information.Add( $"{name}: area light not converted; s&box has no rectangle or disc lights." );
-					else { list.Add( light ); tags.Add( tag ); }
+					// HDRP keeps the physical intensity, unit and dimmer in HDAdditionalLightData on this
+					// GameObject; the grouped report carries the unit scale and the area lights it drops.
+					var light = UnitySceneExport.Light( id, component.Body, Hd( HdLights, objectId ), enabled, out var tag, out var converted );
+					Hdrp.Add( name, converted );
+					if ( light != null ) { list.Add( light ); tags.Add( tag ); }
 				}
 			}
 			if ( tags.Count > 0 ) node["Tags"] = string.Join( ",", tags );
@@ -1738,6 +1766,7 @@ internal static class UnityPrefabExport
 		else throw new InvalidDataException( "Prefab has no root transform; the file has no object that could become an s&box root." );
 		result.Json = Document( rootNode );
 		converter.ReportBuiltins();
+		converter.ReportHdrp();
 		return result;
 	}
 
