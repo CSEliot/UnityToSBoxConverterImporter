@@ -160,6 +160,10 @@ public static class UnityImport
 		// because an HDRP scene has hundreds of these components and a material line each would drown it.
 		var hdrpMaterials = 0;
 		var hdrpComponents = new HdrpCounts( 0, 0, 0, 0 );
+		// HDRP Lit features the complex shader cannot express. They are grouped into one line at the end
+		// of the import rather than reported per material, because a real project has dozens.
+		var transmissionMaterials = new HashSet<string>( StringComparer.OrdinalIgnoreCase );
+		var subsurfaceMaterials = new HashSet<string>( StringComparer.OrdinalIgnoreCase );
 		var operation = "creating the staging folder";
 		string currentAsset = null;
 		Exception failure = null;
@@ -214,6 +218,8 @@ public static class UnityImport
 							material.ConfigureShader( source );
 						}
 						if ( material.Pipeline == UnityPipeline.Hdrp ) hdrpMaterials++;
+						if ( material.Transmission ) transmissionMaterials.Add( asset.Path );
+						if ( material.Subsurface ) subsurfaceMaterials.Add( asset.Path );
 						if ( extractChannel != null || extractChannels != null )
 						{
 							material.PrepareChannels( (guid, channel, scale, invert) =>
@@ -511,6 +517,8 @@ public static class UnityImport
 			}
 			var hdrp = hdrpComponents + new HdrpCounts( hdrpMaterials, 0, 0, 0 );
 			if ( hdrp.Total > 0 ) information.Add( hdrp.Report );
+			if ( UnityHdrp.UnsupportedMaterials( transmissionMaterials, subsurfaceMaterials ) is string unsupportedSurface )
+				information.Add( unsupportedSurface );
 			var variants = mirroredPrefabs.Values.Count( v => v != null );
 			if ( variants > 0 ) information.Add( $"{variants} mirrored prefab variant(s) and {mirroredModels.Count} mirrored model(s) were generated for placements with a negative scale (s&box would draw those inside out)." );
 			operation = "extracting texture channels";

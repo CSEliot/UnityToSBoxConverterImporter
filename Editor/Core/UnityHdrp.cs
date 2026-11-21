@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace ImportUnityPackage;
@@ -164,5 +165,27 @@ public static class UnityHdrp
 			}
 		}
 		return new( materials, lights, probes, volumes );
+	}
+
+	/// <summary>
+	/// One line for the HDRP Lit features s&box's complex shader has no model for. Transmission and
+	/// subsurface scattering change what a surface is, so they are neither approximated nor silently
+	/// dropped: the materials are named so a reviewer can decide per surface. Long lists are sampled,
+	/// because a project has more of these than the report can carry.
+	/// </summary>
+	public static string UnsupportedMaterials( IEnumerable<string> transmission, IEnumerable<string> subsurface )
+	{
+		static string Group( string feature, IEnumerable<string> materials )
+		{
+			// Key by path so same-named materials in different folders are counted; show the short name.
+			var paths = materials.Distinct( StringComparer.OrdinalIgnoreCase ).OrderBy( n => n, StringComparer.Ordinal ).ToArray();
+			var names = paths.Select( Path.GetFileNameWithoutExtension ).Distinct( StringComparer.OrdinalIgnoreCase ).ToArray();
+			return $"{paths.Length} use {feature} ({string.Join( ", ", names.Take( 5 ) )}{(names.Length > 5 ? ", …" : "")})";
+		}
+		var groups = new List<string>();
+		if ( transmission.Any() ) groups.Add( Group( "transmission", transmission ) );
+		if ( subsurface.Any() ) groups.Add( Group( "subsurface scattering", subsurface ) );
+		if ( groups.Count == 0 ) return null;
+		return $"HDRP surfaces with no s&box equivalent were converted without that feature, so they do not render as authored: {string.Join( "; ", groups )}.";
 	}
 }
