@@ -251,13 +251,57 @@ internal static class UnitySceneExport
 			if ( !c.Stubs.ContainsKey( instance.Id ) && !skips.Has( instance.Id ) )
 				skips.Loss( instance.Id, SkipCause.Unreached, c.InstanceName( instance ) );
 
-		// 6. Sky, ambient light and fog from RenderSettings.
+		// 6. Sky, ambient light and fog: HDRP's Volume overrides first, then Unity's RenderSettings.
+		var environment = UnityVolume.Read( c.Blocks, byGuid );
+		result.Information.AddRange( environment.Information );
+		if ( environment.Sky is UnityVolume.Sky volumeSky )
+		{
+			result.Information.Add( volumeSky.Note );
+			objects.Add( SceneObject( $"{c.Key}:skybox", "2D Skybox", "skybox", Component( "Sandbox.SkyBox2D", StableGuid( $"{c.Key}:skybox:component" ), true, new()
+			{
+				["SkyIndirectLighting"] = true,
+				["SkyMaterial"] = DefaultSky,
+				["Tint"] = Colour( volumeSky.Tint )
+			} ) ) );
+		}
+		if ( environment.Ambient != null )
+			objects.Add( SceneObject( $"{c.Key}:ambient", "Ambient Light", "", Component( "Sandbox.AmbientLight", StableGuid( $"{c.Key}:ambient:component" ), true, new()
+			{
+				["Color"] = Colour( environment.Ambient )
+			} ) ) );
+		if ( environment.Fog is UnityVolume.Fog volumeFog )
+		{
+			// HDRP's exponential fog is an extinction with a 63 % attenuating distance, which is exactly
+			// Sandbox.Fog's exponential mode; the height ramp is HDRP's fogBaseHeight/attenuation pair.
+			var height = volumeFog.BaseHeight != 0 || volumeFog.HeightAttenuation > 0 || volumeFog.MaximumHeight > 0;
+			var heightLength = volumeFog.MaximumHeight > volumeFog.BaseHeight
+				? volumeFog.MaximumHeight - volumeFog.BaseHeight
+				: volumeFog.HeightAttenuation > 0 ? 1 / volumeFog.HeightAttenuation : 50;
+			result.Information.Add( volumeFog.Note );
+			objects.Add( SceneObject( $"{c.Key}:fog", "Fog", "", Component( "Sandbox.Fog", StableGuid( $"{c.Key}:fog:component" ), true, new()
+			{
+				["AttenuationDistance"] = Single( volumeFog.Distance * UnitsPerMetre ),
+				["Color"] = Colour( volumeFog.Colour ),
+				["ColorSource"] = volumeFog.SkyColour ? "SceneSky" : "Constant",
+				["DistanceEnabled"] = true,
+				["FalloffExponent"] = 1,
+				["FogEnabled"] = true,
+				["HeightColor"] = Colour( volumeFog.Colour ),
+				["HeightColorSource"] = "Constant",
+				["HeightEnabled"] = height,
+				["HeightExponent"] = 1,
+				["HeightGradientLength"] = Single( heightLength * UnitsPerMetre ),
+				["HeightOffset"] = Single( volumeFog.BaseHeight * UnitsPerMetre ),
+				["MaximumOpacity"] = 1,
+				["Mode"] = "Exponential",
+				["StartDistance"] = 0
+			} ) ) );
+		}
 		if ( c.Blocks.FirstOrDefault( b => b.Type == "104" ) is Block render )
 		{
-			var skybox = Field( render.Body, "m_SkyboxMaterial" );
-			if ( IdOf( skybox ) != 0 )
+			if ( environment.Sky == null && IdOf( Field( render.Body, "m_SkyboxMaterial" ) ) != 0 )
 			{
-				var guid = GuidOf( skybox );
+				var guid = GuidOf( Field( render.Body, "m_SkyboxMaterial" ) );
 				if ( !guid.Equals( BuiltInGuid, StringComparison.OrdinalIgnoreCase ) )
 					result.Information.Add( byGuid.TryGetValue( guid, out var material )
 						? $"Unity skybox material {material.Path} is not convertible to an s&box sky (its shader is not a sky shader); the default sky is used."
@@ -271,7 +315,7 @@ internal static class UnitySceneExport
 			}
 			var intensity = Scalar( render.Body, "m_AmbientIntensity" ).Length == 0 ? 1 : Number( render.Body, "m_AmbientIntensity" );
 			var ambientMode = Scalar( render.Body, "m_AmbientMode" );
-			if ( ambientMode is "3" or "1" )
+			if ( environment.Ambient == null && ambientMode is "3" or "1" )
 			{
 				// Flat ambient maps directly; a trilight gradient has no counterpart, its equator colour is the middle of it.
 				var colour = Vector( render.Body, ambientMode == "3" ? "m_AmbientSkyColor" : "m_AmbientEquatorColor", "r", "g", "b" ).Select( v => Linear( v ) * intensity );
@@ -281,23 +325,28 @@ internal static class UnitySceneExport
 					["Color"] = Colour( colour )
 				} ) ) );
 			}
-			if ( Scalar( render.Body, "m_Fog" ) == "1" )
+			if ( environment.Fog == null && Scalar( render.Body, "m_Fog" ) == "1" )
 			{
 				var mode = Scalar( render.Body, "m_FogMode" );
 				var density = Number( render.Body, "m_FogDensity" );
-				// Exponential fog reaches 99 % at e^(-d·k) = 0.01, exp² at e^(-(d·k)²) = 0.01; s&box's fog is a linear fade to that distance.
-				var (start, end) = mode == "1" || density <= 0
-					? (Number( render.Body, "m_LinearFogStart" ), Number( render.Body, "m_LinearFogEnd" ))
-					: (0, (mode == "2" ? 4.6 : 2.15) / density);
-				result.Information.Add( "Unity fog converts to a GradientFog object tall enough to act as plain distance fog; check its look in the editor." );
-				objects.Add( SceneObject( $"{c.Key}:fog", "Fog", "", Component( "Sandbox.GradientFog", StableGuid( $"{c.Key}:fog:component" ), true, new()
+				var start = Number( render.Body, "m_LinearFogStart" );
+				// Unity's density is an extinction per metre; s&box's fog takes the distance that removes 63 %.
+				var attenuation = mode == "1" ? (Number( render.Body, "m_LinearFogEnd" ) - start) / 2.15 : density <= 0 ? 0 : 1 / density;
+				result.Information.Add( mode == "1"
+					? "Unity's linear fog converts to Sandbox.Fog's exponential mode at the same fade distance; check its look in the editor."
+					: "Unity fog converts to Sandbox.Fog's exponential mode at the same density; check its look in the editor." );
+				objects.Add( SceneObject( $"{c.Key}:fog", "Fog", "", Component( "Sandbox.Fog", StableGuid( $"{c.Key}:fog:component" ), true, new()
 				{
+					["AttenuationDistance"] = Single( attenuation * UnitsPerMetre ),
 					["Color"] = Colour( Vector( render.Body, "m_FogColor", "r", "g", "b" ).Select( Linear ) ),
-					["EndDistance"] = Single( end * UnitsPerMetre ),
+					["ColorSource"] = "Constant",
+					["DistanceEnabled"] = true,
 					["FalloffExponent"] = 1,
-					["Height"] = 100000,
-					["StartDistance"] = Single( start * UnitsPerMetre ),
-					["VerticalFalloffExponent"] = 1
+					["FogEnabled"] = true,
+					["HeightEnabled"] = false,
+					["MaximumOpacity"] = 1,
+					["Mode"] = "Exponential",
+					["StartDistance"] = Single( Math.Max( 0, start ) * UnitsPerMetre )
 				} ) ) );
 			}
 		}
@@ -307,6 +356,9 @@ internal static class UnitySceneExport
 		foreach ( var block in c.Blocks )
 		{
 			if ( block.Stripped || block.Type is "1" or "4" or "224" or "1001" or "29" or "104" or "157" or "196" or "1660057539" || Convertible( block.Type ) ) continue;
+			// Volume and StaticLightingSky are read by the environment step above, which names them in its
+			// own lines; counting them here would report the same components twice as anonymous scripts.
+			if ( block.Type == "114" && UnityHdrp.Component( GuidOf( Field( block.Body, "m_Script" ) ) )?.Kind is HdrpComponentKind.Volume or HdrpComponentKind.StaticLightingSky ) continue;
 			if ( c.ById.GetValueOrDefault( IdOf( Field( block.Body, "m_GameObject" ) ) ) is not { Type: "1", Stripped: false } go ) continue;
 			var name = TypeName( block.Type, block.Body );
 			if ( !unconverted.TryGetValue( name, out var owners ) ) unconverted[name] = owners = new();
