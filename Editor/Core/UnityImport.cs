@@ -193,9 +193,22 @@ public static class UnityImport
 				// A Unity prefab is YAML under the name s&box uses for its own JSON prefabs, so only the
 				// converted prefab is written; copying the source would leave an unloadable .prefab.
 				if ( asset.Kind == UnityAssetKind.Prefab ) continue;
-				using ( var source = File.OpenRead( asset.Source ) )
-				using ( var target = new FileStream( Output( asset.Path ), FileMode.CreateNew ) )
-						UnityArchive.Copy( source, target, cancel );
+				var copied = Output( asset.Path );
+				if ( asset.Path.EndsWith( ".fbx", StringComparison.OrdinalIgnoreCase )
+					&& UnityFbxRewrite.Sanitize( File.ReadAllBytes( asset.Source ) ) is byte[] portableFbx )
+				{
+					// An FBX keeps the original author's absolute texture paths. s&box derives a
+					// material reference from each one and cannot make an absolute path content-relative,
+					// so reduce them to file names before the resource compiler sees the imported model.
+					File.WriteAllBytes( copied, portableFbx );
+					information.Add( $"{asset.Path}: absolute texture paths in the FBX were reduced to file names so the resource compiler can resolve its material references." );
+				}
+				else
+				{
+					using var source = File.OpenRead( asset.Source );
+					using var target = new FileStream( copied, FileMode.CreateNew );
+					UnityArchive.Copy( source, target, cancel );
+				}
 				if ( asset.Kind == UnityAssetKind.Texture && NeedsTextureResource( asset.Path ) )
 				{
 					// Keep source pixels/HDR data intact and give the editor a loadable texture resource.
@@ -263,7 +276,7 @@ public static class UnityImport
 					if ( asset.Path.EndsWith( ".fbx", StringComparison.OrdinalIgnoreCase ) && UnityFbxCompatibility.Normalize( asset.Source, cancel ) is byte[] normalized )
 					{
 						var repaired = generatedFiles.Add( asset.Path, "repaired", ".fbx" );
-						File.WriteAllBytes( repaired.File, normalized );
+						File.WriteAllBytes( repaired.File, UnityFbxRewrite.Sanitize( normalized ) ?? normalized );
 						meshPath = repaired.Reference;
 						warnings.Add( $"{asset.Path}: removed an exact duplicate vertex array after a closing brace in a derived FBX; original source preserved." );
 					}
@@ -274,7 +287,7 @@ public static class UnityImport
 					{
 						try
 						{
-							if ( UnityFbxRewrite.Rewrite( asset.Source, out var renamed ) is byte[] rewritten )
+							if ( UnityFbxRewrite.Rewrite( asset.Source, out var renamed, sanitize: true ) is byte[] rewritten )
 							{
 								var skinnedCopy = generatedFiles.Add( asset.Path, "skinned", ".fbx" );
 								File.WriteAllBytes( skinnedCopy.File, rewritten );

@@ -32,7 +32,7 @@ internal static class UnityFbxRewrite
 	/// The rewritten file, or null when the file is not binary FBX or nothing needed renaming. With
 	/// <paramref name="rename"/> false the file is only parsed and written back, which must reproduce it byte for byte.
 	/// </summary>
-	internal static byte[] Rewrite( string source, out List<string> changes, bool rename = true )
+	internal static byte[] Rewrite( string source, out List<string> changes, bool rename = true, bool sanitize = false )
 	{
 		changes = new List<string>();
 		var data = File.ReadAllBytes( source );
@@ -45,8 +45,58 @@ internal static class UnityFbxRewrite
 		if ( pos + 16 > data.Length ) throw new InvalidDataException( "FBX footer is missing." );
 		var footerId = data[pos..(pos + 16)];
 		if ( rename ) Rename( roots, changes );
-		if ( rename && changes.Count == 0 ) return null;
+		var portable = sanitize && Sanitize( roots );
+		if ( portable ) changes.Add( "absolute source paths made content-relative" );
+		if ( rename && !portable && changes.Count == 0 ) return null;
 		return Serialize( data[..27], roots, wide, version, footerId );
+	}
+
+	/// <summary>
+	/// FBX exporters store the original author's absolute texture and document paths in string
+	/// properties (Properties70 Path/RelPath and DocumentUrl/SrcDocumentUrl). s&box derives a
+	/// material reference from an image path and fails with "could not be made content-relative"
+	/// when it starts with a drive letter, which is why an import floods the compiler with
+	/// C:\Users\...\something.vmat errors. Keeping only the file name makes every such reference
+	/// content-relative while leaving geometry, bones, slots and pixel data untouched.
+	/// Returns null for a non-binary FBX or one with no absolute paths, so byte-for-byte imports
+	/// stay byte-for-byte. <paramref name="data"/> is never modified.
+	/// </summary>
+	internal static byte[] Sanitize( byte[] data )
+	{
+		if ( data.Length < 27 + 13 || Encoding.ASCII.GetString( data, 0, Magic.Length ) != Magic ) return null;
+		var version = BitConverter.ToUInt32( data, 23 );
+		var wide = version >= 7500;
+		var pos = 27;
+		var roots = new List<Node>();
+		while ( ReadNode( data, ref pos, wide ) is Node node ) roots.Add( node );
+		if ( pos + 16 > data.Length ) throw new InvalidDataException( "FBX footer is missing." );
+		var footerId = data[pos..(pos + 16)];
+		return Sanitize( roots ) ? Serialize( data[..27], roots, wide, version, footerId ) : null;
+	}
+
+	static bool Sanitize( IReadOnlyList<Node> nodes )
+	{
+		var changed = false;
+		foreach ( var node in nodes )
+		{
+			for ( var i = 0; i < node.Properties.Count; i++ )
+			{
+				if ( Text( node.Properties[i] ) is not string text || Portable( text ) is not string name ) continue;
+				node.Properties[i] = StringProperty( name );
+				changed = true;
+			}
+			changed |= Sanitize( node.Children );
+		}
+		return changed;
+	}
+
+	/// <summary>The bare file name of a Windows drive path, or null for a string that is not one.</summary>
+	static string Portable( string value )
+	{
+		// FBX writes drive paths with either separator: Path uses '/', RelPath uses '\'.
+		if ( value.Length < 4 || !char.IsLetter( value[0] ) || value[1] != ':' || value[2] is not ('\\' or '/') ) return null;
+		var name = value.Replace( '\\', '/' ).Split( '/' ).Last();
+		return name.Length > 0 && name != value ? name : null;
 	}
 
 	static Node ReadNode( byte[] data, ref int pos, bool wide )
