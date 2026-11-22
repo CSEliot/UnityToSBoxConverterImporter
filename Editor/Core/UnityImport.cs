@@ -194,20 +194,31 @@ public static class UnityImport
 				// converted prefab is written; copying the source would leave an unloadable .prefab.
 				if ( asset.Kind == UnityAssetKind.Prefab ) continue;
 				var copied = Output( asset.Path );
-				if ( asset.Path.EndsWith( ".fbx", StringComparison.OrdinalIgnoreCase )
-					&& UnityFbxRewrite.Sanitize( File.ReadAllBytes( asset.Source ) ) is byte[] portableFbx )
+				var isFbx = asset.Path.EndsWith( ".fbx", StringComparison.OrdinalIgnoreCase );
+				var isTga = asset.Path.EndsWith( ".tga", StringComparison.OrdinalIgnoreCase );
+				byte[] stagedBytes = null;
+				string tgaReason = null;
+				if ( isFbx ) stagedBytes = UnityFbxRewrite.Sanitize( File.ReadAllBytes( asset.Source ) );
+				else if ( isTga ) stagedBytes = UnityTgaRewrite.Normalize( File.ReadAllBytes( asset.Source ), out tgaReason );
+				if ( stagedBytes != null )
 				{
-					// An FBX keeps the original author's absolute texture paths. s&box derives a
-					// material reference from each one and cannot make an absolute path content-relative,
-					// so reduce them to file names before the resource compiler sees the imported model.
-					File.WriteAllBytes( copied, portableFbx );
-					information.Add( $"{asset.Path}: absolute texture paths in the FBX were reduced to file names so the resource compiler can resolve its material references." );
+					File.WriteAllBytes( copied, stagedBytes );
+					if ( isFbx )
+					{
+						// An FBX keeps the original author's absolute texture paths. s&box derives a
+						// material reference from each one and cannot make an absolute path content-relative,
+						// so reduce them to file names before the resource compiler sees the imported model.
+						information.Add( $"{asset.Path}: absolute texture paths in the FBX were reduced to file names so the resource compiler can resolve its material references." );
+					}
+					else information.Add( $"{asset.Path}: 16-bit TGA was expanded to 32-bit so s&box's TGA loader accepts it." );
 				}
 				else
 				{
 					using var source = File.OpenRead( asset.Source );
 					using var target = new FileStream( copied, FileMode.CreateNew );
 					UnityArchive.Copy( source, target, cancel );
+					if ( isTga && !string.IsNullOrEmpty( tgaReason ) )
+						information.Add( $"{asset.Path}: {tgaReason}; left verbatim." );
 				}
 				if ( asset.Kind == UnityAssetKind.Texture && NeedsTextureResource( asset.Path ) )
 				{
