@@ -387,7 +387,7 @@ internal static class UnitySceneExport
 			}
 			var children = (JsonArray)node["Children"];
 			void Effect( string name, string type, Dictionary<string, JsonNode> properties ) =>
-				children.Add( SceneObject( $"{key}:{type}", name, "", Component( type, StableGuid( $"{key}:{type}" ), true, properties ) ) );
+				children.Add( SceneObject( $"{key}:{type}", name, "", Component( type, StableGuid( $"{key}:{type}:component" ), true, properties ) ) );
 			if ( post.TonemapMode >= 0 ) Effect( "Tonemapping", "Sandbox.Tonemapping", new() { ["Mode"] = UnityVolume.TonemapMode( post.TonemapMode ) } );
 			if ( post.Bloom )
 			{
