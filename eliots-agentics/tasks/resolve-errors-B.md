@@ -94,6 +94,11 @@ Tree: eliots-agentics/tasks/fix-unresolved-material-slots.md 8ba2989294c25a69de2
 
 	Q2: New task files copied from .template-task.md necessarily start DONE? NO!. Your goal says work until all task headers are DONE? YES!. What should happen to the newly created per-group tasks?
 	An: (Director, in chat) "Q2: A" = Leave the new per-group tasks as fresh backlog (DONE? NO!) and close only the three current tasks. This explicitly overrides the standing "all headers DONE? YES!" goal for the newly created backlog task; recorded as a Director decision, not an oversight.
+	DIRECTOR CORRECTION (in chat, 2026-11-22 18:33): "My mistake, I meant 2B anyway." The intended
+	answer was Q2=B = "Drive the new per-group tasks to DONE? YES! too, implementing those fixes in
+	this same loop". The Q2=A line above and the "override" / "fresh backlog" parent decisions below
+	are SUPERSEDED. The new task fix-unresolved-material-slots.md was therefore driven to DONE? YES!
+	at commit 3ae34c7, which is what Q2=B required.
 
 	Parent decisions (change if wrong):
 	- The grouping is by ROOT CAUSE, not by message string: the 261 'dependency timeout' entries are a downstream symptom of upstream compile failures, not a separate cause.

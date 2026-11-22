@@ -138,3 +138,7 @@ the single new task. G2 is `tga-fix.md`. G3-G6 are documented above with their d
 Director Q2=A: the new per-group task stays `DONE? NO!` as fresh backlog; only the three
 current tasks are closed. This explicitly overrides the standing "all headers DONE? YES!"
 goal for the new backlog task.
+SUPERSEDED (Director, in chat, 2026-11-22 18:33): "My mistake, I meant 2B anyway." The
+intended answer was Q2=B = drive the new per-group tasks to `DONE? YES!` in this same loop.
+The three lines above are retained as the historical record but are no longer the governing
+decision. `fix-unresolved-material-slots.md` was driven to `DONE? YES!` at commit 3ae34c7.
