@@ -8,7 +8,9 @@
 #   ~/1-Development/1-SBox/1-Engine-Builds/Dev/sbox-public/game  or the Steam sbox install.
 import os, re, sys
 
-project, game, out = (os.path.abspath(os.path.expanduser(a)) for a in sys.argv[1:4])
+# Normalise to forward slashes here: on Windows os.path.abspath() returns C:\...\paths, and a
+# backslash in a re.sub() replacement string is parsed as an escape (C:\Users -> bad escape \U).
+project, game, out = (os.path.abspath(os.path.expanduser(a)).replace(os.sep, "/") for a in sys.argv[1:4])
 src = os.path.join(project, "Editor", "unityimporterplus.editor.csproj")
 text = open(src, encoding="utf-8-sig").read()
 if not os.path.isfile(os.path.join(game, "bin", "managed", "Sandbox.Engine.dll")):
@@ -18,7 +20,7 @@ roots = set(re.findall(r'Include="([^"]*?)/bin/managed/', text))
 if len(roots) != 1: sys.exit(f"expected one engine root in {src}, found {roots}")
 root = roots.pop()
 text = text.replace(root + "/", game.replace(os.sep, "/") + "/")
-text = re.sub(r"<OutputPath>.*?</OutputPath>", f"<OutputPath>{out}/bin/</OutputPath>", text)
+text = re.sub(r"<OutputPath>.*?</OutputPath>", lambda _: f"<OutputPath>{out}/bin/</OutputPath>", text)
 text = re.sub(r"<DocumentationFile>.*?</DocumentationFile>", "", text)
 # The game-side Code project is not needed to compile Editor/ and its csproj has the same problem.
 text = re.sub(r'\s*<ProjectReference Include="\.\./Code/[^"]*"\s*/>', "", text)
