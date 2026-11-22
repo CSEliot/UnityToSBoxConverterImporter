@@ -11,4 +11,12 @@ public static class UnityPackageMenu
 		window.Show();
 		window.Browse();
 	}
+
+	[Menu( "Editor", "Import Unity Package/Import Unity project folder..." )]
+	public static void OpenFolder()
+	{
+		var window = new UnityPackageWindow();
+		window.Show();
+		window.BrowseFolder();
+	}
 }

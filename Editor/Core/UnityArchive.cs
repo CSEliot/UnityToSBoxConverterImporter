@@ -31,11 +31,16 @@ public sealed class UnityArchive : IDisposable
 {
 	const long MaxEntryBytes = 2L * 1024 * 1024 * 1024;
 	const long MaxTotalBytes = 32L * 1024 * 1024 * 1024;
+	const string MetaExtension = ".meta";
+	const long MaxMetaBytes = 16L * 1024 * 1024;
+	static readonly Regex MetaGuidPattern = new( @"(?m)^\s*guid:\s*([0-9a-fA-F]{32})" );
 	ImportWorkspace workspace;
 	string scratch => workspace?.DirectoryPath;
 	public bool HasExtractedFiles { get; private set; }
 	public string[] CleanupWarnings => workspace?.Warnings.ToArray() ?? Array.Empty<string>();
 	public string FileName { get; private set; }
+	/// <summary>Non-null when the archive reads a live Unity project instead of a .unitypackage.</summary>
+	public string SourceDirectory { get; private set; }
 	public List<UnityAsset> Assets { get; } = new();
 	public List<string> Warnings { get; } = new();
 
@@ -109,6 +114,55 @@ public sealed class UnityArchive : IDisposable
 			if ( package.CleanupWarnings.Length > 0 ) ex.Data["StagingCleanupError"] = string.Join( "\n", package.CleanupWarnings );
 			throw;
 		}
+	}
+
+	/// <summary>
+	/// Build the same UnityAsset list straight from a Unity project folder. Files live on disk (no
+	/// workspace), so the existing ImportCatalog/UnityImport pipeline runs unchanged.
+	/// A null folders collection means every immediate Assets/ subfolder.
+	/// </summary>
+	public static UnityArchive ReadDirectory( string projectFolder, IProgress<ImportProgress> progress,
+		CancellationToken cancel, string assetsDirectory, IReadOnlyCollection<string> folders = null )
+	{
+		ArgumentException.ThrowIfNullOrWhiteSpace( projectFolder );
+		ArgumentException.ThrowIfNullOrWhiteSpace( assetsDirectory );
+		if ( !System.IO.Path.IsPathFullyQualified( assetsDirectory ) ) throw new ArgumentException( "An absolute project Assets path is required.", nameof( assetsDirectory ) );
+		if ( !UnityProjectFolders.IsValidUnityFolder( projectFolder ) )
+			throw new InvalidDataException( $"Not a Unity project folder (needs Assets/ and ProjectSettings/): {projectFolder}" );
+
+		var selectedFolders = folders ?? UnityProjectFolders.ListAssetFolders( projectFolder );
+		var package = new UnityArchive { FileName = projectFolder, SourceDirectory = projectFolder, HasExtractedFiles = true };
+		var assetsRoot = System.IO.Path.Combine( projectFolder, UnityProjectFolders.AssetsFolderName );
+		var guids = new HashSet<string>( StringComparer.OrdinalIgnoreCase );
+		var paths = new HashSet<string>( StringComparer.OrdinalIgnoreCase );
+		int count = 0;
+		var files = Directory.EnumerateFiles( assetsRoot, "*", SearchOption.AllDirectories ).ToArray();
+		for ( int i = 0; i < files.Length; i++ )
+		{
+			cancel.ThrowIfCancellationRequested();
+			var source = files[i];
+			if ( source.EndsWith( MetaExtension, StringComparison.OrdinalIgnoreCase ) ) continue; // sidecars, including folder metas
+			var relative = Path.GetRelativePath( assetsRoot, source ).Replace( '\\', '/' );
+			var path = SafePath( $"{UnityProjectFolders.AssetsFolderName}/{relative}" );
+			if ( !UnityProjectFolders.IsPathSelected( path, selectedFolders ) ) continue;
+			var metadata = source + MetaExtension;
+			if ( !File.Exists( metadata ) ) { package.Warnings.Add( $"Skipped {relative}: no .meta sidecar." ); continue; }
+			if ( new FileInfo( metadata ).Length > MaxMetaBytes ) { package.Warnings.Add( $"Skipped {relative}: .meta sidecar is too large." ); continue; }
+			var match = MetaGuidPattern.Match( File.ReadAllText( metadata ) );
+			if ( !match.Success ) { package.Warnings.Add( $"Skipped {relative}: .meta has no guid." ); continue; }
+			var guid = match.Groups[1].Value.ToLowerInvariant();
+			if ( !guids.Add( guid ) ) { package.Warnings.Add( $"Skipped {relative}: duplicate guid {guid}." ); continue; }
+			if ( !paths.Add( path ) ) { package.Warnings.Add( $"Skipped {relative}: duplicate asset path." ); continue; }
+			var kind = Classify( path );
+			package.Assets.Add( new UnityAsset { Guid = guid, Path = path, Source = source, Metadata = metadata,
+				Kind = kind, Selected = kind != UnityAssetKind.Unsupported } );
+			count++;
+			progress?.Report( new( (double)(i + 1) / files.Length, $"Reading project ({count:N0} assets)…" ) );
+		}
+		package.Assets.Sort( (a, b) => StringComparer.OrdinalIgnoreCase.Compare( a.Path, b.Path ) );
+		UnityModel.AssignPrefabMaterials( package );
+		if ( package.Assets.Count == 0 ) throw new InvalidDataException( "This Unity project contains no file assets in the selected folders." );
+		return package;
 	}
 
 	public static string SafePath( string path )

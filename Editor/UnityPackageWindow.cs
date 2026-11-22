@@ -26,6 +26,7 @@ public sealed class UnityPackageWindow : Widget
 	volatile ImportProgress latestProgress;
 	bool closeWhenCancelled;
 	readonly Button browse;
+	readonly Button browseFolder;
 	readonly Button confirm;
 	readonly Button cancel;
 	readonly Button reimport;
@@ -71,6 +72,8 @@ public sealed class UnityPackageWindow : Widget
 		packageLabel = fileRow.Add( new Label( "Choose a .unitypackage file" ), 1 );
 		browse = fileRow.Add( new Button( "Browse…" ) );
 		browse.Clicked = Browse;
+		browseFolder = fileRow.Add( new Button( "Browse folder…" ) );
+		browseFolder.Clicked = BrowseFolder;
 		var contents = Layout.AddRow();
 		contents.Spacing = 8;
 		contents.Add( new Label( "Package contents" ), 1 );
@@ -146,8 +149,65 @@ public sealed class UnityPackageWindow : Widget
 		LoadPackage( dialog.SelectedFile );
 	}
 
+	/// <summary>Pick a Unity project directory and ask which immediate Assets/ subfolders to import.</summary>
+	public async void BrowseFolder()
+	{
+		if ( Busy ) return;
+		var dialog = new FileDialog( this ) { Title = "Import Unity Project Folder" };
+		dialog.SetFindDirectory();
+		var appData = Environment.GetFolderPath( Environment.SpecialFolder.ApplicationData );
+		var unityDirectory = Path.Combine( appData, "Unity" );
+		if ( !string.IsNullOrEmpty( appData ) && Directory.Exists( unityDirectory ) ) dialog.Directory = unityDirectory;
+		if ( !dialog.Execute() ) return;
+		var project = dialog.SelectedFile;
+		if ( !UnityProjectFolders.IsValidUnityFolder( project ) )
+		{
+			EditorUtility.DisplayDialog( "Not a Unity project", $"{project}\nA Unity project needs an Assets/ directory and a ProjectSettings/ directory." );
+			return;
+		}
+		string[] folders;
+		try { folders = await ChooseFolders( project ); }
+		catch ( Exception ex ) { EditorUtility.DisplayDialog( "Could not choose folders", ex.Message ); return; }
+		if ( folders == null ) return;
+		LoadArchive( Path.GetFileName( project ), ( p, t, a ) => UnityArchive.ReadDirectory( project, p, t, a, folders ) );
+	}
+
+	/// <summary>Checkbox dialog: immediate subfolders of Assets/, all selected by default.</summary>
+	static Task<string[]> ChooseFolders( string project )
+	{
+		var available = UnityProjectFolders.ListAssetFolders( project );
+		var completion = new TaskCompletionSource<string[]>( TaskCreationOptions.RunContinuationsAsynchronously );
+		var window = new Widget( null, true ) { WindowTitle = $"Import folders from {Path.GetFileName( project )}", Size = new Vector2( 420, 480 ), MinimumSize = new Vector2( 300, 260 ) };
+		window.Layout = Layout.Column(); window.Layout.Margin = 16; window.Layout.Spacing = 8;
+		window.Layout.Add( new Label( "Which Assets/ subfolders should be imported? Files directly in Assets/ are always included." ) { WordWrap = true } );
+		var scroll = window.Layout.Add( new ScrollArea( window ), 1 );
+		scroll.Canvas = new Widget( window );
+		scroll.Canvas.SetSizeMode( SizeMode.Default, SizeMode.CanGrow );
+		scroll.Canvas.Layout = Layout.Column();
+		var boxes = new Checkbox[available.Length];
+		for ( int i = 0; i < available.Length; i++ ) boxes[i] = scroll.Canvas.Layout.Add( new Checkbox( available[i] ) { Value = true } );
+		scroll.Canvas.Layout.AddStretchCell();
+		var buttons = window.Layout.AddRow();
+		buttons.AddStretchCell();
+		buttons.Add( new Button( "Cancel" ) ).Clicked = () => { completion.TrySetResult( null ); window.Close(); };
+		buttons.Add( new Button.Primary( "Continue" ) ).Clicked = () =>
+		{
+			completion.TrySetResult( available.Where( ( _, i ) => boxes[i].Value ).ToArray() );
+			window.Close();
+		};
+		window.Show();
+		return completion.Task;
+	}
+
 	/// <summary>Load a package into the selection window, including from other editor tools.</summary>
 	public void LoadPackage( string file )
+	{
+		if ( Busy ) return;
+		LoadArchive( Path.GetFileName( file ), ( p, t, a ) => UnityArchive.Read( file, p, t, a ) );
+	}
+
+	/// <summary>Shared load path for .unitypackage files and Unity project directories.</summary>
+	void LoadArchive( string label, Func<IProgress<ImportProgress>, CancellationToken, string, UnityArchive> read )
 	{
 		if ( Busy ) return;
 		var assetsDirectory = Project.Current?.GetAssetsPath();
@@ -163,14 +223,14 @@ public sealed class UnityPackageWindow : Widget
 		tree.SetItems( Array.Empty<TreeNode>() );
 		ClearCompletion();
 		WindowTitle = "Import Unity Package";
-		packageLabel.Text = Path.GetFileName( file );
-		packageLabel.ToolTip = file;
+		packageLabel.Text = label;
+		packageLabel.ToolTip = label;
 		cancellation = new CancellationTokenSource();
 		latestProgress = new( 0, "Reading package…", "Scanning package" );
 		stageLabel.Text = latestProgress.Stage; stageLabel.Visible = true;
 		readTask = Task.Run( () =>
 		{
-			var loaded = UnityArchive.Read( file, new ProgressSink( this, stage: "Scanning package" ), cancellation.Token, assetsDirectory );
+			var loaded = read( new ProgressSink( this, stage: "Scanning package" ), cancellation.Token, assetsDirectory );
 			try
 			{
 				latestProgress = new( 1, "Resolving package dependencies…", "Finding dependencies" );
@@ -207,7 +267,8 @@ public sealed class UnityPackageWindow : Widget
 		ImportResult result = null;
 		try
 		{
-			if ( !archive.HasExtractedFiles )
+			// A directory archive has no extracted workspace: never re-read it as a gzip tar.
+			if ( !archive.HasExtractedFiles && archive.SourceDirectory == null )
 			{
 				var selected = confirmedPlan.Assets.Where( a => a.Explicit ).Select( a => a.Asset.Path ).ToHashSet( StringComparer.OrdinalIgnoreCase );
 				var options = confirmedPlan.Options;
@@ -401,7 +462,7 @@ public sealed class UnityPackageWindow : Widget
 	void RefreshSelection()
 	{
 		if ( confirm == null ) return;
-		browse.Enabled = tree.Enabled = additionalTerrain.Enabled = importScenes.Enabled = advancedToggle.Enabled = !Busy;
+		browse.Enabled = browseFolder.Enabled = tree.Enabled = additionalTerrain.Enabled = importScenes.Enabled = advancedToggle.Enabled = !Busy;
 		selectAll.Enabled = selectNone.Enabled = expandAll.Enabled = collapseAll.Enabled = !Busy && archive != null;
 		expandLayer.Enabled = collapseLayer.Enabled = !Busy && archive != null;
 		cancel.Enabled = !Busy || cancellation?.IsCancellationRequested != true;

@@ -11,7 +11,8 @@ using ImportUnityPackage;
 // the harness has always used (Editor/Core via UnityImport.Run + ImportOptions.Auto); it now has
 // real argument parsing and two console-output modes. Verbose is the default and is byte-for-byte
 // the legacy output, so every existing gate/baseline keeps working.
-//   harness [--scenes] [-h|--human] <package.unitypackage> <assetsDirectory> [report.json]
+//   harness [--scenes] [-h|--human] <package.unitypackage|unity-project-dir> <assetsDirectory> [report.json]
+//   harness [--folders A,B] <unity-project-dir> <assetsDirectory> [report.json]
 //   harness --help
 // NOTE: -h / --human means "Human-Readable" (reduced verbosity), NOT help; --help is the help switch.
 internal static class Program
@@ -20,10 +21,14 @@ internal static class Program
 	internal static class CliSettings
 	{
 		public const string ScenesFlag = "--scenes";
+		public const string FoldersFlag = "--folders";
+		public const string FoldersPrefix = "--folders=";
 		public static readonly string[] HumanFlags = { "-h", "--human" };
 		public static readonly string[] HelpFlags = { "--help" };
 		public const string DefaultReportFile = "import-report.json";
-		public const string Usage = "usage: harness [--scenes] [-h|--human] <package.unitypackage> <assetsDirectory> [report.json]";
+		public const char FolderSeparator = ',';
+		public const string AllFoldersAnswer = "*";
+		public const string Usage = "usage: harness [--scenes] [-h|--human] [--folders A,B] <package.unitypackage|unity-project-dir> <assetsDirectory> [report.json]";
 
 		// Per-section output caps. int.MaxValue lists everything (the legacy/default behaviour);
 		// the human values are small so the summary stays compact. Change any of these to tune output.
@@ -53,6 +58,8 @@ internal static class Program
 		public string Package;
 		public string Assets;
 		public string Report;
+		public string RequestedFolders;
+		public bool IsProject;
 	}
 
 	private static int Main( string[] args )
@@ -62,37 +69,92 @@ internal static class Program
 			PrintHelp();
 			return 0;
 		}
-		if ( !TryParse( args, out var cmd, out var error ) )
+		try
 		{
-			Console.Error.WriteLine( error );
-			Console.Error.WriteLine( CliSettings.Usage );
+			if ( !TryParse( args, out var cmd, out var error ) )
+			{
+				Console.Error.WriteLine( error );
+				Console.Error.WriteLine( CliSettings.Usage );
+				return 2;
+			}
+			return Run( cmd );
+		}
+		catch ( Exception ex ) when ( ex is ArgumentException or InvalidDataException or IOException or UnauthorizedAccessException )
+		{
+			// Folder selection and project detection are user errors: a clean message, not a stack trace.
+			Console.Error.WriteLine( $"error: {ex.Message}" );
 			return 2;
 		}
-		return Run( cmd );
 	}
 
-	// Flags may appear in any order; the positional contract is unchanged.
+	// Flags may appear in any order; the positional contract is unchanged. A DIRECTORY first
+	// positional is a Unity project; a FILE remains a .unitypackage.
 	private static bool TryParse( string[] args, out Invocation cmd, out string error )
 	{
 		cmd = new Invocation();
 		error = null;
 		var positional = new List<string>();
-		foreach ( var a in args )
+		for ( int i = 0; i < args.Length; i++ )
 		{
+			var a = args[i];
 			if ( a == CliSettings.ScenesFlag ) cmd.Scenes = true;
 			else if ( CliSettings.HumanFlags.Contains( a, StringComparer.Ordinal ) ) cmd.Verbosity = Verbosity.Human;
+			else if ( a.StartsWith( CliSettings.FoldersPrefix, StringComparison.Ordinal ) ) cmd.RequestedFolders = a[CliSettings.FoldersPrefix.Length..];
+			else if ( a == CliSettings.FoldersFlag )
+			{
+				if ( ++i >= args.Length ) { error = "--folders needs a comma-separated list of Assets subfolders"; return false; }
+				cmd.RequestedFolders = args[i];
+			}
 			else if ( a.Length > 1 && a[0] == '-' ) { error = $"unknown option: {a}"; return false; }
 			else positional.Add( a );
 		}
 		if ( positional.Count is < 2 or > 3 )
 		{
-			error = "expected <package.unitypackage> <assetsDirectory> [report.json]";
+			error = "expected <package.unitypackage|unity-project-dir> <assetsDirectory> [report.json]";
 			return false;
 		}
 		cmd.Package = Path.GetFullPath( positional[0] );
+		cmd.IsProject = Directory.Exists( cmd.Package );
+		if ( !cmd.IsProject && cmd.RequestedFolders != null )
+		{
+			error = "--folders applies only to a Unity project directory";
+			return false;
+		}
 		cmd.Assets = Path.GetFullPath( positional[1] );
 		cmd.Report = positional.Count == 3 ? positional[2] : CliSettings.DefaultReportFile;
 		return true;
+	}
+
+	/// <summary>Interactive numbered prompt on a terminal; --folders for scripts/LLMs and piped stdin.</summary>
+	private static string[] SelectFolders( string project, string requested )
+	{
+		var available = UnityProjectFolders.ListAssetFolders( project );
+		if ( !string.IsNullOrWhiteSpace( requested ) && requested.Trim() != CliSettings.AllFoldersAnswer )
+		{
+			var wanted = requested.Split( CliSettings.FolderSeparator, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries );
+			var unknown = wanted.Where( f => !available.Contains( f, StringComparer.OrdinalIgnoreCase ) ).ToArray();
+			if ( unknown.Length > 0 ) throw new ArgumentException( $"Unknown Assets/ subfolder(s): {string.Join( ", ", unknown )}. Available: {string.Join( ", ", available )}" );
+			return wanted;
+		}
+		if ( Console.IsInputRedirected || available.Length == 0 )
+		{
+			Console.WriteLine( $"Assets/ subfolders: {(available.Length == 0 ? "(none)" : string.Join( ", ", available ))} (all selected)" );
+			return available;
+		}
+		Console.WriteLine( "Which Assets/ subfolders should be imported?" );
+		for ( int i = 0; i < available.Length; i++ ) Console.WriteLine( $"  {i + 1}. {available[i]}" );
+		Console.Write( "Enter numbers (comma-separated; Enter = all, * = all): " );
+		var answer = Console.ReadLine();
+		if ( string.IsNullOrWhiteSpace( answer ) || answer.Trim() == CliSettings.AllFoldersAnswer ) return available;
+		var chosen = new List<string>();
+		foreach ( var token in answer.Split( CliSettings.FolderSeparator, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries ) )
+		{
+			if ( !int.TryParse( token, NumberStyles.None, CultureInfo.InvariantCulture, out var number ) || number < 1 || number > available.Length )
+				throw new ArgumentException( $"Invalid folder number: {token}" );
+			var folder = available[number - 1];
+			if ( !chosen.Contains( folder, StringComparer.OrdinalIgnoreCase ) ) chosen.Add( folder );
+		}
+		return chosen.ToArray();
 	}
 
 	private static int Run( Invocation cmd )
@@ -118,14 +180,25 @@ internal static class Program
 		}
 
 		var progress = new Progress<ImportProgress>( _ => { if ( CliSettings.Progress( cmd.Verbosity ) ) Console.WriteLine( "  importing..." ); } );
-		using var archive = UnityArchive.Read( cmd.Package, progress, CancellationToken.None, cmd.Assets );
-		var result = UnityImport.Run( archive, cmd.Assets, ImportOptions.Auto( scenes: cmd.Scenes ), progress, CancellationToken.None, extractChannels: Extract );
+		UnityArchive archive;
+		if ( cmd.IsProject )
+		{
+			var folders = SelectFolders( cmd.Package, cmd.RequestedFolders );
+			Console.WriteLine( $"unity project: {cmd.Package}" );
+			Console.WriteLine( $"selected folders: {(folders.Length == 0 ? "(none)" : string.Join( ", ", folders ))}" );
+			archive = UnityArchive.ReadDirectory( cmd.Package, progress, CancellationToken.None, cmd.Assets, folders );
+		}
+		else archive = UnityArchive.Read( cmd.Package, progress, CancellationToken.None, cmd.Assets );
+		using ( archive )
+		{
+			var result = UnityImport.Run( archive, cmd.Assets, ImportOptions.Auto( scenes: cmd.Scenes ), progress, CancellationToken.None, extractChannels: Extract );
 
-		PrintReport( archive, result, cmd.Verbosity, cmd.Report );
+			PrintReport( archive, result, cmd.Verbosity, cmd.Report );
 
-		// The report path and bytes are identical in both modes; only the console text differs.
-		File.WriteAllText( cmd.Report, result.ReportJson );
-		return result.Unresolved.Length == 0 ? 0 : 1;
+			// The report path and bytes are identical in both modes; only the console text differs.
+			File.WriteAllText( cmd.Report, result.ReportJson );
+			return result.Unresolved.Length == 0 ? 0 : 1;
+		}
 	}
 
 	// One formatting routine for both modes: the mode only selects the exposed caps above (DRY).
@@ -160,11 +233,13 @@ internal static class Program
 		Console.WriteLine( CliSettings.Usage );
 		Console.WriteLine();
 		Console.WriteLine( "Arguments:" );
-		Console.WriteLine( "  <package.unitypackage>  Unity package to import (required)" );
+		Console.WriteLine( "  <package.unitypackage>  Unity package file to import (legacy mode)" );
+		Console.WriteLine( "   OR <project-dir>        Unity project directory (Assets/ + ProjectSettings/); prompts for Assets/ subfolders" );
 		Console.WriteLine( "  <assetsDirectory>       Output assets root (required; created if missing)" );
 		Console.WriteLine( "  [report.json]           Report path (default: " + CliSettings.DefaultReportFile + " in the current directory)" );
 		Console.WriteLine( "Options:" );
 		Console.WriteLine( "  --scenes                 Also convert Unity scenes" );
+		Console.WriteLine( "  --folders A,B            Import only these immediate Assets/ subfolders (non-interactive; '*' = all)" );
 		Console.WriteLine( "  -h, --human              Human-Readable output: reduced verbosity (NOT help)" );
 		Console.WriteLine( "  --help                   Show this help" );
 		Console.WriteLine();
