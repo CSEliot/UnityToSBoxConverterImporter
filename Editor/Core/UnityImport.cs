@@ -366,9 +366,15 @@ public static class UnityImport
 					// table, so each gets its own model naming only that mesh. Decide the models before
 					// synthesizing a neutral material: a split model's own remaps win over the shared table.
 					var meshGroups = ModelSplit( info, materialPaths, selected, MaterialFor );
+					// A split model's remaps start with the prefab-assigned slots only. Include the FBX's
+					// own material names for each of its meshes too: an embedded slot the prefab never
+					// assigned still has to resolve, or ModelDoc falls back to a bare <slot>.vmat name.
 					string[] GroupSlots( ModelGroup group ) => group.Remaps == null
 						? missingSlots
-						: group.Meshes.SelectMany( m => info.MeshSlotMaterials.GetValueOrDefault( m )?.Keys ?? Enumerable.Empty<string>() )
+						: group.Meshes.SelectMany( m =>
+							(info.MeshSlotMaterials.GetValueOrDefault( m )?.Keys ?? Enumerable.Empty<string>() )
+							.Concat( info.RendererSlots.Values.Where( b => b.Mesh.Equals( m, StringComparison.OrdinalIgnoreCase ) )
+								.SelectMany( b => b.Slots ) ) )
 							.Distinct( StringComparer.OrdinalIgnoreCase ).ToArray();
 					var groupedWarning = options.Materials && options.Vmat && defaultMaterial == null &&
 						(info.Materials.Count == 0 || defaultSlots.Length > 0) &&
