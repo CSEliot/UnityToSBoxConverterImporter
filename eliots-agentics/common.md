@@ -24,6 +24,8 @@ The canonical field order is line 1 of `.template-task.md`. A header missing any
 
 `{project}` is the directory holding `eliots-agentics/`.
 Never read, write, list, or stage `{project}/eliots-agentics/.humans-only/`.
+Historical tasks (for research) available at `{project}/eliots-agentics/archive/`.
+
 
 ## Work
 

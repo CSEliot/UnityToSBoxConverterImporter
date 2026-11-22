@@ -1,0 +1,1000 @@
+ 02:25:34   engine/Engine CAssociateResourceBlockLoader::BlockingLoadResourceFileData: Trying to load an illegal resource name lambert2.vmat!
+ 02:25:34   engine/Engine resourcecompiler: Could not find material data for "unnamed_1"!
+ 02:25:34   engine/ModelProcessingSystem Error! Mesh: unnamed_1 - Missing vmat "lambert2.vmat"
+ 02:25:34   engine/Engine CAssociateResourceBlockLoader::BlockingLoadResourceFileData: Trying to load an illegal resource name lambert2.vmat!
+ 02:25:34   engine/Engine resourcecompiler: Could not find material data for "unnamed_1"!
+ 02:25:34   engine/ModelProcessingSystem Error! Mesh: unnamed_1 - Missing vmat "lambert3.vmat"
+ 02:25:34   engine/Engine CAssociateResourceBlockLoader::BlockingLoadResourceFileData: Trying to load an illegal resource name lambert3.vmat!
+ 02:25:34   engine/Engine resourcecompiler: Could not find material data for "unnamed_1"!
+ 02:25:34   engine/ModelProcessingSystem Error! Mesh: unnamed_1 - Missing vmat "mesh.vmat"
+ 02:25:34   engine/Engine CAssociateResourceBlockLoader::BlockingLoadResourceFileData: Trying to load an illegal resource name mesh.vmat!
+ 02:25:34   engine/Engine resourcecompiler: Could not find material data for "unnamed_1"!
+ 02:25:34   engine/ModelProcessingSystem Error! Mesh: unnamed_1 - Missing vmat "glass.vmat"
+ 02:25:34   engine/Engine CAssociateResourceBlockLoader::BlockingLoadResourceFileData: Trying to load an illegal resource name glass.vmat!
+ 02:25:34   engine/Engine resourcecompiler: Could not find material data for "unnamed_1"!
+ 02:25:34   engine/ModelProcessingSystem Error! Mesh: unnamed_1 - Missing vmat "windows.vmat"
+ 02:25:34   engine/Engine CAssociateResourceBlockLoader::BlockingLoadResourceFileData: Trying to load an illegal resource name windows.vmat!
+ 02:25:34   engine/Engine resourcecompiler: Could not find material data for "unnamed_1"!
+ 02:25:34   engine/ResourceSystem Error loading resource file "mesh.vmat_c" (Error: ERROR_FILEOPEN: File not found) - from imported/a/s/art/model/structure/wall/classroom_door_wall_01_snaps014.vmdl
+ 02:25:34   engine/ResourceSystem Error loading resource file "lambert2.vmat_c" (Error: ERROR_FILEOPEN: File not found) - from imported/a/s/art/model/structure/wall/classroom_door_wall_01_snaps014.vmdl
+ 02:25:34   engine/ResourceSystem Error loading resource file "lambert3.vmat_c" (Error: ERROR_FILEOPEN: File not found) - from imported/a/s/art/model/structure/wall/classroom_door_wall_01_snaps014.vmdl
+ 02:25:34   engine/ResourceSystem Error loading resource file "windows.vmat_c" (Error: ERROR_FILEOPEN: File not found) - from imported/a/s/art/model/structure/windows/windows_02/windows_02_01_snaps014.vmdl
+ 02:25:34   engine/ModelProcessingSystem  [1] Error! Mesh: unnamed_1 - Missing vmat "glass.vmat"
+ 02:25:34   engine/Engine  [1] CAssociateResourceBlockLoader::BlockingLoadResourceFileData: Trying to load an illegal resource name glass.vmat!
+ 02:25:34   engine/Engine  [1] resourcecompiler: Could not find material data for "unnamed_1"!
+ 02:25:34   engine/ModelProcessingSystem  [1] Error! Mesh: unnamed_1 - Missing vmat "windows.vmat"
+ 02:25:34   engine/Engine  [1] CAssociateResourceBlockLoader::BlockingLoadResourceFileData: Trying to load an illegal resource name windows.vmat!
+ 02:25:34   engine/Engine resourcecompiler: Could not find material data for "unnamed_1"!
+ 02:25:34   engine/ModelProcessingSystem Error! Mesh: unnamed_1 - Missing vmat "glass.vmat"
+ 02:25:34   engine/Engine resourcecompiler: Could not find material data for "unnamed_1"!
+ 02:25:34   engine/Engine CAssociateResourceBlockLoader::BlockingLoadResourceFileData: Trying to load an illegal resource name glass.vmat!
+ 02:25:34   engine/Engine resourcecompiler: Could not find material data for "unnamed_1"!
+ 02:25:34   engine/ModelProcessingSystem Error! Mesh: unnamed_1 - Missing vmat "windows.vmat"
+ 02:25:34   engine/Engine CAssociateResourceBlockLoader::BlockingLoadResourceFileData: Trying to load an illegal resource name windows.vmat!
+ 02:25:34   engine/Engine resourcecompiler: Could not find material data for "unnamed_1"!
+ 02:25:35   engine/ModelProcessingSystem Error! Mesh: unnamed_1 - Missing vmat "glass.vmat"
+ 02:25:35   engine/Engine CAssociateResourceBlockLoader::BlockingLoadResourceFileData: Trying to load an illegal resource name glass.vmat!
+ 02:25:35   engine/ModelProcessingSystem Error! Mesh: unnamed_1 - Missing vmat "glass.vmat"
+ 02:25:35   engine/Engine resourcecompiler: Could not find material data for "unnamed_1"!
+ 02:25:35   engine/Engine CAssociateResourceBlockLoader::BlockingLoadResourceFileData: Trying to load an illegal resource name glass.vmat!
+ 02:25:35   engine/ModelProcessingSystem Error! Mesh: unnamed_1 - Missing vmat "windows.vmat"
+ 02:25:35   engine/Engine resourcecompiler: Could not find material data for "unnamed_1"!
+ 02:25:35   engine/ModelProcessingSystem Error! Mesh: unnamed_1 - Missing vmat "glass.vmat"
+ 02:25:35   engine/Engine CAssociateResourceBlockLoader::BlockingLoadResourceFileData: Trying to load an illegal resource name windows.vmat!
+ 02:25:35   engine/ModelProcessingSystem Error! Mesh: unnamed_1 - Missing vmat "windows.vmat"
+ 02:25:35   engine/Engine CAssociateResourceBlockLoader::BlockingLoadResourceFileData: Trying to load an illegal resource name glass.vmat!
+ 02:25:35   engine/Engine resourcecompiler: Could not find material data for "unnamed_1"!
+ 02:25:35   engine/Engine CAssociateResourceBlockLoader::BlockingLoadResourceFileData: Trying to load an illegal resource name windows.vmat!
+ 02:25:35   engine/Engine  [1] resourcecompiler: Could not find material data for "unnamed_1"!
+ 02:25:35   engine/ModelProcessingSystem Error! Mesh: unnamed_1 - Missing vmat "windows.vmat"
+ 02:25:35   engine/Engine CAssociateResourceBlockLoader::BlockingLoadResourceFileData: Trying to load an illegal resource name windows.vmat!
+ 02:25:35   engine/Engine resourcecompiler: Could not find material data for "unnamed_1"!
+ 02:25:35   engine/ModelProcessingSystem Error! Mesh: unnamed_1 - Missing vmat "glass.vmat"
+ 02:25:35   engine/Engine CAssociateResourceBlockLoader::BlockingLoadResourceFileData: Trying to load an illegal resource name glass.vmat!
+ 02:25:35   engine/Engine resourcecompiler: Could not find material data for "unnamed_1"!
+ 02:25:35   engine/ModelProcessingSystem Error! Mesh: unnamed_1 - Missing vmat "windows.vmat"
+ 02:25:35   engine/ModelProcessingSystem Error! Mesh: unnamed_1 - Missing vmat "glass.vmat"
+ 02:25:35   engine/Engine CAssociateResourceBlockLoader::BlockingLoadResourceFileData: Trying to load an illegal resource name windows.vmat!
+ 02:25:35   engine/Engine CAssociateResourceBlockLoader::BlockingLoadResourceFileData: Trying to load an illegal resource name glass.vmat!
+ 02:25:35   engine/ModelProcessingSystem Error! Mesh: unnamed_1 - Missing vmat "glass.vmat"
+ 02:25:35   engine/Engine  [1] resourcecompiler: Could not find material data for "unnamed_1"!
+ 02:25:35   engine/Engine CAssociateResourceBlockLoader::BlockingLoadResourceFileData: Trying to load an illegal resource name glass.vmat!
+ 02:25:35   engine/ModelProcessingSystem Error! Mesh: unnamed_1 - Missing vmat "windows.vmat"
+ 02:25:35   engine/Engine resourcecompiler: Could not find material data for "unnamed_1"!
+ 02:25:35   engine/Engine CAssociateResourceBlockLoader::BlockingLoadResourceFileData: Trying to load an illegal resource name windows.vmat!
+ 02:25:35   engine/ModelProcessingSystem Error! Mesh: unnamed_1 - Missing vmat "windows.vmat"
+ 02:25:35   engine/Engine resourcecompiler: Could not find material data for "unnamed_1"!
+ 02:25:35   engine/Engine CAssociateResourceBlockLoader::BlockingLoadResourceFileData: Trying to load an illegal resource name windows.vmat!
+ 02:25:35   engine/Engine resourcecompiler: Could not find material data for "unnamed_1"!
+ 02:25:35   engine/ModelProcessingSystem  [1] Error! Mesh: unnamed_1 - Missing vmat "glass.vmat"
+ 02:25:35   engine/Engine  [1] CAssociateResourceBlockLoader::BlockingLoadResourceFileData: Trying to load an illegal resource name glass.vmat!
+ 02:25:35   engine/Engine  [1] resourcecompiler: Could not find material data for "unnamed_1"!
+ 02:25:35   engine/ModelProcessingSystem Error! Mesh: unnamed_1 - Missing vmat "metal.vmat"
+ 02:25:35   engine/Engine CAssociateResourceBlockLoader::BlockingLoadResourceFileData: Trying to load an illegal resource name metal.vmat!
+ 02:25:35   engine/ModelProcessingSystem Error! Mesh: unnamed_1 - Missing vmat "metal.vmat"
+ 02:25:35   engine/ModelProcessingSystem Error! Mesh: unnamed_1 - Missing vmat "glass.vmat"
+ 02:25:35   engine/Engine resourcecompiler: Could not find material data for "unnamed_1"!
+ 02:25:35   engine/Engine CAssociateResourceBlockLoader::BlockingLoadResourceFileData: Trying to load an illegal resource name metal.vmat!
+ 02:25:35   engine/Engine CAssociateResourceBlockLoader::BlockingLoadResourceFileData: Trying to load an illegal resource name glass.vmat!
+ 02:25:35   engine/Engine  [1] resourcecompiler: Could not find material data for "unnamed_1"!
+ 02:25:35   engine/ModelProcessingSystem Error! Mesh: unnamed_1 - Missing vmat "metal.vmat"
+ 02:25:35   engine/Engine CAssociateResourceBlockLoader::BlockingLoadResourceFileData: Trying to load an illegal resource name metal.vmat!
+ 02:25:35   engine/Engine resourcecompiler: Could not find material data for "unnamed_1"!
+ 02:25:35   engine/ModelProcessingSystem Error! Mesh: unnamed_1 - Missing vmat "glass.vmat"
+ 02:25:35   engine/Engine CAssociateResourceBlockLoader::BlockingLoadResourceFileData: Trying to load an illegal resource name glass.vmat!
+ 02:25:35   engine/Engine resourcecompiler: Could not find material data for "unnamed_1"!
+ 02:25:35   engine/ModelProcessingSystem Error! Mesh: unnamed_1 - Missing vmat "metal.vmat"
+ 02:25:35   engine/Engine CAssociateResourceBlockLoader::BlockingLoadResourceFileData: Trying to load an illegal resource name metal.vmat!
+ 02:25:35   engine/Engine resourcecompiler: Could not find material data for "unnamed_1"!
+ 02:25:36   engine/AssetSystem Not compiling imported/a/s/art/material/plane_snaps014.vmat: a content build is running
+ 02:25:36   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/plane_snaps014.vmat'
+ 02:25:36   Generic Not Compiled: imported/a/s/art/material/props/bathroom/brush_01_albedo_snaps014.vmat (Files changed since it was last built or checked)
+ 02:25:36   engine/AssetSystem Not compiling imported/a/s/art/material/props/bathroom/brush_01_albedo_snaps014.vmat: a content build is running
+ 02:25:36   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/props/bathroom/brush_01_albedo_snaps014.vmat'
+ 02:25:37   engine/AssetSystem Not compiling imported/a/s/art/material/props/bathroom/brush_01_albedo_snaps014.vmat: a content build is running
+ 02:25:37   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/props/bathroom/brush_01_albedo_snaps014.vmat'
+ 02:25:37   engine/AssetSystem Not compiling imported/a/s/art/material/props/bathroom/bucket_01_albedo_snaps014.vmat: a content build is running
+ 02:25:37   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/props/bathroom/bucket_01_albedo_snaps014.vmat'
+ 02:25:37   engine/AssetSystem Not compiling imported/a/s/art/material/props/bathroom/holder_01_albedo_snaps014.vmat: a content build is running
+ 02:25:37   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/props/bathroom/holder_01_albedo_snaps014.vmat'
+ 02:25:38   engine/AssetSystem Not compiling imported/a/s/art/material/props/bathroom/mirror_01_snaps014.vmat: a content build is running
+ 02:25:38   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/props/bathroom/mirror_01_snaps014.vmat'
+ 02:25:38   Generic Not Compiled: imported/a/s/art/material/props/bathroom/pipe_04_albedo_snaps014.vmat (Files changed since it was last built or checked)
+ 02:25:38   engine/AssetSystem Not compiling imported/a/s/art/material/props/bathroom/pipe_04_albedo_snaps014.vmat: a content build is running
+ 02:25:38   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/props/bathroom/pipe_04_albedo_snaps014.vmat'
+ 02:25:43   engine/ResourceCompilerSystem      0/   1 (elapsed  5.686):  C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\material\props\bathroom\pipe_04_albedo_snaps014.vmat
+ 02:25:43   engine/ResourceCompilerSystem Compile of 1 file(s) matching nonrecursive specification "C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported/a/s/art/material/props/bathroom/pipe_04_albedo_snaps014.vmat" took 5.686 seconds
+ 02:25:43   engine/AssetSystem Not compiling imported/a/s/art/material/props/bathroom/pipe_04_albedo_snaps014.vmat: a content build is running
+ 02:25:43   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/props/bathroom/pipe_04_albedo_snaps014.vmat'
+ 02:25:44   engine/AssetSystem Not compiling imported/a/s/art/material/props/bathroom/plunger_01_albedo_snaps014.vmat: a content build is running
+ 02:25:44   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/props/bathroom/plunger_01_albedo_snaps014.vmat'
+ 02:25:44   Generic Not Compiled: imported/a/s/art/material/props/bathroom/restroom_sink_01_albedo_snaps014.vmat (Files changed since it was last built or checked)
+ 02:25:44   engine/AssetSystem Not compiling imported/a/s/art/material/props/bathroom/restroom_sink_01_albedo_snaps014.vmat: a content build is running
+ 02:25:44   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/props/bathroom/restroom_sink_01_albedo_snaps014.vmat'
+ 02:25:45   engine/ResourceCompilerSystem      0/   1 (elapsed  7.140):  C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\material\props\bathroom\restroom_sink_01_albedo_snaps014.vmat
+ 02:25:45   engine/ResourceCompilerSystem Compile of 1 file(s) matching nonrecursive specification "C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported/a/s/art/material/props/bathroom/restroom_sink_01_albedo_snaps014.vmat" took 7.141 seconds
+ 02:25:45   engine/AssetSystem Not compiling imported/a/s/art/material/props/bathroom/restroom_sink_01_albedo_snaps014.vmat: a content build is running
+ 02:25:45   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/props/bathroom/restroom_sink_01_albedo_snaps014.vmat'
+ 02:25:45   Generic Not Compiled: imported/a/s/art/material/props/bathroom/restroom_sink_02_albedo_snaps014.vmat (Files changed since it was last built or checked)
+ 02:25:45   engine/AssetSystem Not compiling imported/a/s/art/material/props/bathroom/restroom_sink_02_albedo_snaps014.vmat: a content build is running
+ 02:25:45   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/props/bathroom/restroom_sink_02_albedo_snaps014.vmat'
+ 02:25:46   engine/ResourceCompilerSystem      0/   1 (elapsed  6.592):  C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\material\props\bathroom\restroom_sink_02_albedo_snaps014.vmat
+ 02:25:46   engine/ResourceCompilerSystem Compile of 1 file(s) matching nonrecursive specification "C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported/a/s/art/material/props/bathroom/restroom_sink_02_albedo_snaps014.vmat" took 6.593 seconds
+ 02:25:46   engine/AssetSystem Not compiling imported/a/s/art/material/props/bathroom/restroom_sink_02_albedo_snaps014.vmat: a content build is running
+ 02:25:46   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/props/bathroom/restroom_sink_02_albedo_snaps014.vmat'
+ 02:25:46   Generic Not Compiled: imported/a/s/art/material/props/bathroom/toilet_01_albedo_snaps014.vmat (Files changed since it was last built or checked)
+ 02:25:46   engine/AssetSystem Not compiling imported/a/s/art/material/props/bathroom/toilet_01_albedo_snaps014.vmat: a content build is running
+ 02:25:46   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/props/bathroom/toilet_01_albedo_snaps014.vmat'
+ 02:25:52   engine/ResourceCompilerSystem      0/   1 (elapsed  6.046):  C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\material\props\bathroom\toilet_01_albedo_snaps014.vmat
+ 02:25:52   engine/ResourceCompilerSystem Compile of 1 file(s) matching nonrecursive specification "C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported/a/s/art/material/props/bathroom/toilet_01_albedo_snaps014.vmat" took 6.046 seconds
+ 02:25:52   engine/ResourceCompilerSystem      0/   1 (elapsed  5.953):  C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\material\props\bathroom\toilet_02_albedo_snaps014.vmat
+ 02:25:52   engine/ResourceCompilerSystem Compile of 1 file(s) matching nonrecursive specification "C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported/a/s/art/material/props/bathroom/toilet_02_albedo_snaps014.vmat" took 5.954 seconds
+ 02:25:52   engine/AssetSystem Not compiling imported/a/s/art/material/props/bathroom/toilet_01_albedo_snaps014.vmat: a content build is running
+ 02:25:52   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/props/bathroom/toilet_01_albedo_snaps014.vmat'
+ 02:25:53   engine/AssetSystem Not compiling imported/a/s/art/material/props/bathroom/toilet_02_albedo_snaps014.vmat: a content build is running
+ 02:25:53   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/props/bathroom/toilet_02_albedo_snaps014.vmat'
+ 02:25:53   Generic Not Compiled: imported/a/s/art/material/props/bathroom/toilet_03_albedo_snaps014.vmat (Files changed since it was last built or checked)
+ 02:25:53   engine/AssetSystem Not compiling imported/a/s/art/material/props/bathroom/toilet_03_albedo_snaps014.vmat: a content build is running
+ 02:25:53   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/props/bathroom/toilet_03_albedo_snaps014.vmat'
+ 02:25:53   engine/ResourceCompilerSystem      0/   1 (elapsed  6.936):  C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\material\props\bathroom\toilet_03_albedo_snaps014.vmat
+ 02:25:53   engine/ResourceCompilerSystem Compile of 1 file(s) matching nonrecursive specification "C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported/a/s/art/material/props/bathroom/toilet_03_albedo_snaps014.vmat" took 6.937 seconds
+ 02:25:54   engine/AssetSystem Not compiling imported/a/s/art/material/props/bathroom/toilet_03_albedo_snaps014.vmat: a content build is running
+ 02:25:54   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/props/bathroom/toilet_03_albedo_snaps014.vmat'
+ 02:25:54   Generic Not Compiled: imported/a/s/art/material/props/classroom/attendance_book_albedo_snaps014.vmat (Files changed since it was last built or checked)
+ 02:25:54   engine/AssetSystem Not compiling imported/a/s/art/material/props/classroom/attendance_book_albedo_snaps014.vmat: a content build is running
+ 02:25:54   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/props/classroom/attendance_book_albedo_snaps014.vmat'
+ 02:25:54   engine/AssetSystem Not compiling imported/a/s/art/material/props/classroom/attendance_book_albedo_snaps014.vmat: a content build is running
+ 02:25:54   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/props/classroom/attendance_book_albedo_snaps014.vmat'
+ 02:25:54   Generic Not Compiled: imported/a/s/art/material/props/classroom/bag_01_albedo_snaps014.vmat (Files changed since it was last built or checked)
+ 02:25:54   engine/AssetSystem Not compiling imported/a/s/art/material/props/classroom/bag_01_albedo_snaps014.vmat: a content build is running
+ 02:25:54   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/props/classroom/bag_01_albedo_snaps014.vmat'
+ 02:25:58   engine/ResourceCompilerSystem      0/   1 (elapsed  5.713):  C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\material\props\classroom\bag_01_albedo_snaps014.vmat
+ 02:25:58   engine/ResourceCompilerSystem Compile of 1 file(s) matching nonrecursive specification "C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported/a/s/art/material/props/classroom/bag_01_albedo_snaps014.vmat" took 5.714 seconds
+ 02:25:59   engine/AssetSystem Not compiling imported/a/s/art/material/props/classroom/bag_01_albedo_snaps014.vmat: a content build is running
+ 02:25:59   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/props/classroom/bag_01_albedo_snaps014.vmat'
+ 02:25:59   Generic Not Compiled: imported/a/s/art/material/props/classroom/bag_02_albedo_snaps014.vmat (Files changed since it was last built or checked)
+ 02:25:59   engine/AssetSystem Not compiling imported/a/s/art/material/props/classroom/bag_02_albedo_snaps014.vmat: a content build is running
+ 02:25:59   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/props/classroom/bag_02_albedo_snaps014.vmat'
+ 02:26:00   engine/ResourceCompilerSystem      0/   1 (elapsed  6.178):  C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\material\props\classroom\bag_02_albedo_snaps014.vmat
+ 02:26:00   engine/ResourceCompilerSystem Compile of 1 file(s) matching nonrecursive specification "C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported/a/s/art/material/props/classroom/bag_02_albedo_snaps014.vmat" took 6.179 seconds
+ 02:26:00   engine/AssetSystem Not compiling imported/a/s/art/material/props/classroom/bag_02_albedo_snaps014.vmat: a content build is running
+ 02:26:00   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/props/classroom/bag_02_albedo_snaps014.vmat'
+ 02:26:01   engine/AssetSystem Not compiling imported/a/s/art/material/props/classroom/blackboard_board_albedo_snaps014.vmat: a content build is running
+ 02:26:01   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/props/classroom/blackboard_board_albedo_snaps014.vmat'
+ 02:26:01   Generic Not Compiled: imported/a/s/art/material/props/classroom/book_albedo_snaps014.vmat (Files changed since it was last built or checked)
+ 02:26:01   engine/AssetSystem Not compiling imported/a/s/art/material/props/classroom/book_albedo_snaps014.vmat: a content build is running
+ 02:26:01   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/props/classroom/book_albedo_snaps014.vmat'
+ 02:26:03   engine/ResourceCompilerSystem      0/   1 (elapsed  5.295):  C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\material\props\classroom\book_albedo_snaps014.vmat
+ 02:26:03   engine/ResourceCompilerSystem Compile of 1 file(s) matching nonrecursive specification "C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported/a/s/art/material/props/classroom/book_albedo_snaps014.vmat" took 5.296 seconds
+ 02:26:04   engine/AssetSystem Not compiling imported/a/s/art/material/props/classroom/book_albedo_snaps014.vmat: a content build is running
+ 02:26:04   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/props/classroom/book_albedo_snaps014.vmat'
+ 02:26:04   Generic Not Compiled: imported/a/s/art/material/props/classroom/broom_01_albedo_snaps014.vmat (Files changed since it was last built or checked)
+ 02:26:04   engine/AssetSystem Not compiling imported/a/s/art/material/props/classroom/broom_01_albedo_snaps014.vmat: a content build is running
+ 02:26:04   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/props/classroom/broom_01_albedo_snaps014.vmat'
+ 02:26:05   engine/ResourceCompilerSystem      0/   1 (elapsed  5.639):  C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\material\props\classroom\broom_01_albedo_snaps014.vmat
+ 02:26:05   engine/ResourceCompilerSystem Compile of 1 file(s) matching nonrecursive specification "C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported/a/s/art/material/props/classroom/broom_01_albedo_snaps014.vmat" took 5.639 seconds
+ 02:26:06   engine/AssetSystem Not compiling imported/a/s/art/material/props/classroom/broom_01_albedo_snaps014.vmat: a content build is running
+ 02:26:06   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/props/classroom/broom_01_albedo_snaps014.vmat'
+ 02:26:06   engine/AssetSystem Not compiling imported/a/s/art/material/props/classroom/burglar_alarm_albedo_snaps014.vmat: a content build is running
+ 02:26:06   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/props/classroom/burglar_alarm_albedo_snaps014.vmat'
+ 02:26:06   engine/AssetSystem Not compiling imported/a/s/art/material/props/classroom/chalk_01_albedo_snaps014.vmat: a content build is running
+ 02:26:06   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/props/classroom/chalk_01_albedo_snaps014.vmat'
+ 02:26:06   Generic Not Compiled: imported/a/s/art/material/props/classroom/clock_01_albedo_snaps014.vmat (Files changed since it was last built or checked)
+ 02:26:06   engine/AssetSystem Not compiling imported/a/s/art/material/props/classroom/clock_01_albedo_snaps014.vmat: a content build is running
+ 02:26:06   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/props/classroom/clock_01_albedo_snaps014.vmat'
+ 02:26:11   engine/ResourceCompilerSystem      0/   1 (elapsed  5.605):  C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\material\props\classroom\curtain_01_albedo_snaps014.vmat
+ 02:26:11   engine/ResourceCompilerSystem Compile of 1 file(s) matching nonrecursive specification "C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported/a/s/art/material/props/classroom/curtain_01_albedo_snaps014.vmat" took 5.605 seconds
+ 02:26:11   engine/ResourceCompilerSystem      0/   1 (elapsed  6.067):  C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\material\props\classroom\clock_01_albedo_snaps014.vmat
+ 02:26:11   engine/ResourceCompilerSystem Compile of 1 file(s) matching nonrecursive specification "C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported/a/s/art/material/props/classroom/clock_01_albedo_snaps014.vmat" took 6.068 seconds
+ 02:26:11   engine/AssetSystem Not compiling imported/a/s/art/material/props/classroom/clock_01_albedo_snaps014.vmat: a content build is running
+ 02:26:11   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/props/classroom/clock_01_albedo_snaps014.vmat'
+ 02:26:12   engine/ResourceCompilerSystem      0/   1 (elapsed  6.151):  C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\material\props\classroom\curtain_rail_01_snaps014.vmat
+ 02:26:12   engine/ResourceCompilerSystem Compile of 1 file(s) matching nonrecursive specification "C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported/a/s/art/material/props/classroom/curtain_rail_01_snaps014.vmat" took 6.151 seconds
+ 02:26:12   engine/AssetSystem Not compiling imported/a/s/art/material/props/classroom/curtain_01_albedo_snaps014.vmat: a content build is running
+ 02:26:12   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/props/classroom/curtain_01_albedo_snaps014.vmat'
+ 02:26:12   engine/AssetSystem Not compiling imported/a/s/art/material/props/classroom/curtain_rail_01_snaps014.vmat: a content build is running
+ 02:26:12   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/props/classroom/curtain_rail_01_snaps014.vmat'
+ 02:26:12   Generic Not Compiled: imported/a/s/art/material/props/classroom/eraser_snaps014.vmat (Files changed since it was last built or checked)
+ 02:26:12   engine/AssetSystem Not compiling imported/a/s/art/material/props/classroom/eraser_snaps014.vmat: a content build is running
+ 02:26:12   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/props/classroom/eraser_snaps014.vmat'
+ 02:26:13   engine/AssetSystem Not compiling imported/a/s/art/material/props/classroom/eraser_snaps014.vmat: a content build is running
+ 02:26:13   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/props/classroom/eraser_snaps014.vmat'
+ 02:26:13   Generic Not Compiled: imported/a/s/art/material/props/classroom/fan_01_albedo_snaps014.vmat (Files changed since it was last built or checked)
+ 02:26:13   engine/AssetSystem Not compiling imported/a/s/art/material/props/classroom/fan_01_albedo_snaps014.vmat: a content build is running
+ 02:26:13   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/props/classroom/fan_01_albedo_snaps014.vmat'
+ 02:26:19   engine/ResourceCompilerSystem      0/   1 (elapsed  7.606):  C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\material\props\classroom\fan_01_albedo_snaps014.vmat
+ 02:26:19   engine/ResourceCompilerSystem Compile of 1 file(s) matching nonrecursive specification "C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported/a/s/art/material/props/classroom/fan_01_albedo_snaps014.vmat" took 7.607 seconds
+ 02:26:19   engine/AssetSystem Not compiling imported/a/s/art/material/props/classroom/fan_01_albedo_snaps014.vmat: a content build is running
+ 02:26:19   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/props/classroom/fan_01_albedo_snaps014.vmat'
+ 02:26:20   engine/AssetSystem Not compiling imported/a/s/art/material/props/classroom/file_pocket_01_albedo.vmat: a content build is running
+ 02:26:20   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/props/classroom/file_pocket_01_albedo.vmat'
+ 02:26:20   engine/AssetSystem Not compiling imported/a/s/art/material/props/classroom/flipped_01_albedo_snaps014.vmat: a content build is running
+ 02:26:20   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/props/classroom/flipped_01_albedo_snaps014.vmat'
+ 02:26:20   Generic Not Compiled: imported/a/s/art/material/props/classroom/lamp_01_albedo_snaps014.vmat (Files changed since it was last built or checked)
+ 02:26:20   engine/AssetSystem Not compiling imported/a/s/art/material/props/classroom/lamp_01_albedo_snaps014.vmat: a content build is running
+ 02:26:20   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/props/classroom/lamp_01_albedo_snaps014.vmat'
+ 02:26:22   engine/ResourceCompilerSystem      0/   1 (elapsed  7.866):  C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\material\props\classroom\lamp_01_albedo_snaps014.vmat
+ 02:26:22   engine/ResourceCompilerSystem Compile of 1 file(s) matching nonrecursive specification "C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported/a/s/art/material/props/classroom/lamp_01_albedo_snaps014.vmat" took 7.867 seconds
+ 02:26:22   engine/AssetSystem Not compiling imported/a/s/art/material/props/classroom/lamp_01_albedo_snaps014.vmat: a content build is running
+ 02:26:22   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/props/classroom/lamp_01_albedo_snaps014.vmat'
+ 02:26:22   Generic Not Compiled: imported/a/s/art/material/props/classroom/lamp_02_snaps014.vmat (Files changed since it was last built or checked)
+ 02:26:22   engine/AssetSystem Not compiling imported/a/s/art/material/props/classroom/lamp_02_snaps014.vmat: a content build is running
+ 02:26:22   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/props/classroom/lamp_02_snaps014.vmat'
+ 02:26:23   engine/ResourceCompilerSystem      0/   1 (elapsed  7.505):  C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\material\props\classroom\lamp_02_snaps014.vmat
+ 02:26:23   engine/ResourceCompilerSystem Compile of 1 file(s) matching nonrecursive specification "C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported/a/s/art/material/props/classroom/lamp_02_snaps014.vmat" took 7.506 seconds
+ 02:26:24   engine/AssetSystem Not compiling imported/a/s/art/material/props/classroom/lamp_02_snaps014.vmat: a content build is running
+ 02:26:24   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/props/classroom/lamp_02_snaps014.vmat'
+ 02:26:24   engine/AssetSystem Not compiling imported/a/s/art/material/props/classroom/pointer_01_albedo_snaps014.vmat: a content build is running
+ 02:26:24   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/props/classroom/pointer_01_albedo_snaps014.vmat'
+ 02:26:24   Generic Not Compiled: imported/a/s/art/material/props/classroom/poster_01_albedo_snaps014.vmat (Files changed since it was last built or checked)
+ 02:26:24   engine/AssetSystem Not compiling imported/a/s/art/material/props/classroom/poster_01_albedo_snaps014.vmat: a content build is running
+ 02:26:24   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/props/classroom/poster_01_albedo_snaps014.vmat'
+ 02:26:27   engine/ResourceCompilerSystem      0/   1 (elapsed  5.631):  C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\material\props\classroom\projector_01_albedo_snaps014.vmat
+ 02:26:27   engine/ResourceCompilerSystem Compile of 1 file(s) matching nonrecursive specification "C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported/a/s/art/material/props/classroom/projector_01_albedo_snaps014.vmat" took 5.631 seconds
+ 02:26:28   engine/ResourceCompilerSystem      0/   1 (elapsed  5.897):  C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\material\props\classroom\ruler_albedo_snaps014.vmat
+ 02:26:28   engine/ResourceCompilerSystem Compile of 1 file(s) matching nonrecursive specification "C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported/a/s/art/material/props/classroom/ruler_albedo_snaps014.vmat" took 5.897 seconds
+ 02:26:33   engine/ResourceCompilerSystem      0/   1 (elapsed  5.929):  C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\material\props\classroom\stacks_of_paper_albedo_snaps014.vmat
+ 02:26:33   engine/ResourceCompilerSystem Compile of 1 file(s) matching nonrecursive specification "C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported/a/s/art/material/props/classroom/stacks_of_paper_albedo_snaps014.vmat" took 5.930 seconds
+ 02:26:36   engine/ResourceCompilerSystem      0/   1 (elapsed  5.593):  C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\material\props\classroom\trashbox_01_albedo_snaps014.vmat
+ 02:26:36   engine/ResourceCompilerSystem Compile of 1 file(s) matching nonrecursive specification "C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported/a/s/art/material/props/classroom/trashbox_01_albedo_snaps014.vmat" took 5.593 seconds
+ 02:26:40   engine/ResourceCompilerSystem      0/   1 (elapsed  6.219):  C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\material\props\corridor\fireplug_box_01_albedo_snaps014.vmat
+ 02:26:40   engine/ResourceCompilerSystem Compile of 1 file(s) matching nonrecursive specification "C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported/a/s/art/material/props/corridor/fireplug_box_01_albedo_snaps014.vmat" took 6.219 seconds
+ 02:26:43   engine/ResourceCompilerSystem      0/   1 (elapsed  6.356):  C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\material\props\corridor\locker_close_01_albedo_snaps014.vmat
+ 02:26:43   engine/ResourceCompilerSystem Compile of 1 file(s) matching nonrecursive specification "C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported/a/s/art/material/props/corridor/locker_close_01_albedo_snaps014.vmat" took 6.357 seconds
+ 02:26:43   engine/ResourceCompilerSystem      0/   1 (elapsed  6.703):  C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\material\props\corridor\fire_extinguisher_01_albedo_snaps014.vmat
+ 02:26:43   engine/ResourceCompilerSystem Compile of 1 file(s) matching nonrecursive specification "C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported/a/s/art/material/props/corridor/fire_extinguisher_01_albedo_snaps014.vmat" took 6.704 seconds
+ 02:26:43   engine/Engine  [3] ERROR: Specified path c:\cseliot\1-development\1-sbox\2-projects\unityimporterplus\huangzhilin\maya\uv.vmat could not be made content-relative
+ 02:26:52   engine/ResourceCompilerSystem      0/   1 (elapsed  5.751):  C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\material\props\outdoor\shrubs_01_albedo_snaps014.vmat
+ 02:26:52   engine/ResourceCompilerSystem Compile of 1 file(s) matching nonrecursive specification "C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported/a/s/art/material/props/outdoor/shrubs_01_albedo_snaps014.vmat" took 5.752 seconds
+ 02:26:53   engine/ResourceCompilerSystem      0/   1 (elapsed  6.831):  C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\material\props\outdoor\single_carport_01_albedo_snaps014.vmat
+ 02:26:53   engine/ResourceCompilerSystem Compile of 1 file(s) matching nonrecursive specification "C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported/a/s/art/material/props/outdoor/single_carport_01_albedo_snaps014.vmat" took 6.831 seconds
+ 02:26:54   Generic CompileIfNeededAsync took over 30 seconds imported/a/s/art/material/props/classroom/poster_01_albedo_snaps014.vmat (Files changed since it was last built or checked)
+ 02:26:54   engine/AssetSystem Not compiling imported/a/s/art/material/props/classroom/poster_01_albedo_snaps014.vmat: a content build is running
+ 02:26:54   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/props/classroom/poster_01_albedo_snaps014.vmat'
+ 02:26:54   Generic Not Compiled: imported/a/s/art/material/props/classroom/poster_02_albedo_snaps014.vmat (Files changed since it was last built or checked)
+ 02:26:54   engine/AssetSystem Not compiling imported/a/s/art/material/props/classroom/poster_02_albedo_snaps014.vmat: a content build is running
+ 02:26:54   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/props/classroom/poster_02_albedo_snaps014.vmat'
+ 02:27:01   engine/ResourceCompilerSystem      0/   1 (elapsed  5.562):  C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\material\structure\ceiling\classroom_ceiling_albedo_snaps014.vmat
+ 02:27:01   engine/ResourceCompilerSystem Compile of 1 file(s) matching nonrecursive specification "C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported/a/s/art/material/structure/ceiling/classroom_ceiling_albedo_snaps014.vmat" took 5.562 seconds
+ 02:27:03   engine/ResourceCompilerSystem      0/   1 (elapsed  5.906):  C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\material\structure\ceiling\corridor_ceiling_albedo_snaps014.vmat
+ 02:27:03   engine/ResourceCompilerSystem Compile of 1 file(s) matching nonrecursive specification "C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported/a/s/art/material/structure/ceiling/corridor_ceiling_albedo_snaps014.vmat" took 5.907 seconds
+ 02:27:05   engine/ResourceCompilerSystem      0/   1 (elapsed  6.828):  C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\material\structure\floor\cement_floor_albedo_snaps014.vmat
+ 02:27:05   engine/ResourceCompilerSystem Compile of 1 file(s) matching nonrecursive specification "C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported/a/s/art/material/structure/floor/cement_floor_albedo_snaps014.vmat" took 6.829 seconds
+ 02:27:11   engine/ResourceCompilerSystem      0/   1 (elapsed  7.392):  C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\material\structure\floor\floor_02_albedo_snaps014.vmat
+ 02:27:11   engine/ResourceCompilerSystem Compile of 1 file(s) matching nonrecursive specification "C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported/a/s/art/material/structure/floor/floor_02_albedo_snaps014.vmat" took 7.392 seconds
+ 02:27:13   engine/ResourceCompilerSystem      0/   1 (elapsed  7.141):  C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\material\structure\floor\floor_tile_albedo_snaps014.vmat
+ 02:27:13   engine/ResourceCompilerSystem Compile of 1 file(s) matching nonrecursive specification "C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported/a/s/art/material/structure/floor/floor_tile_albedo_snaps014.vmat" took 7.142 seconds
+ 02:27:16   engine/ResourceCompilerSystem      0/   1 (elapsed  7.628):  C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\material\structure\floor\restromm_floor_albedo_snaps014.vmat
+ 02:27:16   engine/ResourceCompilerSystem Compile of 1 file(s) matching nonrecursive specification "C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported/a/s/art/material/structure/floor/restromm_floor_albedo_snaps014.vmat" took 7.629 seconds
+ 02:27:16   engine/Engine Warning! FBX file "c:\cseliot\1-development\1-sbox\2-projects\unityimporterplus\assets\imported\a\s\art\model\structure\floor\restroom_floor_01_snaps014.fbx": Clamped index
+ 02:27:19   engine/ResourceCompilerSystem      0/   1 (elapsed  7.655):  C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\material\structure\floor\roof_floor_albedo_snaps014.vmat
+ 02:27:19   engine/ResourceCompilerSystem Compile of 1 file(s) matching nonrecursive specification "C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported/a/s/art/material/structure/floor/roof_floor_albedo_snaps014.vmat" took 7.656 seconds
+ 02:27:23   engine/ResourceCompilerSystem      0/   1 (elapsed  6.786):  C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\material\structure\trim\trim_01_albedo_snaps014.vmat
+ 02:27:23   engine/ResourceCompilerSystem Compile of 1 file(s) matching nonrecursive specification "C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported/a/s/art/material/structure/trim/trim_01_albedo_snaps014.vmat" took 6.787 seconds
+ 02:27:24   engine/ResourceCompilerSystem      0/   1 (elapsed  7.341):  C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\material\structure\trim\outdoor_trim_albedo_snaps014.vmat
+ 02:27:24   engine/ResourceCompilerSystem Compile of 1 file(s) matching nonrecursive specification "C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported/a/s/art/material/structure/trim/outdoor_trim_albedo_snaps014.vmat" took 7.341 seconds
+ 02:27:24   Generic CompileIfNeededAsync took over 30 seconds imported/a/s/art/material/props/classroom/poster_02_albedo_snaps014.vmat (Files changed since it was last built or checked)
+ 02:27:25   engine/AssetSystem Not compiling imported/a/s/art/material/props/classroom/poster_02_albedo_snaps014.vmat: a content build is running
+ 02:27:25   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/props/classroom/poster_02_albedo_snaps014.vmat'
+ 02:27:25   engine/AssetSystem Not compiling imported/a/s/art/material/props/classroom/projector_01_albedo_snaps014.vmat: a content build is running
+ 02:27:25   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/props/classroom/projector_01_albedo_snaps014.vmat'
+ 02:27:25   engine/AssetSystem Not compiling imported/a/s/art/material/props/classroom/ruler_albedo_snaps014.vmat: a content build is running
+ 02:27:25   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/props/classroom/ruler_albedo_snaps014.vmat'
+ 02:27:26   engine/AssetSystem Not compiling imported/a/s/art/material/props/classroom/screen_01_albedo_snaps014.vmat: a content build is running
+ 02:27:26   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/props/classroom/screen_01_albedo_snaps014.vmat'
+ 02:27:26   engine/AssetSystem Not compiling imported/a/s/art/material/props/classroom/stacks_of_paper_albedo_snaps014.vmat: a content build is running
+ 02:27:26   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/props/classroom/stacks_of_paper_albedo_snaps014.vmat'
+ 02:27:26   engine/AssetSystem Not compiling imported/a/s/art/material/props/classroom/stationery_01_albedo_snaps014.vmat: a content build is running
+ 02:27:26   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/props/classroom/stationery_01_albedo_snaps014.vmat'
+ 02:27:26   engine/AssetSystem Not compiling imported/a/s/art/material/props/classroom/switch_01_albedo_snaps014.vmat: a content build is running
+ 02:27:26   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/props/classroom/switch_01_albedo_snaps014.vmat'
+ 02:27:27   engine/AssetSystem Not compiling imported/a/s/art/material/props/classroom/trashbox_01_albedo_snaps014.vmat: a content build is running
+ 02:27:27   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/props/classroom/trashbox_01_albedo_snaps014.vmat'
+ 02:27:27   engine/ResourceCompilerSystem      0/   1 (elapsed  7.200):  C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\material\structure\wall\interior_wall_01_snaps014.vmat
+ 02:27:27   engine/ResourceCompilerSystem Compile of 1 file(s) matching nonrecursive specification "C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported/a/s/art/material/structure/wall/interior_wall_01_snaps014.vmat" took 7.200 seconds
+ 02:27:27   engine/AssetSystem Not compiling imported/a/s/art/material/props/corridor/doorplate_01_albedo_snaps014.vmat: a content build is running
+ 02:27:27   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/props/corridor/doorplate_01_albedo_snaps014.vmat'
+ 02:27:28   engine/AssetSystem Not compiling imported/a/s/art/material/props/corridor/exit_sign_albedo_snaps014.vmat: a content build is running
+ 02:27:28   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/props/corridor/exit_sign_albedo_snaps014.vmat'
+ 02:27:28   engine/AssetSystem Not compiling imported/a/s/art/material/props/corridor/fireplug_box_01_albedo_snaps014.vmat: a content build is running
+ 02:27:28   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/props/corridor/fireplug_box_01_albedo_snaps014.vmat'
+ 02:27:28   engine/AssetSystem Not compiling imported/a/s/art/material/props/corridor/fire_extinguisher_01_albedo_snaps014.vmat: a content build is running
+ 02:27:28   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/props/corridor/fire_extinguisher_01_albedo_snaps014.vmat'
+ 02:27:28   engine/AssetSystem Not compiling imported/a/s/art/material/props/corridor/locker_close_01_albedo_snaps014.vmat: a content build is running
+ 02:27:28   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/props/corridor/locker_close_01_albedo_snaps014.vmat'
+ 02:27:29   engine/AssetSystem Not compiling imported/a/s/art/material/props/corridor/speaker_01_albedo_snaps014.vmat: a content build is running
+ 02:27:29   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/props/corridor/speaker_01_albedo_snaps014.vmat'
+ 02:27:29   engine/AssetSystem Not compiling imported/a/s/art/material/props/decal/decal_albedo_snaps014.vmat: a content build is running
+ 02:27:29   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/props/decal/decal_albedo_snaps014.vmat'
+ 02:27:29   engine/AssetSystem Not compiling imported/a/s/art/material/props/outdoor/certificate_albedo_snaps014.vmat: a content build is running
+ 02:27:29   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/props/outdoor/certificate_albedo_snaps014.vmat'
+ 02:27:30   engine/AssetSystem Not compiling imported/a/s/art/material/props/outdoor/roadblock_01_albedo_snaps014.vmat: a content build is running
+ 02:27:30   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/props/outdoor/roadblock_01_albedo_snaps014.vmat'
+ 02:27:30   engine/AssetSystem Not compiling imported/a/s/art/material/props/outdoor/shrubs_01_albedo_snaps014.vmat: a content build is running
+ 02:27:30   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/props/outdoor/shrubs_01_albedo_snaps014.vmat'
+ 02:27:31   engine/AssetSystem Not compiling imported/a/s/art/material/props/outdoor/single_carport_01_albedo_snaps014.vmat: a content build is running
+ 02:27:31   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/props/outdoor/single_carport_01_albedo_snaps014.vmat'
+ 02:27:31   engine/AssetSystem Not compiling imported/a/s/art/material/props/outdoor/tree_leaf_01_albedo_snaps014.vmat: a content build is running
+ 02:27:31   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/props/outdoor/tree_leaf_01_albedo_snaps014.vmat'
+ 02:27:31   engine/AssetSystem Not compiling imported/a/s/art/material/props/outdoor/tree_01_albedo_snaps014 .vmat: a content build is running
+ 02:27:31   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/props/outdoor/tree_01_albedo_snaps014 .vmat'
+ 02:27:32   engine/AssetSystem Not compiling imported/a/s/art/material/props/porch/shoes_01_snaps014_albedo.vmat: a content build is running
+ 02:27:32   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/props/porch/shoes_01_snaps014_albedo.vmat'
+ 02:27:32   engine/AssetSystem Not compiling imported/a/s/art/material/props/porch/shoes_02_snaps014.vmat: a content build is running
+ 02:27:32   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/props/porch/shoes_02_snaps014.vmat'
+ 02:27:32   engine/AssetSystem Not compiling imported/a/s/art/material/props/porch/umbrella_01_albedo_snaps014.vmat: a content build is running
+ 02:27:32   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/props/porch/umbrella_01_albedo_snaps014.vmat'
+ 02:27:33   engine/AssetSystem Not compiling imported/a/s/art/material/props/porch/umbrella_02_snaps014.vmat: a content build is running
+ 02:27:33   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/props/porch/umbrella_02_snaps014.vmat'
+ 02:27:33   engine/ResourceCompilerSystem      0/   1 (elapsed  7.023):  C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\material\structure\wall\interior_wall_blue_snaps014.vmat
+ 02:27:33   engine/ResourceCompilerSystem Compile of 1 file(s) matching nonrecursive specification "C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported/a/s/art/material/structure/wall/interior_wall_blue_snaps014.vmat" took 7.023 seconds
+ 02:27:33   engine/AssetSystem Not compiling imported/a/s/art/material/props/porch/umbrella_03_snaps014.vmat: a content build is running
+ 02:27:33   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/props/porch/umbrella_03_snaps014.vmat'
+ 02:27:33   engine/ResourceCompilerSystem      0/   1 (elapsed  7.618):  C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\material\structure\wall\interior_wal_red_snaps014.vmat
+ 02:27:33   engine/ResourceCompilerSystem Compile of 1 file(s) matching nonrecursive specification "C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported/a/s/art/material/structure/wall/interior_wal_red_snaps014.vmat" took 7.618 seconds
+ 02:27:34   engine/AssetSystem Not compiling imported/a/s/art/material/props/porch/umbrella_04_snaps014.vmat: a content build is running
+ 02:27:34   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/props/porch/umbrella_04_snaps014.vmat'
+ 02:27:34   engine/AssetSystem Not compiling imported/a/s/art/material/props/small_item/small_item_albedo_snaps014.vmat: a content build is running
+ 02:27:34   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/props/small_item/small_item_albedo_snaps014.vmat'
+ 02:27:34   engine/ResourceCompilerSystem      0/   1 (elapsed  6.167):  C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\material\structure\wall\outdoor_wall_albedo_snaps014.vmat
+ 02:27:34   engine/ResourceCompilerSystem Compile of 1 file(s) matching nonrecursive specification "C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported/a/s/art/material/structure/wall/outdoor_wall_albedo_snaps014.vmat" took 6.167 seconds
+ 02:27:34   engine/AssetSystem Not compiling imported/a/s/art/material/structure/ceiling/classroom_ceiling_albedo_snaps014.vmat: a content build is running
+ 02:27:34   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/structure/ceiling/classroom_ceiling_albedo_snaps014.vmat'
+ 02:27:35   engine/AssetSystem Not compiling imported/a/s/art/material/structure/ceiling/corridor_ceiling_albedo_snaps014.vmat: a content build is running
+ 02:27:35   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/structure/ceiling/corridor_ceiling_albedo_snaps014.vmat'
+ 02:27:35   engine/ResourceCompilerSystem      0/   1 (elapsed 231.409):  C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\hdr\spruit_sunrise_8k.exr.vtex
+ 02:27:35   engine/ResourceCompilerSystem Compile of 1 file(s) matching nonrecursive specification "C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported/a/s/art/hdr/spruit_sunrise_8k.exr.vtex" took 231.410 seconds
+ 02:27:35   engine/AssetSystem Not compiling imported/a/s/art/material/structure/floor/cement_floor_albedo_snaps014.vmat: a content build is running
+ 02:27:35   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/structure/floor/cement_floor_albedo_snaps014.vmat'
+ 02:27:36   engine/AssetSystem Not compiling imported/a/s/art/material/structure/floor/floor_01_albedo_snaps014.vmat: a content build is running
+ 02:27:36   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/structure/floor/floor_01_albedo_snaps014.vmat'
+ 02:27:36   engine/AssetSystem Not compiling imported/a/s/art/material/structure/floor/floor_02_albedo_snaps014.vmat: a content build is running
+ 02:27:36   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/structure/floor/floor_02_albedo_snaps014.vmat'
+ 02:27:36   engine/AssetSystem Not compiling imported/a/s/art/material/structure/floor/earth_floor_albedo_snaps014.vmat: a content build is running
+ 02:27:36   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/structure/floor/earth_floor_albedo_snaps014.vmat'
+ 02:27:36   engine/AssetSystem Not compiling imported/a/s/art/material/structure/floor/floor_tile_albedo_snaps014.vmat: a content build is running
+ 02:27:36   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/structure/floor/floor_tile_albedo_snaps014.vmat'
+ 02:27:37   engine/AssetSystem Not compiling imported/a/s/art/material/structure/floor/restromm_floor_albedo_snaps014.vmat: a content build is running
+ 02:27:37   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/structure/floor/restromm_floor_albedo_snaps014.vmat'
+ 02:27:37   engine/AssetSystem Not compiling imported/a/s/art/material/structure/floor/roof_floor_albedo_snaps014.vmat: a content build is running
+ 02:27:37   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/structure/floor/roof_floor_albedo_snaps014.vmat'
+ 02:27:38   engine/AssetSystem Not compiling imported/a/s/art/material/structure/floor/wood_01_albedo_snaps014.vmat: a content build is running
+ 02:27:38   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/structure/floor/wood_01_albedo_snaps014.vmat'
+ 02:27:38   engine/AssetSystem Not compiling imported/a/s/art/material/structure/trim/outdoor_trim_albedo_snaps014.vmat: a content build is running
+ 02:27:38   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/structure/trim/outdoor_trim_albedo_snaps014.vmat'
+ 02:27:39   engine/AssetSystem Not compiling imported/a/s/art/material/structure/trim/trim_01_albedo_snaps014.vmat: a content build is running
+ 02:27:39   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/structure/trim/trim_01_albedo_snaps014.vmat'
+ 02:27:39   Generic Not Compiled: imported/a/s/art/material/structure/wall/wall_01_albedo_snaps014.vmat (Files changed since it was last built or checked)
+ 02:27:39   engine/AssetSystem Not compiling imported/a/s/art/material/structure/wall/wall_01_albedo_snaps014.vmat: a content build is running
+ 02:27:39   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/structure/wall/wall_01_albedo_snaps014.vmat'
+ 02:27:40   engine/ResourceCompilerSystem      0/   1 (elapsed  6.480):  C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\material\structure\wall\restroom_wall_albedo_snaps014.vmat
+ 02:27:40   engine/ResourceCompilerSystem Compile of 1 file(s) matching nonrecursive specification "C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported/a/s/art/material/structure/wall/restroom_wall_albedo_snaps014.vmat" took 6.480 seconds
+ 02:27:40   engine/ResourceCompilerSystem      0/   1 (elapsed  7.321):  C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\material\structure\wall\restromm_wall_brick_albedo_snaps014.vmat
+ 02:27:40   engine/ResourceCompilerSystem Compile of 1 file(s) matching nonrecursive specification "C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported/a/s/art/material/structure/wall/restromm_wall_brick_albedo_snaps014.vmat" took 7.322 seconds
+ 02:27:41   engine/ResourceCompilerSystem      0/   1 (elapsed  5.951):  C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\material\structure\wall\wall_01_albedo_snaps014.vmat
+ 02:27:41   engine/ResourceCompilerSystem Compile of 1 file(s) matching nonrecursive specification "C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported/a/s/art/material/structure/wall/wall_01_albedo_snaps014.vmat" took 5.952 seconds
+ 02:27:41   engine/AssetSystem Not compiling imported/a/s/art/material/structure/wall/wall_01_albedo_snaps014.vmat: a content build is running
+ 02:27:41   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/structure/wall/wall_01_albedo_snaps014.vmat'
+ 02:27:41   Generic Not Compiled: imported/a/s/art/material/structure/wall/wall_03_albedo_snaps014.vmat (Files changed since it was last built or checked)
+ 02:27:41   engine/AssetSystem Not compiling imported/a/s/art/material/structure/wall/wall_03_albedo_snaps014.vmat: a content build is running
+ 02:27:41   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/structure/wall/wall_03_albedo_snaps014.vmat'
+ 02:27:41   engine/ModelProcessingSystem  [1] Error! Mesh: unnamed_1 - Missing vmat "glass.vmat"
+ 02:27:41   engine/Engine  [1] CAssociateResourceBlockLoader::BlockingLoadResourceFileData: Trying to load an illegal resource name glass.vmat!
+ 02:27:41   engine/Engine  [1] resourcecompiler: Could not find material data for "unnamed_1"!
+ 02:27:41   engine/ModelProcessingSystem  [1] Error! Mesh: unnamed_1 - Missing vmat "glass.vmat"
+ 02:27:41   engine/Engine  [1] CAssociateResourceBlockLoader::BlockingLoadResourceFileData: Trying to load an illegal resource name glass.vmat!
+ 02:27:41   engine/Engine  [1] resourcecompiler: Could not find material data for "unnamed_1"!
+ 02:27:43   engine/ResourceCompilerSystem      0/   1 (elapsed  7.713):  C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\material\structure\wall\wall_02_albedo_snaps014.vmat
+ 02:27:43   engine/ResourceCompilerSystem Compile of 1 file(s) matching nonrecursive specification "C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported/a/s/art/material/structure/wall/wall_02_albedo_snaps014.vmat" took 7.714 seconds
+ 02:27:47   engine/ResourceCompilerSystem      0/   1 (elapsed  6.757):  C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\material\structure\wall\wall_03_albedo_snaps014.vmat
+ 02:27:47   engine/ResourceCompilerSystem Compile of 1 file(s) matching nonrecursive specification "C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported/a/s/art/material/structure/wall/wall_03_albedo_snaps014.vmat" took 6.758 seconds
+ 02:27:47   engine/AssetSystem Not compiling imported/a/s/art/material/structure/wall/wall_03_albedo_snaps014.vmat: a content build is running
+ 02:27:47   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/structure/wall/wall_03_albedo_snaps014.vmat'
+ 02:27:48   engine/Engine  [1] Warning! FBX file "c:\cseliot\1-development\1-sbox\2-projects\unityimporterplus\assets\imported\a\s\art\model\structure\stair\module\stairs_wall_top_snaps014.fbx": Clamped index
+ 02:27:48   engine/AssetSystem Not compiling imported/a/s/art/material/structure/wall/wall_02_albedo_snaps014.vmat: a content build is running
+ 02:27:48   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/structure/wall/wall_02_albedo_snaps014.vmat'
+ 02:27:48   engine/AssetSystem Not compiling imported/a/s/art/material/structure/wall/interior_wall_01_snaps014.vmat: a content build is running
+ 02:27:48   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/structure/wall/interior_wall_01_snaps014.vmat'
+ 02:27:48   engine/AssetSystem Not compiling imported/a/s/art/material/structure/wall/interior_wall_blue_snaps014.vmat: a content build is running
+ 02:27:48   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/structure/wall/interior_wall_blue_snaps014.vmat'
+ 02:27:48   engine/ResourceCompilerSystem      0/   1 (elapsed  6.714):  C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\material\tiling\metallic_01_albedo_snaps014.vmat
+ 02:27:48   engine/ResourceCompilerSystem Compile of 1 file(s) matching nonrecursive specification "C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported/a/s/art/material/tiling/metallic_01_albedo_snaps014.vmat" took 6.714 seconds
+ 02:27:48   engine/AssetSystem Not compiling imported/a/s/art/material/structure/wall/interior_wal_red_snaps014.vmat: a content build is running
+ 02:27:48   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/structure/wall/interior_wal_red_snaps014.vmat'
+ 02:27:49   engine/AssetSystem Not compiling imported/a/s/art/material/structure/wall/restromm_wall_brick_albedo_snaps014.vmat: a content build is running
+ 02:27:49   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/structure/wall/restromm_wall_brick_albedo_snaps014.vmat'
+ 02:27:49   engine/Engine  [3] ERROR: Specified path c:\cseliot\1-development\1-sbox\2-projects\unityimporterplus\Unity\School_01\Assets\JP_School corridor_V2\Textures\door03_3.vmat could not be made content-relative
+ 02:27:49   engine/AssetSystem Not compiling imported/a/s/art/material/structure/wall/restroom_wall_albedo_snaps014.vmat: a content build is running
+ 02:27:49   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/structure/wall/restroom_wall_albedo_snaps014.vmat'
+ 02:27:49   engine/Engine  [1] ERROR: Specified path c:\cseliot\1-development\1-sbox\2-projects\unityimporterplus\Unity\School_01\Assets\JP_School corridor_V2\Textures\door03_3.vmat could not be made content-relative
+ 02:27:49   engine/AssetSystem Not compiling imported/a/s/art/material/structure/wall/outdoor_wall_albedo_snaps014.vmat: a content build is running
+ 02:27:49   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/structure/wall/outdoor_wall_albedo_snaps014.vmat'
+ 02:27:50   engine/AssetSystem Not compiling imported/a/s/art/material/tiling/glass_snaps014.vmat: a content build is running
+ 02:27:50   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/tiling/glass_snaps014.vmat'
+ 02:27:50   Generic Not Compiled: imported/a/s/art/material/tiling/metallic_albedo_snaps014.vmat (Files changed since it was last built or checked)
+ 02:27:50   engine/AssetSystem Not compiling imported/a/s/art/material/tiling/metallic_albedo_snaps014.vmat: a content build is running
+ 02:27:50   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/tiling/metallic_albedo_snaps014.vmat'
+ 02:27:50   engine/Engine ERROR: Specified path c:\cseliot\1-development\1-sbox\2-projects\unityimporterplus\Unity\School_01\Assets\JP_School corridor_V2\Textures\door03_3.vmat could not be made content-relative
+ 02:27:50   engine/ResourceCompilerSystem      0/   1 (elapsed  5.036):  C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\material\tiling\metallic_albedo_snaps014.vmat
+ 02:27:50   engine/ResourceCompilerSystem Compile of 1 file(s) matching nonrecursive specification "C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported/a/s/art/material/tiling/metallic_albedo_snaps014.vmat" took 5.036 seconds
+ 02:27:50   engine/Engine ERROR: Specified path c:\cseliot\1-development\1-sbox\2-projects\unityimporterplus\Unity\School_01\Assets\JP_School corridor_V2\Textures\door03_3.vmat could not be made content-relative
+ 02:27:51   engine/AssetSystem Not compiling imported/a/s/art/material/tiling/metallic_albedo_snaps014.vmat: a content build is running
+ 02:27:51   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/tiling/metallic_albedo_snaps014.vmat'
+ 02:27:51   engine/AssetSystem Not compiling imported/a/s/art/material/tiling/metallic_01_albedo_snaps014.vmat: a content build is running
+ 02:27:51   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/tiling/metallic_01_albedo_snaps014.vmat'
+ 02:27:51   engine/AssetSystem Not compiling imported/a/s/art/material/tiling/metallic_03_snaps014.vmat: a content build is running
+ 02:27:51   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/tiling/metallic_03_snaps014.vmat'
+ 02:27:51   Generic Not Compiled: imported/a/s/art/material/tiling/paint_01_albedo_snaps014.vmat (Files changed since it was last built or checked)
+ 02:27:51   engine/AssetSystem Not compiling imported/a/s/art/material/tiling/paint_01_albedo_snaps014.vmat: a content build is running
+ 02:27:51   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/tiling/paint_01_albedo_snaps014.vmat'
+ 02:27:54   engine/RenderSystem Merging and flushing Vulkan pipeline cache to disk.
+ 02:27:54   engine/ResourceCompilerSystem      0/   1 (elapsed  6.685):  C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\material\tiling\plastic_01_albedo_snaps014.vmat
+ 02:27:54   engine/ResourceCompilerSystem Compile of 1 file(s) matching nonrecursive specification "C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported/a/s/art/material/tiling/plastic_01_albedo_snaps014.vmat" took 6.685 seconds
+ 02:28:00   engine/ResourceCompilerSystem      0/   1 (elapsed  6.994):  C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\material\tiling\plastic_02_snaps014.vmat
+ 02:28:00   engine/ResourceCompilerSystem Compile of 1 file(s) matching nonrecursive specification "C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported/a/s/art/material/tiling/plastic_02_snaps014.vmat" took 6.995 seconds
+ 02:28:02   engine/ResourceCompilerSystem      0/   1 (elapsed  9.164):  C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\material\tiling\plastic_albedo_snaps014.vmat
+ 02:28:02   engine/ResourceCompilerSystem Compile of 1 file(s) matching nonrecursive specification "C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported/a/s/art/material/tiling/plastic_albedo_snaps014.vmat" took 9.165 seconds
+ 02:28:02   engine/ResourceCompilerSystem      0/   1 (elapsed  7.368):  C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\material\tiling\steel_01_snaps014.vmat
+ 02:28:02   engine/ResourceCompilerSystem Compile of 1 file(s) matching nonrecursive specification "C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported/a/s/art/material/tiling/steel_01_snaps014.vmat" took 7.369 seconds
+ 02:28:06   engine/ResourceCompilerSystem      0/   1 (elapsed 19.050):  C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\material\tiling\paint_01_albedo_snaps014.vmat
+ 02:28:06   engine/ResourceCompilerSystem Compile of 1 file(s) matching nonrecursive specification "C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported/a/s/art/material/tiling/paint_01_albedo_snaps014.vmat" took 19.050 seconds
+ 02:28:06   engine/AssetSystem Not compiling imported/a/s/art/material/tiling/paint_01_albedo_snaps014.vmat: a content build is running
+ 02:28:06   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/tiling/paint_01_albedo_snaps014.vmat'
+ 02:28:06   engine/AssetSystem Not compiling imported/a/s/art/material/tiling/plastic_01_albedo_snaps014.vmat: a content build is running
+ 02:28:06   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/tiling/plastic_01_albedo_snaps014.vmat'
+ 02:28:07   engine/AssetSystem Not compiling imported/a/s/art/material/tiling/plastic_02_snaps014.vmat: a content build is running
+ 02:28:07   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/tiling/plastic_02_snaps014.vmat'
+ 02:28:08   engine/AssetSystem Not compiling imported/a/s/art/material/tiling/plastic_albedo_snaps014.vmat: a content build is running
+ 02:28:08   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/tiling/plastic_albedo_snaps014.vmat'
+ 02:28:09   engine/AssetSystem Not compiling imported/a/s/art/material/tiling/steel_01_snaps014.vmat: a content build is running
+ 02:28:09   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/tiling/steel_01_snaps014.vmat'
+ 02:28:09   Generic Not Compiled: imported/a/s/art/material/tiling/urushi_01_albedo_snaps014.vmat (Files changed since it was last built or checked)
+ 02:28:09   engine/AssetSystem Not compiling imported/a/s/art/material/tiling/urushi_01_albedo_snaps014.vmat: a content build is running
+ 02:28:09   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/tiling/urushi_01_albedo_snaps014.vmat'
+ 02:28:09   engine/ResourceCompilerSystem      0/   1 (elapsed  8.276):  C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\material\tiling\urushi_01_albedo_snaps014.vmat
+ 02:28:09   engine/ResourceCompilerSystem Compile of 1 file(s) matching nonrecursive specification "C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported/a/s/art/material/tiling/urushi_01_albedo_snaps014.vmat" took 8.276 seconds
+ 02:28:09   engine/ResourceCompilerSystem      0/   1 (elapsed  6.911):  C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\material\tiling\wood_02_albedo_snaps014.vmat
+ 02:28:09   engine/ResourceCompilerSystem Compile of 1 file(s) matching nonrecursive specification "C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported/a/s/art/material/tiling/wood_02_albedo_snaps014.vmat" took 6.911 seconds
+ 02:28:09   engine/AssetSystem Not compiling imported/a/s/art/material/tiling/urushi_01_albedo_snaps014.vmat: a content build is running
+ 02:28:09   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/tiling/urushi_01_albedo_snaps014.vmat'
+ 02:28:09   Generic Not Compiled: imported/a/s/art/material/tiling/wood_01_albedo_snaps014.vmat (Files changed since it was last built or checked)
+ 02:28:09   engine/AssetSystem Not compiling imported/a/s/art/material/tiling/wood_01_albedo_snaps014.vmat: a content build is running
+ 02:28:09   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/material/tiling/wood_01_albedo_snaps014.vmat'
+ 02:28:14   engine/ResourceCompilerSystem      0/   1 (elapsed  7.848):  C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\material\tiling\wood_03_albedo_snaps014.vmat
+ 02:28:14   engine/ResourceCompilerSystem Compile of 1 file(s) matching nonrecursive specification "C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported/a/s/art/material/tiling/wood_03_albedo_snaps014.vmat" took 7.850 seconds
+ 02:28:16   engine/ResourceCompilerSystem      0/   1 (elapsed  6.352):  C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\material\tiling\wood_04_albedo_snaps014.vmat
+ 02:28:16   engine/ResourceCompilerSystem Compile of 1 file(s) matching nonrecursive specification "C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported/a/s/art/material/tiling/wood_04_albedo_snaps014.vmat" took 6.352 seconds
+ 02:28:17   engine/ResourceCompilerSystem      0/   1 (elapsed  7.464):  C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\material\tiling\wood_05_albedo_snaps014.vmat
+ 02:28:17   engine/ResourceCompilerSystem Compile of 1 file(s) matching nonrecursive specification "C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported/a/s/art/material/tiling/wood_05_albedo_snaps014.vmat" took 7.465 seconds
+ 02:28:21   engine/ResourceCompilerSystem      0/   1 (elapsed  7.562):  C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\material\tiling\wood_06_snaps014.vmat
+ 02:28:21   engine/ResourceCompilerSystem Compile of 1 file(s) matching nonrecursive specification "C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported/a/s/art/material/tiling/wood_06_snaps014.vmat" took 7.563 seconds
+ 02:28:22   engine/ResourceCompilerSystem      0/   1 (elapsed  6.216):  C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\material\trim\trim_01_albedo_snaps014.vmat
+ 02:28:22   engine/ResourceCompilerSystem Compile of 1 file(s) matching nonrecursive specification "C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported/a/s/art/material/trim/trim_01_albedo_snaps014.vmat" took 6.217 seconds
+ 02:28:23   engine/ModelProcessingSystem Error! Mesh: unnamed_1 - Missing vmat "glass.vmat"
+ 02:28:23   engine/Engine CAssociateResourceBlockLoader::BlockingLoadResourceFileData: Trying to load an illegal resource name glass.vmat!
+ 02:28:23   engine/Engine resourcecompiler: Could not find material data for "unnamed_1"!
+ 02:28:25   engine/ModelProcessingSystem Error! Mesh: unnamed_1 - Missing vmat "floor.vmat"
+ 02:28:25   engine/Engine CAssociateResourceBlockLoader::BlockingLoadResourceFileData: Trying to load an illegal resource name floor.vmat!
+ 02:28:25   engine/Engine resourcecompiler: Could not find material data for "unnamed_1"!
+ 02:28:25   engine/ResourceSystem Error loading resource file "floor.vmat_c" (Error: ERROR_FILEOPEN: File not found) - from imported/a/s/art/model/structure/stair/floor_stairs_bottom_lod01.vmdl
+ 02:28:33   engine/ResourceCompilerSystem      0/   1 (elapsed 30.944):  C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\material\tiling\wood_01_albedo_snaps014.vmat
+ 02:28:33   engine/ResourceCompilerSystem Compile of 1 file(s) matching nonrecursive specification "C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported/a/s/art/material/tiling/wood_01_albedo_snaps014.vmat" took 30.944 seconds
+ 02:28:33   Generic Content build: 906 compiles, 0 adopted, 2 failed, 32 blocked, 0 removed
+ 02:28:33   Generic local.unityimporterplus:imported/a/s/art/material/props/classroom/poster_01_albedo_snaps014.vmat: describe failed
+ 02:28:34   Generic Not Compiled: imported/a/s/art/model/props/classroom/awards_01_snaps014.vmdl (Files changed since it was last built or checked)
+ 02:28:34   engine/Engine FloatBitMap_t::LoadFromFile(2516): Error calling TGALoader::GetInfo( c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014.tga )
+ 02:28:34   engine/TextureCompiler CTextureObject::ReadFromFile(2104): Error calling LoadFromFile() for texture "c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014.tga"!
+ 02:28:34   engine/TextureCompiler CResourceCompilerTexture::ReadInputTextures(284): Error reading texture "imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014.tga" for "TextureColor" when compiling file "c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014_tga_48f0db5.generated.vtex"!
+ 02:28:34   engine/ResourceCompilerSystem                                                                       [FAIL]
+ 02:28:34   engine/MaterialCompiler ProcessTexture(750): Error calling CompileImmediately( C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\textures\props\classroom\poster_02\poster_02_albedo_snaps014_tga_48f0db5.generated.vtex ) for c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/material/props/classroom/poster_02_albedo_snaps014.vmat!
+ 02:28:34   engine/MaterialCompiler CResourceCompilerMaterial::CompileResourceInternal(1577): Error processing texture g_tColor
+ 02:28:34   engine/ResourceCompilerSystem                                                                       [FAIL]
+ 02:28:34   engine/Engine CAssociateResourceBlockLoader::BlockingLoadResourceFileData: Trying to load an illegal resource name imported/a/s/art/material/props/classroom/poster_02_albedo_snaps014.vmat!
+ 02:28:34   engine/Engine resourcecompiler: Could not find material data for "unnamed_1"!
+ 02:28:34   Generic Not Compiled: imported/a/s/art/model/props/classroom/awards_02_snaps014.vmdl (Files changed since it was last built or checked)
+ 02:28:34   engine/Engine FloatBitMap_t::LoadFromFile(2516): Error calling TGALoader::GetInfo( c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014.tga )
+ 02:28:34   engine/TextureCompiler CTextureObject::ReadFromFile(2104): Error calling LoadFromFile() for texture "c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014.tga"!
+ 02:28:34   engine/TextureCompiler CResourceCompilerTexture::ReadInputTextures(284): Error reading texture "imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014.tga" for "TextureColor" when compiling file "c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014_tga_48f0db5.generated.vtex"!
+ 02:28:34   engine/ResourceCompilerSystem                                                                       [FAIL]
+ 02:28:34   engine/MaterialCompiler ProcessTexture(750): Error calling CompileImmediately( C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\textures\props\classroom\poster_02\poster_02_albedo_snaps014_tga_48f0db5.generated.vtex ) for c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/material/props/classroom/poster_02_albedo_snaps014.vmat!
+ 02:28:34   engine/MaterialCompiler CResourceCompilerMaterial::CompileResourceInternal(1577): Error processing texture g_tColor
+ 02:28:34   engine/ResourceCompilerSystem                                                                       [FAIL]
+ 02:28:34   engine/Engine CAssociateResourceBlockLoader::BlockingLoadResourceFileData: Trying to load an illegal resource name imported/a/s/art/material/props/classroom/poster_02_albedo_snaps014.vmat!
+ 02:28:34   engine/Engine resourcecompiler: Could not find material data for "unnamed_1"!
+ 02:28:34   Generic Not Compiled: imported/a/s/art/model/props/classroom/awards_03_snaps014.vmdl (Files changed since it was last built or checked)
+ 02:28:34   engine/Engine FloatBitMap_t::LoadFromFile(2516): Error calling TGALoader::GetInfo( c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014.tga )
+ 02:28:34   engine/TextureCompiler CTextureObject::ReadFromFile(2104): Error calling LoadFromFile() for texture "c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014.tga"!
+ 02:28:34   engine/TextureCompiler CResourceCompilerTexture::ReadInputTextures(284): Error reading texture "imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014.tga" for "TextureColor" when compiling file "c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014_tga_48f0db5.generated.vtex"!
+ 02:28:34   engine/ResourceCompilerSystem                                                                       [FAIL]
+ 02:28:34   engine/MaterialCompiler ProcessTexture(750): Error calling CompileImmediately( C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\textures\props\classroom\poster_02\poster_02_albedo_snaps014_tga_48f0db5.generated.vtex ) for c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/material/props/classroom/poster_02_albedo_snaps014.vmat!
+ 02:28:34   engine/MaterialCompiler CResourceCompilerMaterial::CompileResourceInternal(1577): Error processing texture g_tColor
+ 02:28:34   engine/ResourceCompilerSystem                                                                       [FAIL]
+ 02:28:34   engine/Engine CAssociateResourceBlockLoader::BlockingLoadResourceFileData: Trying to load an illegal resource name imported/a/s/art/material/props/classroom/poster_02_albedo_snaps014.vmat!
+ 02:28:34   engine/Engine resourcecompiler: Could not find material data for "unnamed_1"!
+ 02:28:45   engine/AssetSystem Not compiling imported/a/s/art/model/props/classroom/bag_03_snaps014.vmdl: a content build is running
+ 02:28:45   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/model/props/classroom/bag_03_snaps014.vmdl'
+ 02:28:45   engine/AssetSystem Not compiling imported/a/s/art/model/props/classroom/ball_pen_01_snaps014.vmdl: a content build is running
+ 02:28:45   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/model/props/classroom/ball_pen_01_snaps014.vmdl'
+ 02:28:45   engine/MaterialCompiler Error loading image file header c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014.tga
+ 02:28:45   engine/ResourceCompilerSystem                                                                       [FAIL]
+ 02:28:45   engine/MaterialCompiler Error loading image file header c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_01/poster_01_albedo_snaps014.tga
+ 02:28:45   engine/ResourceCompilerSystem                                                                       [FAIL]
+ 02:28:45   engine/AssetSystem Not compiling imported/a/s/art/model/props/classroom/ball_pen_02_snaps014.vmdl: a content build is running
+ 02:28:45   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/model/props/classroom/ball_pen_02_snaps014.vmdl'
+ 02:28:46   engine/AssetSystem Not compiling imported/a/s/art/model/props/classroom/blackboard_01_snaps014.vmdl: a content build is running
+ 02:28:46   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/model/props/classroom/blackboard_01_snaps014.vmdl'
+ 02:28:46   engine/AssetSystem Not compiling imported/a/s/art/model/props/classroom/board_01_snaps014.vmdl: a content build is running
+ 02:28:46   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/model/props/classroom/board_01_snaps014.vmdl'
+ 02:28:46   engine/AssetSystem Not compiling imported/a/s/art/model/props/classroom/book_01_snaps014.vmdl: a content build is running
+ 02:28:46   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/model/props/classroom/book_01_snaps014.vmdl'
+ 02:28:47   engine/AssetSystem Not compiling imported/a/s/art/model/props/classroom/book_02_snaps014.vmdl: a content build is running
+ 02:28:47   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/model/props/classroom/book_02_snaps014.vmdl'
+ 02:28:47   engine/AssetSystem Not compiling imported/a/s/art/model/props/classroom/book_03_snaps014.vmdl: a content build is running
+ 02:28:47   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/model/props/classroom/book_03_snaps014.vmdl'
+ 02:28:47   engine/AssetSystem Not compiling imported/a/s/art/model/props/classroom/book_04_snaps014.vmdl: a content build is running
+ 02:28:47   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/model/props/classroom/book_04_snaps014.vmdl'
+ 02:28:47   engine/AssetSystem Not compiling imported/a/s/art/model/props/classroom/book_05_snaps014.vmdl: a content build is running
+ 02:28:47   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/model/props/classroom/book_05_snaps014.vmdl'
+ 02:28:48   engine/AssetSystem Not compiling imported/a/s/art/model/props/classroom/book_06_snaps014.vmdl: a content build is running
+ 02:28:48   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/model/props/classroom/book_06_snaps014.vmdl'
+ 02:28:48   engine/AssetSystem Not compiling imported/a/s/art/model/props/classroom/book_07_snaps014.vmdl: a content build is running
+ 02:28:48   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/model/props/classroom/book_07_snaps014.vmdl'
+ 02:28:48   engine/AssetSystem Not compiling imported/a/s/art/model/props/classroom/book_08_snaps014.vmdl: a content build is running
+ 02:28:48   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/model/props/classroom/book_08_snaps014.vmdl'
+ 02:28:49   engine/AssetSystem Not compiling imported/a/s/art/model/props/classroom/book_09_snaps014.vmdl: a content build is running
+ 02:28:49   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/model/props/classroom/book_09_snaps014.vmdl'
+ 02:28:49   engine/AssetSystem Not compiling imported/a/s/art/model/props/classroom/book_10_snaps014.vmdl: a content build is running
+ 02:28:49   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/model/props/classroom/book_10_snaps014.vmdl'
+ 02:28:49   engine/AssetSystem Not compiling imported/a/s/art/model/props/classroom/broom_01_snaps014.vmdl: a content build is running
+ 02:28:49   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/model/props/classroom/broom_01_snaps014.vmdl'
+ 02:28:49   engine/AssetSystem Not compiling imported/a/s/art/model/props/classroom/burglar_alarm_01_snaps014.vmdl: a content build is running
+ 02:28:49   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/model/props/classroom/burglar_alarm_01_snaps014.vmdl'
+ 02:28:50   engine/AssetSystem Not compiling imported/a/s/art/model/props/classroom/chair_01_snaps014.vmdl: a content build is running
+ 02:28:50   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/model/props/classroom/chair_01_snaps014.vmdl'
+ 02:28:50   engine/AssetSystem Not compiling imported/a/s/art/model/props/classroom/chalk_01_snaps014.vmdl: a content build is running
+ 02:28:50   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/model/props/classroom/chalk_01_snaps014.vmdl'
+ 02:28:50   engine/AssetSystem Not compiling imported/a/s/art/model/props/classroom/chalk_02_snaps014.vmdl: a content build is running
+ 02:28:50   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/model/props/classroom/chalk_02_snaps014.vmdl'
+ 02:28:51   engine/AssetSystem Not compiling imported/a/s/art/model/props/classroom/chalk_03_snaps014.vmdl: a content build is running
+ 02:28:51   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/model/props/classroom/chalk_03_snaps014.vmdl'
+ 02:28:51   engine/AssetSystem Not compiling imported/a/s/art/model/props/classroom/chalk_04_snaps014.vmdl: a content build is running
+ 02:28:51   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/model/props/classroom/chalk_04_snaps014.vmdl'
+ 02:28:51   engine/AssetSystem Not compiling imported/a/s/art/model/props/classroom/chalk_05_snaps014.vmdl: a content build is running
+ 02:28:51   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/model/props/classroom/chalk_05_snaps014.vmdl'
+ 02:28:51   engine/ResourceCompilerSystem      0/   1 (elapsed  5.351):  C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\material\props\classroom\bag_01_albedo_snaps014.vmat
+ 02:28:51   engine/ResourceCompilerSystem Compile of 1 file(s) matching nonrecursive specification "C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported/a/s/art/material/props/classroom/bag_01_albedo_snaps014.vmat" took 5.352 seconds
+ 02:28:51   Generic Content build: 1 compiles, 3 adopted, 2 failed, 32 blocked, 0 removed
+ 02:28:51   Generic local.unityimporterplus:imported/a/s/art/material/props/classroom/poster_01_albedo_snaps014.vmat: describe failed
+ 02:28:52   Generic Not Compiled: imported/a/s/art/model/props/classroom/photo_01_snaps014.vmdl (Files changed since it was last built or checked)
+ 02:28:52   engine/Engine FloatBitMap_t::LoadFromFile(2516): Error calling TGALoader::GetInfo( c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014.tga )
+ 02:28:52   engine/TextureCompiler CTextureObject::ReadFromFile(2104): Error calling LoadFromFile() for texture "c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014.tga"!
+ 02:28:52   engine/TextureCompiler CResourceCompilerTexture::ReadInputTextures(284): Error reading texture "imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014.tga" for "TextureColor" when compiling file "c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014_tga_48f0db5.generated.vtex"!
+ 02:28:52   engine/ResourceCompilerSystem                                                                       [FAIL]
+ 02:28:52   engine/MaterialCompiler ProcessTexture(750): Error calling CompileImmediately( C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\textures\props\classroom\poster_02\poster_02_albedo_snaps014_tga_48f0db5.generated.vtex ) for c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/material/props/classroom/poster_02_albedo_snaps014.vmat!
+ 02:28:52   engine/MaterialCompiler CResourceCompilerMaterial::CompileResourceInternal(1577): Error processing texture g_tColor
+ 02:28:52   engine/ResourceCompilerSystem                                                                       [FAIL]
+ 02:28:52   engine/Engine CAssociateResourceBlockLoader::BlockingLoadResourceFileData: Trying to load an illegal resource name imported/a/s/art/material/props/classroom/poster_02_albedo_snaps014.vmat!
+ 02:28:52   engine/Engine resourcecompiler: Could not find material data for "unnamed_1"!
+ 02:28:52   Generic Not Compiled: imported/a/s/art/model/props/classroom/photo_02_snaps014.vmdl (Files changed since it was last built or checked)
+ 02:28:52   engine/Engine FloatBitMap_t::LoadFromFile(2516): Error calling TGALoader::GetInfo( c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014.tga )
+ 02:28:52   engine/TextureCompiler CTextureObject::ReadFromFile(2104): Error calling LoadFromFile() for texture "c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014.tga"!
+ 02:28:52   engine/TextureCompiler CResourceCompilerTexture::ReadInputTextures(284): Error reading texture "imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014.tga" for "TextureColor" when compiling file "c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014_tga_48f0db5.generated.vtex"!
+ 02:28:52   engine/ResourceCompilerSystem                                                                       [FAIL]
+ 02:28:52   engine/MaterialCompiler ProcessTexture(750): Error calling CompileImmediately( C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\textures\props\classroom\poster_02\poster_02_albedo_snaps014_tga_48f0db5.generated.vtex ) for c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/material/props/classroom/poster_02_albedo_snaps014.vmat!
+ 02:28:52   engine/MaterialCompiler CResourceCompilerMaterial::CompileResourceInternal(1577): Error processing texture g_tColor
+ 02:28:52   engine/ResourceCompilerSystem                                                                       [FAIL]
+ 02:28:52   engine/Engine CAssociateResourceBlockLoader::BlockingLoadResourceFileData: Trying to load an illegal resource name imported/a/s/art/material/props/classroom/poster_02_albedo_snaps014.vmat!
+ 02:28:52   engine/Engine resourcecompiler: Could not find material data for "unnamed_1"!
+ 02:28:52   Generic Not Compiled: imported/a/s/art/model/props/classroom/photo_03_snaps014.vmdl (Files changed since it was last built or checked)
+ 02:28:52   engine/Engine FloatBitMap_t::LoadFromFile(2516): Error calling TGALoader::GetInfo( c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014.tga )
+ 02:28:52   engine/TextureCompiler CTextureObject::ReadFromFile(2104): Error calling LoadFromFile() for texture "c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014.tga"!
+ 02:28:52   engine/TextureCompiler CResourceCompilerTexture::ReadInputTextures(284): Error reading texture "imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014.tga" for "TextureColor" when compiling file "c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014_tga_48f0db5.generated.vtex"!
+ 02:28:52   engine/ResourceCompilerSystem                                                                       [FAIL]
+ 02:28:52   engine/MaterialCompiler ProcessTexture(750): Error calling CompileImmediately( C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\textures\props\classroom\poster_02\poster_02_albedo_snaps014_tga_48f0db5.generated.vtex ) for c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/material/props/classroom/poster_02_albedo_snaps014.vmat!
+ 02:28:52   engine/MaterialCompiler CResourceCompilerMaterial::CompileResourceInternal(1577): Error processing texture g_tColor
+ 02:28:52   engine/ResourceCompilerSystem                                                                       [FAIL]
+ 02:28:52   engine/Engine CAssociateResourceBlockLoader::BlockingLoadResourceFileData: Trying to load an illegal resource name imported/a/s/art/material/props/classroom/poster_02_albedo_snaps014.vmat!
+ 02:28:52   engine/Engine resourcecompiler: Could not find material data for "unnamed_1"!
+ 02:29:00   Generic Not Compiled: imported/a/s/art/model/props/classroom/poster_01_snaps014.vmdl (Files changed since it was last built or checked)
+ 02:29:01   engine/Engine FloatBitMap_t::LoadFromFile(2516): Error calling TGALoader::GetInfo( c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_01/poster_01_albedo_snaps014.tga )
+ 02:29:01   engine/TextureCompiler CTextureObject::ReadFromFile(2104): Error calling LoadFromFile() for texture "c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_01/poster_01_albedo_snaps014.tga"!
+ 02:29:01   engine/TextureCompiler CResourceCompilerTexture::ReadInputTextures(284): Error reading texture "imported/a/s/art/textures/props/classroom/poster_01/poster_01_albedo_snaps014.tga" for "TextureColor" when compiling file "c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_01/poster_01_albedo_snaps014_tga_54d7d0d1.generated.vtex"!
+ 02:29:01   engine/ResourceCompilerSystem                                                                       [FAIL]
+ 02:29:01   engine/MaterialCompiler ProcessTexture(750): Error calling CompileImmediately( C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\textures\props\classroom\poster_01\poster_01_albedo_snaps014_tga_54d7d0d1.generated.vtex ) for c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/material/props/classroom/poster_01_albedo_snaps014.vmat!
+ 02:29:01   engine/MaterialCompiler CResourceCompilerMaterial::CompileResourceInternal(1577): Error processing texture g_tColor
+ 02:29:01   engine/ResourceCompilerSystem                                                                       [FAIL]
+ 02:29:01   engine/Engine CAssociateResourceBlockLoader::BlockingLoadResourceFileData: Trying to load an illegal resource name imported/a/s/art/material/props/classroom/poster_01_albedo_snaps014.vmat!
+ 02:29:01   engine/Engine resourcecompiler: Could not find material data for "unnamed_1"!
+ 02:29:01   Generic Not Compiled: imported/a/s/art/model/props/classroom/poster_02_snaps014.vmdl (Files changed since it was last built or checked)
+ 02:29:01   engine/Engine FloatBitMap_t::LoadFromFile(2516): Error calling TGALoader::GetInfo( c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_01/poster_01_albedo_snaps014.tga )
+ 02:29:01   engine/TextureCompiler CTextureObject::ReadFromFile(2104): Error calling LoadFromFile() for texture "c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_01/poster_01_albedo_snaps014.tga"!
+ 02:29:01   engine/TextureCompiler CResourceCompilerTexture::ReadInputTextures(284): Error reading texture "imported/a/s/art/textures/props/classroom/poster_01/poster_01_albedo_snaps014.tga" for "TextureColor" when compiling file "c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_01/poster_01_albedo_snaps014_tga_54d7d0d1.generated.vtex"!
+ 02:29:01   engine/ResourceCompilerSystem                                                                       [FAIL]
+ 02:29:01   engine/MaterialCompiler ProcessTexture(750): Error calling CompileImmediately( C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\textures\props\classroom\poster_01\poster_01_albedo_snaps014_tga_54d7d0d1.generated.vtex ) for c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/material/props/classroom/poster_01_albedo_snaps014.vmat!
+ 02:29:01   engine/MaterialCompiler CResourceCompilerMaterial::CompileResourceInternal(1577): Error processing texture g_tColor
+ 02:29:01   engine/ResourceCompilerSystem                                                                       [FAIL]
+ 02:29:01   engine/Engine CAssociateResourceBlockLoader::BlockingLoadResourceFileData: Trying to load an illegal resource name imported/a/s/art/material/props/classroom/poster_01_albedo_snaps014.vmat!
+ 02:29:01   engine/Engine resourcecompiler: Could not find material data for "unnamed_1"!
+ 02:29:01   Generic Not Compiled: imported/a/s/art/model/props/classroom/poster_03_snaps014.vmdl (Files changed since it was last built or checked)
+ 02:29:01   engine/Engine FloatBitMap_t::LoadFromFile(2516): Error calling TGALoader::GetInfo( c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_01/poster_01_albedo_snaps014.tga )
+ 02:29:01   engine/TextureCompiler CTextureObject::ReadFromFile(2104): Error calling LoadFromFile() for texture "c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_01/poster_01_albedo_snaps014.tga"!
+ 02:29:01   engine/TextureCompiler CResourceCompilerTexture::ReadInputTextures(284): Error reading texture "imported/a/s/art/textures/props/classroom/poster_01/poster_01_albedo_snaps014.tga" for "TextureColor" when compiling file "c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_01/poster_01_albedo_snaps014_tga_54d7d0d1.generated.vtex"!
+ 02:29:01   engine/ResourceCompilerSystem                                                                       [FAIL]
+ 02:29:01   engine/MaterialCompiler ProcessTexture(750): Error calling CompileImmediately( C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\textures\props\classroom\poster_01\poster_01_albedo_snaps014_tga_54d7d0d1.generated.vtex ) for c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/material/props/classroom/poster_01_albedo_snaps014.vmat!
+ 02:29:01   engine/MaterialCompiler CResourceCompilerMaterial::CompileResourceInternal(1577): Error processing texture g_tColor
+ 02:29:01   engine/ResourceCompilerSystem                                                                       [FAIL]
+ 02:29:01   engine/Engine CAssociateResourceBlockLoader::BlockingLoadResourceFileData: Trying to load an illegal resource name imported/a/s/art/material/props/classroom/poster_01_albedo_snaps014.vmat!
+ 02:29:01   engine/Engine resourcecompiler: Could not find material data for "unnamed_1"!
+ 02:29:01   Generic Not Compiled: imported/a/s/art/model/props/classroom/poster_04_snaps014.vmdl (Files changed since it was last built or checked)
+ 02:29:01   engine/Engine FloatBitMap_t::LoadFromFile(2516): Error calling TGALoader::GetInfo( c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_01/poster_01_albedo_snaps014.tga )
+ 02:29:01   engine/TextureCompiler CTextureObject::ReadFromFile(2104): Error calling LoadFromFile() for texture "c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_01/poster_01_albedo_snaps014.tga"!
+ 02:29:01   engine/TextureCompiler CResourceCompilerTexture::ReadInputTextures(284): Error reading texture "imported/a/s/art/textures/props/classroom/poster_01/poster_01_albedo_snaps014.tga" for "TextureColor" when compiling file "c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_01/poster_01_albedo_snaps014_tga_54d7d0d1.generated.vtex"!
+ 02:29:01   engine/ResourceCompilerSystem                                                                       [FAIL]
+ 02:29:01   engine/MaterialCompiler ProcessTexture(750): Error calling CompileImmediately( C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\textures\props\classroom\poster_01\poster_01_albedo_snaps014_tga_54d7d0d1.generated.vtex ) for c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/material/props/classroom/poster_01_albedo_snaps014.vmat!
+ 02:29:01   engine/MaterialCompiler CResourceCompilerMaterial::CompileResourceInternal(1577): Error processing texture g_tColor
+ 02:29:01   engine/ResourceCompilerSystem                                                                       [FAIL]
+ 02:29:01   engine/Engine CAssociateResourceBlockLoader::BlockingLoadResourceFileData: Trying to load an illegal resource name imported/a/s/art/material/props/classroom/poster_01_albedo_snaps014.vmat!
+ 02:29:01   engine/Engine resourcecompiler: Could not find material data for "unnamed_1"!
+ 02:29:01   Generic Not Compiled: imported/a/s/art/model/props/classroom/poster_05_snaps014.vmdl (Files changed since it was last built or checked)
+ 02:29:01   engine/Engine FloatBitMap_t::LoadFromFile(2516): Error calling TGALoader::GetInfo( c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_01/poster_01_albedo_snaps014.tga )
+ 02:29:01   engine/TextureCompiler CTextureObject::ReadFromFile(2104): Error calling LoadFromFile() for texture "c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_01/poster_01_albedo_snaps014.tga"!
+ 02:29:01   engine/TextureCompiler CResourceCompilerTexture::ReadInputTextures(284): Error reading texture "imported/a/s/art/textures/props/classroom/poster_01/poster_01_albedo_snaps014.tga" for "TextureColor" when compiling file "c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_01/poster_01_albedo_snaps014_tga_54d7d0d1.generated.vtex"!
+ 02:29:01   engine/ResourceCompilerSystem                                                                       [FAIL]
+ 02:29:01   engine/MaterialCompiler ProcessTexture(750): Error calling CompileImmediately( C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\textures\props\classroom\poster_01\poster_01_albedo_snaps014_tga_54d7d0d1.generated.vtex ) for c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/material/props/classroom/poster_01_albedo_snaps014.vmat!
+ 02:29:01   engine/MaterialCompiler CResourceCompilerMaterial::CompileResourceInternal(1577): Error processing texture g_tColor
+ 02:29:01   engine/ResourceCompilerSystem                                                                       [FAIL]
+ 02:29:01   engine/Engine CAssociateResourceBlockLoader::BlockingLoadResourceFileData: Trying to load an illegal resource name imported/a/s/art/material/props/classroom/poster_01_albedo_snaps014.vmat!
+ 02:29:01   engine/Engine resourcecompiler: Could not find material data for "unnamed_1"!
+ 02:29:01   Generic Not Compiled: imported/a/s/art/model/props/classroom/poster_06_snaps014.vmdl (Files changed since it was last built or checked)
+ 02:29:02   engine/Engine FloatBitMap_t::LoadFromFile(2516): Error calling TGALoader::GetInfo( c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_01/poster_01_albedo_snaps014.tga )
+ 02:29:02   engine/TextureCompiler CTextureObject::ReadFromFile(2104): Error calling LoadFromFile() for texture "c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_01/poster_01_albedo_snaps014.tga"!
+ 02:29:02   engine/TextureCompiler CResourceCompilerTexture::ReadInputTextures(284): Error reading texture "imported/a/s/art/textures/props/classroom/poster_01/poster_01_albedo_snaps014.tga" for "TextureColor" when compiling file "c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_01/poster_01_albedo_snaps014_tga_54d7d0d1.generated.vtex"!
+ 02:29:02   engine/ResourceCompilerSystem                                                                       [FAIL]
+ 02:29:02   engine/MaterialCompiler ProcessTexture(750): Error calling CompileImmediately( C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\textures\props\classroom\poster_01\poster_01_albedo_snaps014_tga_54d7d0d1.generated.vtex ) for c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/material/props/classroom/poster_01_albedo_snaps014.vmat!
+ 02:29:02   engine/MaterialCompiler CResourceCompilerMaterial::CompileResourceInternal(1577): Error processing texture g_tColor
+ 02:29:02   engine/ResourceCompilerSystem                                                                       [FAIL]
+ 02:29:02   engine/Engine CAssociateResourceBlockLoader::BlockingLoadResourceFileData: Trying to load an illegal resource name imported/a/s/art/material/props/classroom/poster_01_albedo_snaps014.vmat!
+ 02:29:02   engine/Engine resourcecompiler: Could not find material data for "unnamed_1"!
+ 02:29:02   Generic Not Compiled: imported/a/s/art/model/props/classroom/poster_07_snaps014.vmdl (Files changed since it was last built or checked)
+ 02:29:02   engine/Engine FloatBitMap_t::LoadFromFile(2516): Error calling TGALoader::GetInfo( c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_01/poster_01_albedo_snaps014.tga )
+ 02:29:02   engine/TextureCompiler CTextureObject::ReadFromFile(2104): Error calling LoadFromFile() for texture "c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_01/poster_01_albedo_snaps014.tga"!
+ 02:29:02   engine/TextureCompiler CResourceCompilerTexture::ReadInputTextures(284): Error reading texture "imported/a/s/art/textures/props/classroom/poster_01/poster_01_albedo_snaps014.tga" for "TextureColor" when compiling file "c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_01/poster_01_albedo_snaps014_tga_54d7d0d1.generated.vtex"!
+ 02:29:02   engine/ResourceCompilerSystem                                                                       [FAIL]
+ 02:29:02   engine/MaterialCompiler ProcessTexture(750): Error calling CompileImmediately( C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\textures\props\classroom\poster_01\poster_01_albedo_snaps014_tga_54d7d0d1.generated.vtex ) for c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/material/props/classroom/poster_01_albedo_snaps014.vmat!
+ 02:29:02   engine/MaterialCompiler CResourceCompilerMaterial::CompileResourceInternal(1577): Error processing texture g_tColor
+ 02:29:02   engine/ResourceCompilerSystem                                                                       [FAIL]
+ 02:29:02   engine/Engine CAssociateResourceBlockLoader::BlockingLoadResourceFileData: Trying to load an illegal resource name imported/a/s/art/material/props/classroom/poster_01_albedo_snaps014.vmat!
+ 02:29:02   engine/Engine resourcecompiler: Could not find material data for "unnamed_1"!
+ 02:29:02   Generic Not Compiled: imported/a/s/art/model/props/classroom/poster_08_snaps014.vmdl (Files changed since it was last built or checked)
+ 02:29:02   engine/Engine FloatBitMap_t::LoadFromFile(2516): Error calling TGALoader::GetInfo( c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_01/poster_01_albedo_snaps014.tga )
+ 02:29:02   engine/TextureCompiler CTextureObject::ReadFromFile(2104): Error calling LoadFromFile() for texture "c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_01/poster_01_albedo_snaps014.tga"!
+ 02:29:02   engine/TextureCompiler CResourceCompilerTexture::ReadInputTextures(284): Error reading texture "imported/a/s/art/textures/props/classroom/poster_01/poster_01_albedo_snaps014.tga" for "TextureColor" when compiling file "c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_01/poster_01_albedo_snaps014_tga_54d7d0d1.generated.vtex"!
+ 02:29:02   engine/ResourceCompilerSystem                                                                       [FAIL]
+ 02:29:02   engine/MaterialCompiler ProcessTexture(750): Error calling CompileImmediately( C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\textures\props\classroom\poster_01\poster_01_albedo_snaps014_tga_54d7d0d1.generated.vtex ) for c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/material/props/classroom/poster_01_albedo_snaps014.vmat!
+ 02:29:02   engine/MaterialCompiler CResourceCompilerMaterial::CompileResourceInternal(1577): Error processing texture g_tColor
+ 02:29:02   engine/ResourceCompilerSystem                                                                       [FAIL]
+ 02:29:02   engine/Engine CAssociateResourceBlockLoader::BlockingLoadResourceFileData: Trying to load an illegal resource name imported/a/s/art/material/props/classroom/poster_01_albedo_snaps014.vmat!
+ 02:29:02   engine/Engine resourcecompiler: Could not find material data for "unnamed_1"!
+ 02:29:02   Generic Not Compiled: imported/a/s/art/model/props/classroom/poster_09_snaps014.vmdl (Files changed since it was last built or checked)
+ 02:29:02   engine/Engine FloatBitMap_t::LoadFromFile(2516): Error calling TGALoader::GetInfo( c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_01/poster_01_albedo_snaps014.tga )
+ 02:29:02   engine/TextureCompiler CTextureObject::ReadFromFile(2104): Error calling LoadFromFile() for texture "c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_01/poster_01_albedo_snaps014.tga"!
+ 02:29:02   engine/TextureCompiler CResourceCompilerTexture::ReadInputTextures(284): Error reading texture "imported/a/s/art/textures/props/classroom/poster_01/poster_01_albedo_snaps014.tga" for "TextureColor" when compiling file "c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_01/poster_01_albedo_snaps014_tga_54d7d0d1.generated.vtex"!
+ 02:29:02   engine/ResourceCompilerSystem                                                                       [FAIL]
+ 02:29:02   engine/MaterialCompiler ProcessTexture(750): Error calling CompileImmediately( C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\textures\props\classroom\poster_01\poster_01_albedo_snaps014_tga_54d7d0d1.generated.vtex ) for c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/material/props/classroom/poster_01_albedo_snaps014.vmat!
+ 02:29:02   engine/MaterialCompiler CResourceCompilerMaterial::CompileResourceInternal(1577): Error processing texture g_tColor
+ 02:29:02   engine/ResourceCompilerSystem                                                                       [FAIL]
+ 02:29:02   engine/Engine CAssociateResourceBlockLoader::BlockingLoadResourceFileData: Trying to load an illegal resource name imported/a/s/art/material/props/classroom/poster_01_albedo_snaps014.vmat!
+ 02:29:02   engine/Engine resourcecompiler: Could not find material data for "unnamed_1"!
+ 02:29:02   Generic Not Compiled: imported/a/s/art/model/props/classroom/poster_10_snaps014.vmdl (Files changed since it was last built or checked)
+ 02:29:02   engine/Engine FloatBitMap_t::LoadFromFile(2516): Error calling TGALoader::GetInfo( c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_01/poster_01_albedo_snaps014.tga )
+ 02:29:02   engine/TextureCompiler CTextureObject::ReadFromFile(2104): Error calling LoadFromFile() for texture "c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_01/poster_01_albedo_snaps014.tga"!
+ 02:29:02   engine/TextureCompiler CResourceCompilerTexture::ReadInputTextures(284): Error reading texture "imported/a/s/art/textures/props/classroom/poster_01/poster_01_albedo_snaps014.tga" for "TextureColor" when compiling file "c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_01/poster_01_albedo_snaps014_tga_54d7d0d1.generated.vtex"!
+ 02:29:02   engine/ResourceCompilerSystem                                                                       [FAIL]
+ 02:29:02   engine/MaterialCompiler ProcessTexture(750): Error calling CompileImmediately( C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\textures\props\classroom\poster_01\poster_01_albedo_snaps014_tga_54d7d0d1.generated.vtex ) for c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/material/props/classroom/poster_01_albedo_snaps014.vmat!
+ 02:29:02   engine/MaterialCompiler CResourceCompilerMaterial::CompileResourceInternal(1577): Error processing texture g_tColor
+ 02:29:02   engine/ResourceCompilerSystem                                                                       [FAIL]
+ 02:29:02   engine/Engine CAssociateResourceBlockLoader::BlockingLoadResourceFileData: Trying to load an illegal resource name imported/a/s/art/material/props/classroom/poster_01_albedo_snaps014.vmat!
+ 02:29:02   engine/Engine resourcecompiler: Could not find material data for "unnamed_1"!
+ 02:29:02   Generic Not Compiled: imported/a/s/art/model/props/classroom/poster_11_snaps014.vmdl (Files changed since it was last built or checked)
+ 02:29:02   engine/Engine FloatBitMap_t::LoadFromFile(2516): Error calling TGALoader::GetInfo( c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014.tga )
+ 02:29:02   engine/TextureCompiler CTextureObject::ReadFromFile(2104): Error calling LoadFromFile() for texture "c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014.tga"!
+ 02:29:02   engine/TextureCompiler CResourceCompilerTexture::ReadInputTextures(284): Error reading texture "imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014.tga" for "TextureColor" when compiling file "c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014_tga_48f0db5.generated.vtex"!
+ 02:29:02   engine/ResourceCompilerSystem                                                                       [FAIL]
+ 02:29:02   engine/MaterialCompiler ProcessTexture(750): Error calling CompileImmediately( C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\textures\props\classroom\poster_02\poster_02_albedo_snaps014_tga_48f0db5.generated.vtex ) for c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/material/props/classroom/poster_02_albedo_snaps014.vmat!
+ 02:29:02   engine/MaterialCompiler CResourceCompilerMaterial::CompileResourceInternal(1577): Error processing texture g_tColor
+ 02:29:02   engine/ResourceCompilerSystem                                                                       [FAIL]
+ 02:29:02   engine/Engine CAssociateResourceBlockLoader::BlockingLoadResourceFileData: Trying to load an illegal resource name imported/a/s/art/material/props/classroom/poster_02_albedo_snaps014.vmat!
+ 02:29:02   engine/Engine resourcecompiler: Could not find material data for "unnamed_1"!
+ 02:29:02   Generic Not Compiled: imported/a/s/art/model/props/classroom/poster_12_snaps014.vmdl (Files changed since it was last built or checked)
+ 02:29:03   engine/Engine FloatBitMap_t::LoadFromFile(2516): Error calling TGALoader::GetInfo( c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014.tga )
+ 02:29:03   engine/TextureCompiler CTextureObject::ReadFromFile(2104): Error calling LoadFromFile() for texture "c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014.tga"!
+ 02:29:03   engine/TextureCompiler CResourceCompilerTexture::ReadInputTextures(284): Error reading texture "imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014.tga" for "TextureColor" when compiling file "c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014_tga_48f0db5.generated.vtex"!
+ 02:29:03   engine/ResourceCompilerSystem                                                                       [FAIL]
+ 02:29:03   engine/MaterialCompiler ProcessTexture(750): Error calling CompileImmediately( C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\textures\props\classroom\poster_02\poster_02_albedo_snaps014_tga_48f0db5.generated.vtex ) for c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/material/props/classroom/poster_02_albedo_snaps014.vmat!
+ 02:29:03   engine/MaterialCompiler CResourceCompilerMaterial::CompileResourceInternal(1577): Error processing texture g_tColor
+ 02:29:03   engine/ResourceCompilerSystem                                                                       [FAIL]
+ 02:29:03   engine/Engine CAssociateResourceBlockLoader::BlockingLoadResourceFileData: Trying to load an illegal resource name imported/a/s/art/material/props/classroom/poster_02_albedo_snaps014.vmat!
+ 02:29:03   engine/Engine resourcecompiler: Could not find material data for "unnamed_1"!
+ 02:29:03   Generic Not Compiled: imported/a/s/art/model/props/classroom/poster_13_snaps014.vmdl (Files changed since it was last built or checked)
+ 02:29:03   engine/Engine FloatBitMap_t::LoadFromFile(2516): Error calling TGALoader::GetInfo( c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014.tga )
+ 02:29:03   engine/TextureCompiler CTextureObject::ReadFromFile(2104): Error calling LoadFromFile() for texture "c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014.tga"!
+ 02:29:03   engine/TextureCompiler CResourceCompilerTexture::ReadInputTextures(284): Error reading texture "imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014.tga" for "TextureColor" when compiling file "c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014_tga_48f0db5.generated.vtex"!
+ 02:29:03   engine/ResourceCompilerSystem                                                                       [FAIL]
+ 02:29:03   engine/MaterialCompiler ProcessTexture(750): Error calling CompileImmediately( C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\textures\props\classroom\poster_02\poster_02_albedo_snaps014_tga_48f0db5.generated.vtex ) for c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/material/props/classroom/poster_02_albedo_snaps014.vmat!
+ 02:29:03   engine/MaterialCompiler CResourceCompilerMaterial::CompileResourceInternal(1577): Error processing texture g_tColor
+ 02:29:03   engine/ResourceCompilerSystem                                                                       [FAIL]
+ 02:29:03   engine/Engine CAssociateResourceBlockLoader::BlockingLoadResourceFileData: Trying to load an illegal resource name imported/a/s/art/material/props/classroom/poster_02_albedo_snaps014.vmat!
+ 02:29:03   engine/Engine resourcecompiler: Could not find material data for "unnamed_1"!
+ 02:29:03   Generic Not Compiled: imported/a/s/art/model/props/classroom/poster_14_snaps014.vmdl (Files changed since it was last built or checked)
+ 02:29:03   engine/Engine FloatBitMap_t::LoadFromFile(2516): Error calling TGALoader::GetInfo( c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014.tga )
+ 02:29:03   engine/TextureCompiler CTextureObject::ReadFromFile(2104): Error calling LoadFromFile() for texture "c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014.tga"!
+ 02:29:03   engine/TextureCompiler CResourceCompilerTexture::ReadInputTextures(284): Error reading texture "imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014.tga" for "TextureColor" when compiling file "c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014_tga_48f0db5.generated.vtex"!
+ 02:29:03   engine/ResourceCompilerSystem                                                                       [FAIL]
+ 02:29:03   engine/MaterialCompiler ProcessTexture(750): Error calling CompileImmediately( C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\textures\props\classroom\poster_02\poster_02_albedo_snaps014_tga_48f0db5.generated.vtex ) for c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/material/props/classroom/poster_02_albedo_snaps014.vmat!
+ 02:29:03   engine/MaterialCompiler CResourceCompilerMaterial::CompileResourceInternal(1577): Error processing texture g_tColor
+ 02:29:03   engine/ResourceCompilerSystem                                                                       [FAIL]
+ 02:29:03   engine/Engine CAssociateResourceBlockLoader::BlockingLoadResourceFileData: Trying to load an illegal resource name imported/a/s/art/material/props/classroom/poster_02_albedo_snaps014.vmat!
+ 02:29:03   engine/Engine resourcecompiler: Could not find material data for "unnamed_1"!
+ 02:29:03   Generic Not Compiled: imported/a/s/art/model/props/classroom/poster_15_snaps014.vmdl (Files changed since it was last built or checked)
+ 02:29:03   engine/Engine FloatBitMap_t::LoadFromFile(2516): Error calling TGALoader::GetInfo( c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014.tga )
+ 02:29:03   engine/TextureCompiler CTextureObject::ReadFromFile(2104): Error calling LoadFromFile() for texture "c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014.tga"!
+ 02:29:03   engine/TextureCompiler CResourceCompilerTexture::ReadInputTextures(284): Error reading texture "imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014.tga" for "TextureColor" when compiling file "c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014_tga_48f0db5.generated.vtex"!
+ 02:29:03   engine/ResourceCompilerSystem                                                                       [FAIL]
+ 02:29:03   engine/MaterialCompiler ProcessTexture(750): Error calling CompileImmediately( C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\textures\props\classroom\poster_02\poster_02_albedo_snaps014_tga_48f0db5.generated.vtex ) for c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/material/props/classroom/poster_02_albedo_snaps014.vmat!
+ 02:29:03   engine/MaterialCompiler CResourceCompilerMaterial::CompileResourceInternal(1577): Error processing texture g_tColor
+ 02:29:03   engine/ResourceCompilerSystem                                                                       [FAIL]
+ 02:29:03   engine/Engine CAssociateResourceBlockLoader::BlockingLoadResourceFileData: Trying to load an illegal resource name imported/a/s/art/material/props/classroom/poster_02_albedo_snaps014.vmat!
+ 02:29:03   engine/Engine resourcecompiler: Could not find material data for "unnamed_1"!
+ 02:29:03   Generic Not Compiled: imported/a/s/art/model/props/classroom/poster_16_snaps014.vmdl (Files changed since it was last built or checked)
+ 02:29:03   engine/Engine FloatBitMap_t::LoadFromFile(2516): Error calling TGALoader::GetInfo( c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014.tga )
+ 02:29:03   engine/TextureCompiler CTextureObject::ReadFromFile(2104): Error calling LoadFromFile() for texture "c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014.tga"!
+ 02:29:03   engine/TextureCompiler CResourceCompilerTexture::ReadInputTextures(284): Error reading texture "imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014.tga" for "TextureColor" when compiling file "c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014_tga_48f0db5.generated.vtex"!
+ 02:29:03   engine/ResourceCompilerSystem                                                                       [FAIL]
+ 02:29:03   engine/MaterialCompiler ProcessTexture(750): Error calling CompileImmediately( C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\textures\props\classroom\poster_02\poster_02_albedo_snaps014_tga_48f0db5.generated.vtex ) for c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/material/props/classroom/poster_02_albedo_snaps014.vmat!
+ 02:29:03   engine/MaterialCompiler CResourceCompilerMaterial::CompileResourceInternal(1577): Error processing texture g_tColor
+ 02:29:03   engine/ResourceCompilerSystem                                                                       [FAIL]
+ 02:29:03   engine/Engine CAssociateResourceBlockLoader::BlockingLoadResourceFileData: Trying to load an illegal resource name imported/a/s/art/material/props/classroom/poster_02_albedo_snaps014.vmat!
+ 02:29:03   engine/Engine resourcecompiler: Could not find material data for "unnamed_1"!
+ 02:29:03   Generic Not Compiled: imported/a/s/art/model/props/classroom/poster_17_snaps014.vmdl (Files changed since it was last built or checked)
+ 02:29:04   engine/Engine FloatBitMap_t::LoadFromFile(2516): Error calling TGALoader::GetInfo( c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014.tga )
+ 02:29:04   engine/TextureCompiler CTextureObject::ReadFromFile(2104): Error calling LoadFromFile() for texture "c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014.tga"!
+ 02:29:04   engine/TextureCompiler CResourceCompilerTexture::ReadInputTextures(284): Error reading texture "imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014.tga" for "TextureColor" when compiling file "c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014_tga_48f0db5.generated.vtex"!
+ 02:29:04   engine/ResourceCompilerSystem                                                                       [FAIL]
+ 02:29:04   engine/MaterialCompiler ProcessTexture(750): Error calling CompileImmediately( C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\textures\props\classroom\poster_02\poster_02_albedo_snaps014_tga_48f0db5.generated.vtex ) for c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/material/props/classroom/poster_02_albedo_snaps014.vmat!
+ 02:29:04   engine/MaterialCompiler CResourceCompilerMaterial::CompileResourceInternal(1577): Error processing texture g_tColor
+ 02:29:04   engine/ResourceCompilerSystem                                                                       [FAIL]
+ 02:29:04   engine/Engine CAssociateResourceBlockLoader::BlockingLoadResourceFileData: Trying to load an illegal resource name imported/a/s/art/material/props/classroom/poster_02_albedo_snaps014.vmat!
+ 02:29:04   engine/Engine resourcecompiler: Could not find material data for "unnamed_1"!
+ 02:29:04   Generic Not Compiled: imported/a/s/art/model/props/classroom/poster_18_snaps014.vmdl (Files changed since it was last built or checked)
+ 02:29:04   engine/Engine FloatBitMap_t::LoadFromFile(2516): Error calling TGALoader::GetInfo( c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014.tga )
+ 02:29:04   engine/TextureCompiler CTextureObject::ReadFromFile(2104): Error calling LoadFromFile() for texture "c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014.tga"!
+ 02:29:04   engine/TextureCompiler CResourceCompilerTexture::ReadInputTextures(284): Error reading texture "imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014.tga" for "TextureColor" when compiling file "c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014_tga_48f0db5.generated.vtex"!
+ 02:29:04   engine/ResourceCompilerSystem                                                                       [FAIL]
+ 02:29:04   engine/MaterialCompiler ProcessTexture(750): Error calling CompileImmediately( C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\textures\props\classroom\poster_02\poster_02_albedo_snaps014_tga_48f0db5.generated.vtex ) for c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/material/props/classroom/poster_02_albedo_snaps014.vmat!
+ 02:29:04   engine/MaterialCompiler CResourceCompilerMaterial::CompileResourceInternal(1577): Error processing texture g_tColor
+ 02:29:04   engine/ResourceCompilerSystem                                                                       [FAIL]
+ 02:29:04   engine/Engine CAssociateResourceBlockLoader::BlockingLoadResourceFileData: Trying to load an illegal resource name imported/a/s/art/material/props/classroom/poster_02_albedo_snaps014.vmat!
+ 02:29:04   engine/Engine resourcecompiler: Could not find material data for "unnamed_1"!
+ 02:29:04   Generic Not Compiled: imported/a/s/art/model/props/classroom/poster_19_snaps014.vmdl (Files changed since it was last built or checked)
+ 02:29:04   engine/Engine FloatBitMap_t::LoadFromFile(2516): Error calling TGALoader::GetInfo( c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014.tga )
+ 02:29:04   engine/TextureCompiler CTextureObject::ReadFromFile(2104): Error calling LoadFromFile() for texture "c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014.tga"!
+ 02:29:04   engine/TextureCompiler CResourceCompilerTexture::ReadInputTextures(284): Error reading texture "imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014.tga" for "TextureColor" when compiling file "c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014_tga_48f0db5.generated.vtex"!
+ 02:29:04   engine/ResourceCompilerSystem                                                                       [FAIL]
+ 02:29:04   engine/MaterialCompiler ProcessTexture(750): Error calling CompileImmediately( C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\textures\props\classroom\poster_02\poster_02_albedo_snaps014_tga_48f0db5.generated.vtex ) for c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/material/props/classroom/poster_02_albedo_snaps014.vmat!
+ 02:29:04   engine/MaterialCompiler CResourceCompilerMaterial::CompileResourceInternal(1577): Error processing texture g_tColor
+ 02:29:04   engine/ResourceCompilerSystem                                                                       [FAIL]
+ 02:29:04   engine/Engine CAssociateResourceBlockLoader::BlockingLoadResourceFileData: Trying to load an illegal resource name imported/a/s/art/material/props/classroom/poster_02_albedo_snaps014.vmat!
+ 02:29:04   engine/Engine resourcecompiler: Could not find material data for "unnamed_1"!
+ 02:29:04   Generic Not Compiled: imported/a/s/art/model/props/classroom/poster_20_snaps014.vmdl (Files changed since it was last built or checked)
+ 02:29:04   engine/Engine FloatBitMap_t::LoadFromFile(2516): Error calling TGALoader::GetInfo( c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014.tga )
+ 02:29:04   engine/TextureCompiler CTextureObject::ReadFromFile(2104): Error calling LoadFromFile() for texture "c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014.tga"!
+ 02:29:04   engine/TextureCompiler CResourceCompilerTexture::ReadInputTextures(284): Error reading texture "imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014.tga" for "TextureColor" when compiling file "c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014_tga_48f0db5.generated.vtex"!
+ 02:29:04   engine/ResourceCompilerSystem                                                                       [FAIL]
+ 02:29:04   engine/MaterialCompiler ProcessTexture(750): Error calling CompileImmediately( C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\textures\props\classroom\poster_02\poster_02_albedo_snaps014_tga_48f0db5.generated.vtex ) for c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/material/props/classroom/poster_02_albedo_snaps014.vmat!
+ 02:29:04   engine/MaterialCompiler CResourceCompilerMaterial::CompileResourceInternal(1577): Error processing texture g_tColor
+ 02:29:04   engine/ResourceCompilerSystem                                                                       [FAIL]
+ 02:29:04   engine/Engine CAssociateResourceBlockLoader::BlockingLoadResourceFileData: Trying to load an illegal resource name imported/a/s/art/material/props/classroom/poster_02_albedo_snaps014.vmat!
+ 02:29:04   engine/Engine resourcecompiler: Could not find material data for "unnamed_1"!
+ 02:29:15   engine/AssetSystem Not compiling imported/a/s/art/model/props/classroom/ruler_02_snaps014.vmdl: a content build is running
+ 02:29:15   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/model/props/classroom/ruler_02_snaps014.vmdl'
+ 02:29:15   engine/MaterialCompiler Error loading image file header c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014.tga
+ 02:29:15   engine/MaterialCompiler Error loading image file header c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_01/poster_01_albedo_snaps014.tga
+ 02:29:15   engine/ResourceCompilerSystem  [1]                                                                       [FAIL]
+ 02:29:15   engine/AssetSystem Not compiling imported/a/s/art/model/props/classroom/ruler_03_snaps014.vmdl: a content build is running
+ 02:29:15   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/model/props/classroom/ruler_03_snaps014.vmdl'
+ 02:29:16   engine/AssetSystem Not compiling imported/a/s/art/model/props/classroom/ruler_04_snaps014.vmdl: a content build is running
+ 02:29:16   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/model/props/classroom/ruler_04_snaps014.vmdl'
+ 02:29:16   engine/AssetSystem Not compiling imported/a/s/art/model/props/classroom/screen_01_snaps014.vmdl: a content build is running
+ 02:29:16   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/model/props/classroom/screen_01_snaps014.vmdl'
+ 02:29:16   engine/AssetSystem Not compiling imported/a/s/art/model/props/classroom/screen_02_snaps014.vmdl: a content build is running
+ 02:29:16   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/model/props/classroom/screen_02_snaps014.vmdl'
+ 02:29:17   engine/AssetSystem Not compiling imported/a/s/art/model/props/classroom/shelf_01_snaps014.vmdl: a content build is running
+ 02:29:17   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/model/props/classroom/shelf_01_snaps014.vmdl'
+ 02:29:17   engine/AssetSystem Not compiling imported/a/s/art/model/props/classroom/stacks_of_paper_01_snaps014.vmdl: a content build is running
+ 02:29:17   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/model/props/classroom/stacks_of_paper_01_snaps014.vmdl'
+ 02:29:17   engine/AssetSystem Not compiling imported/a/s/art/model/props/classroom/stacks_of_paper_02_snaps014.vmdl: a content build is running
+ 02:29:17   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/model/props/classroom/stacks_of_paper_02_snaps014.vmdl'
+ 02:29:17   engine/AssetSystem Not compiling imported/a/s/art/model/props/classroom/stacks_of_paper_03_snaps014.vmdl: a content build is running
+ 02:29:17   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/model/props/classroom/stacks_of_paper_03_snaps014.vmdl'
+ 02:29:18   engine/AssetSystem Not compiling imported/a/s/art/model/props/classroom/switch_01_snaps014.vmdl: a content build is running
+ 02:29:18   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/model/props/classroom/switch_01_snaps014.vmdl'
+ 02:29:18   engine/AssetSystem Not compiling imported/a/s/art/model/props/classroom/switch_02_snaps014.vmdl: a content build is running
+ 02:29:18   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/model/props/classroom/switch_02_snaps014.vmdl'
+ 02:29:19   engine/AssetSystem Not compiling imported/a/s/art/model/props/classroom/switch_03_snaps014.vmdl: a content build is running
+ 02:29:19   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/model/props/classroom/switch_03_snaps014.vmdl'
+ 02:29:19   engine/AssetSystem Not compiling imported/a/s/art/model/props/classroom/trashbox_01_snaps014.vmdl: a content build is running
+ 02:29:19   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/model/props/classroom/trashbox_01_snaps014.vmdl'
+ 02:29:20   engine/AssetSystem Not compiling imported/a/s/art/model/props/corridor/board_01_snaps014.vmdl: a content build is running
+ 02:29:20   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/model/props/corridor/board_01_snaps014.vmdl'
+ 02:29:20   engine/AssetSystem Not compiling imported/a/s/art/model/props/corridor/doorplate_01_snaps014.vmdl: a content build is running
+ 02:29:20   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/model/props/corridor/doorplate_01_snaps014.vmdl'
+ 02:29:20   engine/AssetSystem Not compiling imported/a/s/art/model/props/corridor/doorplate_02_snaps014.vmdl: a content build is running
+ 02:29:20   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/model/props/corridor/doorplate_02_snaps014.vmdl'
+ 02:29:20   engine/AssetSystem Not compiling imported/a/s/art/model/props/corridor/doorplate_03_snaps014.vmdl: a content build is running
+ 02:29:20   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/model/props/corridor/doorplate_03_snaps014.vmdl'
+ 02:29:21   engine/AssetSystem Not compiling imported/a/s/art/model/props/corridor/doorplate_04_snaps014.vmdl: a content build is running
+ 02:29:21   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/model/props/corridor/doorplate_04_snaps014.vmdl'
+ 02:29:21   engine/AssetSystem Not compiling imported/a/s/art/model/props/corridor/doorplate_05_snaps014.vmdl: a content build is running
+ 02:29:21   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/model/props/corridor/doorplate_05_snaps014.vmdl'
+ 02:29:22   engine/AssetSystem Not compiling imported/a/s/art/model/props/corridor/electric_box_big_01_snaps014.vmdl: a content build is running
+ 02:29:22   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/model/props/corridor/electric_box_big_01_snaps014.vmdl'
+ 02:29:22   engine/AssetSystem Not compiling imported/a/s/art/model/props/corridor/exit_sign_01_snaps014.vmdl: a content build is running
+ 02:29:22   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/model/props/corridor/exit_sign_01_snaps014.vmdl'
+ 02:29:22   engine/AssetSystem Not compiling imported/a/s/art/model/props/corridor/exit_sign_02_snaps014.vmdl: a content build is running
+ 02:29:22   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/model/props/corridor/exit_sign_02_snaps014.vmdl'
+ 02:29:23   engine/ResourceCompilerSystem      0/   1 (elapsed  6.385):  C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\material\props\classroom\projector_01_albedo_snaps014.vmat
+ 02:29:23   engine/ResourceCompilerSystem Compile of 1 file(s) matching nonrecursive specification "C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported/a/s/art/material/props/classroom/projector_01_albedo_snaps014.vmat" took 6.386 seconds
+ 02:29:23   engine/AssetSystem Not compiling imported/a/s/art/model/props/corridor/fireplug_box_01_snaps014.vmdl: a content build is running
+ 02:29:23   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/model/props/corridor/fireplug_box_01_snaps014.vmdl'
+ 02:29:23   engine/AssetSystem Not compiling imported/a/s/art/model/props/corridor/fire_extinguisher_01_snaps014.vmdl: a content build is running
+ 02:29:23   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/model/props/corridor/fire_extinguisher_01_snaps014.vmdl'
+ 02:29:23   engine/ResourceCompilerSystem      0/   1 (elapsed  6.860):  C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\material\tiling\wood_06_snaps014.vmat
+ 02:29:23   engine/ResourceCompilerSystem Compile of 1 file(s) matching nonrecursive specification "C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported/a/s/art/material/tiling/wood_06_snaps014.vmat" took 6.860 seconds
+ 02:29:23   engine/AssetSystem Not compiling imported/a/s/art/model/props/corridor/locker_close_01_snaps014.vmdl: a content build is running
+ 02:29:23   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/model/props/corridor/locker_close_01_snaps014.vmdl'
+ 02:29:24   engine/ResourceCompilerSystem      0/   1 (elapsed  7.250):  C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\material\props\classroom\ruler_albedo_snaps014.vmat
+ 02:29:24   engine/ResourceCompilerSystem Compile of 1 file(s) matching nonrecursive specification "C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported/a/s/art/material/props/classroom/ruler_albedo_snaps014.vmat" took 7.251 seconds
+ 02:29:24   engine/AssetSystem Not compiling imported/a/s/art/model/props/corridor/sink_01_snaps014.vmdl: a content build is running
+ 02:29:24   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/model/props/corridor/sink_01_snaps014.vmdl'
+ 02:29:24   engine/ResourceCompilerSystem      0/   1 (elapsed  7.523):  C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\material\tiling\wood_05_albedo_snaps014.vmat
+ 02:29:24   engine/ResourceCompilerSystem Compile of 1 file(s) matching nonrecursive specification "C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported/a/s/art/material/tiling/wood_05_albedo_snaps014.vmat" took 7.523 seconds
+ 02:29:24   engine/AssetSystem Not compiling imported/a/s/art/model/props/corridor/speaker_01_snaps014.vmdl: a content build is running
+ 02:29:24   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/model/props/corridor/speaker_01_snaps014.vmdl'
+ 02:29:24   engine/AssetSystem Not compiling imported/a/s/art/model/props/decal/decal_01_snaps014.vmdl: a content build is running
+ 02:29:24   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/model/props/decal/decal_01_snaps014.vmdl'
+ 02:29:25   engine/AssetSystem Not compiling imported/a/s/art/model/props/decal/decal_02_snaps014.vmdl: a content build is running
+ 02:29:25   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/model/props/decal/decal_02_snaps014.vmdl'
+ 02:29:25   Generic Content build: 7 compiles, 23 adopted, 2 failed, 32 blocked, 0 removed
+ 02:29:25   Generic local.unityimporterplus:imported/a/s/art/material/props/classroom/poster_01_albedo_snaps014.vmat: describe failed
+ 02:29:25   Generic Not Compiled: imported/a/s/art/model/props/porch/label_01_snaps014.vmdl (Files changed since it was last built or checked)
+ 02:29:25   engine/Engine FloatBitMap_t::LoadFromFile(2516): Error calling TGALoader::GetInfo( c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014.tga )
+ 02:29:25   engine/TextureCompiler CTextureObject::ReadFromFile(2104): Error calling LoadFromFile() for texture "c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014.tga"!
+ 02:29:25   engine/TextureCompiler CResourceCompilerTexture::ReadInputTextures(284): Error reading texture "imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014.tga" for "TextureColor" when compiling file "c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014_tga_48f0db5.generated.vtex"!
+ 02:29:25   engine/ResourceCompilerSystem                                                                       [FAIL]
+ 02:29:25   engine/MaterialCompiler ProcessTexture(750): Error calling CompileImmediately( C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\textures\props\classroom\poster_02\poster_02_albedo_snaps014_tga_48f0db5.generated.vtex ) for c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/material/props/classroom/poster_02_albedo_snaps014.vmat!
+ 02:29:25   engine/MaterialCompiler CResourceCompilerMaterial::CompileResourceInternal(1577): Error processing texture g_tColor
+ 02:29:25   engine/ResourceCompilerSystem                                                                       [FAIL]
+ 02:29:25   engine/Engine CAssociateResourceBlockLoader::BlockingLoadResourceFileData: Trying to load an illegal resource name imported/a/s/art/material/props/classroom/poster_02_albedo_snaps014.vmat!
+ 02:29:25   engine/Engine resourcecompiler: Could not find material data for "unnamed_1"!
+ 02:29:25   Generic Not Compiled: imported/a/s/art/model/props/porch/label_02_snaps014.vmdl (Files changed since it was last built or checked)
+ 02:29:25   engine/Engine FloatBitMap_t::LoadFromFile(2516): Error calling TGALoader::GetInfo( c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014.tga )
+ 02:29:25   engine/TextureCompiler CTextureObject::ReadFromFile(2104): Error calling LoadFromFile() for texture "c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014.tga"!
+ 02:29:25   engine/TextureCompiler CResourceCompilerTexture::ReadInputTextures(284): Error reading texture "imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014.tga" for "TextureColor" when compiling file "c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014_tga_48f0db5.generated.vtex"!
+ 02:29:25   engine/ResourceCompilerSystem                                                                       [FAIL]
+ 02:29:25   engine/MaterialCompiler ProcessTexture(750): Error calling CompileImmediately( C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\textures\props\classroom\poster_02\poster_02_albedo_snaps014_tga_48f0db5.generated.vtex ) for c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/material/props/classroom/poster_02_albedo_snaps014.vmat!
+ 02:29:25   engine/MaterialCompiler CResourceCompilerMaterial::CompileResourceInternal(1577): Error processing texture g_tColor
+ 02:29:25   engine/ResourceCompilerSystem                                                                       [FAIL]
+ 02:29:25   engine/Engine CAssociateResourceBlockLoader::BlockingLoadResourceFileData: Trying to load an illegal resource name imported/a/s/art/material/props/classroom/poster_02_albedo_snaps014.vmat!
+ 02:29:25   engine/Engine resourcecompiler: Could not find material data for "unnamed_1"!
+ 02:29:25   Generic Not Compiled: imported/a/s/art/model/props/porch/label_03_snaps014.vmdl (Files changed since it was last built or checked)
+ 02:29:25   engine/Engine FloatBitMap_t::LoadFromFile(2516): Error calling TGALoader::GetInfo( c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014.tga )
+ 02:29:25   engine/TextureCompiler CTextureObject::ReadFromFile(2104): Error calling LoadFromFile() for texture "c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014.tga"!
+ 02:29:25   engine/TextureCompiler CResourceCompilerTexture::ReadInputTextures(284): Error reading texture "imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014.tga" for "TextureColor" when compiling file "c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014_tga_48f0db5.generated.vtex"!
+ 02:29:26   engine/ResourceCompilerSystem                                                                       [FAIL]
+ 02:29:26   engine/MaterialCompiler ProcessTexture(750): Error calling CompileImmediately( C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\textures\props\classroom\poster_02\poster_02_albedo_snaps014_tga_48f0db5.generated.vtex ) for c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/material/props/classroom/poster_02_albedo_snaps014.vmat!
+ 02:29:26   engine/MaterialCompiler CResourceCompilerMaterial::CompileResourceInternal(1577): Error processing texture g_tColor
+ 02:29:26   engine/ResourceCompilerSystem                                                                       [FAIL]
+ 02:29:26   engine/Engine CAssociateResourceBlockLoader::BlockingLoadResourceFileData: Trying to load an illegal resource name imported/a/s/art/material/props/classroom/poster_02_albedo_snaps014.vmat!
+ 02:29:26   engine/Engine resourcecompiler: Could not find material data for "unnamed_1"!
+ 02:29:26   Generic Not Compiled: imported/a/s/art/model/props/porch/label_04_snaps014.vmdl (Files changed since it was last built or checked)
+ 02:29:26   engine/Engine FloatBitMap_t::LoadFromFile(2516): Error calling TGALoader::GetInfo( c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014.tga )
+ 02:29:26   engine/TextureCompiler CTextureObject::ReadFromFile(2104): Error calling LoadFromFile() for texture "c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014.tga"!
+ 02:29:26   engine/TextureCompiler CResourceCompilerTexture::ReadInputTextures(284): Error reading texture "imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014.tga" for "TextureColor" when compiling file "c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014_tga_48f0db5.generated.vtex"!
+ 02:29:26   engine/ResourceCompilerSystem                                                                       [FAIL]
+ 02:29:26   engine/MaterialCompiler ProcessTexture(750): Error calling CompileImmediately( C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\textures\props\classroom\poster_02\poster_02_albedo_snaps014_tga_48f0db5.generated.vtex ) for c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/material/props/classroom/poster_02_albedo_snaps014.vmat!
+ 02:29:26   engine/MaterialCompiler CResourceCompilerMaterial::CompileResourceInternal(1577): Error processing texture g_tColor
+ 02:29:26   engine/ResourceCompilerSystem                                                                       [FAIL]
+ 02:29:26   engine/Engine CAssociateResourceBlockLoader::BlockingLoadResourceFileData: Trying to load an illegal resource name imported/a/s/art/material/props/classroom/poster_02_albedo_snaps014.vmat!
+ 02:29:26   engine/Engine resourcecompiler: Could not find material data for "unnamed_1"!
+ 02:29:26   Generic Not Compiled: imported/a/s/art/model/props/porch/label_05_snaps014.vmdl (Files changed since it was last built or checked)
+ 02:29:26   engine/Engine FloatBitMap_t::LoadFromFile(2516): Error calling TGALoader::GetInfo( c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014.tga )
+ 02:29:26   engine/TextureCompiler CTextureObject::ReadFromFile(2104): Error calling LoadFromFile() for texture "c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014.tga"!
+ 02:29:26   engine/TextureCompiler CResourceCompilerTexture::ReadInputTextures(284): Error reading texture "imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014.tga" for "TextureColor" when compiling file "c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014_tga_48f0db5.generated.vtex"!
+ 02:29:26   engine/ResourceCompilerSystem                                                                       [FAIL]
+ 02:29:26   engine/MaterialCompiler ProcessTexture(750): Error calling CompileImmediately( C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\textures\props\classroom\poster_02\poster_02_albedo_snaps014_tga_48f0db5.generated.vtex ) for c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/material/props/classroom/poster_02_albedo_snaps014.vmat!
+ 02:29:26   engine/MaterialCompiler CResourceCompilerMaterial::CompileResourceInternal(1577): Error processing texture g_tColor
+ 02:29:26   engine/ResourceCompilerSystem                                                                       [FAIL]
+ 02:29:26   engine/Engine CAssociateResourceBlockLoader::BlockingLoadResourceFileData: Trying to load an illegal resource name imported/a/s/art/material/props/classroom/poster_02_albedo_snaps014.vmat!
+ 02:29:26   engine/Engine resourcecompiler: Could not find material data for "unnamed_1"!
+ 02:29:26   Generic Not Compiled: imported/a/s/art/model/props/porch/label_06_snaps014.vmdl (Files changed since it was last built or checked)
+ 02:29:26   engine/Engine FloatBitMap_t::LoadFromFile(2516): Error calling TGALoader::GetInfo( c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014.tga )
+ 02:29:26   engine/TextureCompiler CTextureObject::ReadFromFile(2104): Error calling LoadFromFile() for texture "c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014.tga"!
+ 02:29:26   engine/TextureCompiler CResourceCompilerTexture::ReadInputTextures(284): Error reading texture "imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014.tga" for "TextureColor" when compiling file "c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014_tga_48f0db5.generated.vtex"!
+ 02:29:26   engine/ResourceCompilerSystem                                                                       [FAIL]
+ 02:29:26   engine/MaterialCompiler ProcessTexture(750): Error calling CompileImmediately( C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\textures\props\classroom\poster_02\poster_02_albedo_snaps014_tga_48f0db5.generated.vtex ) for c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/material/props/classroom/poster_02_albedo_snaps014.vmat!
+ 02:29:26   engine/MaterialCompiler CResourceCompilerMaterial::CompileResourceInternal(1577): Error processing texture g_tColor
+ 02:29:26   engine/ResourceCompilerSystem                                                                       [FAIL]
+ 02:29:26   engine/Engine CAssociateResourceBlockLoader::BlockingLoadResourceFileData: Trying to load an illegal resource name imported/a/s/art/material/props/classroom/poster_02_albedo_snaps014.vmat!
+ 02:29:26   engine/Engine resourcecompiler: Could not find material data for "unnamed_1"!
+ 02:29:43   engine/AssetSystem Not compiling imported/a/s/art/model/props/small_item/bell_01_snaps014.vmdl: a content build is running
+ 02:29:43   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/model/props/small_item/bell_01_snaps014.vmdl'
+ 02:29:43   engine/AssetSystem Not compiling imported/a/s/art/model/props/small_item/brand_01_snaps014.vmdl: a content build is running
+ 02:29:43   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/model/props/small_item/brand_01_snaps014.vmdl'
+ 02:29:43   engine/MaterialCompiler Error loading image file header c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_01/poster_01_albedo_snaps014.tga
+ 02:29:43   engine/ResourceCompilerSystem                                                                       [FAIL]
+ 02:29:43   engine/MaterialCompiler Error loading image file header c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014.tga
+ 02:29:43   engine/ResourceCompilerSystem                                                                       [FAIL]
+ 02:29:43   engine/AssetSystem Not compiling imported/a/s/art/model/props/small_item/brand_02_snaps014.vmdl: a content build is running
+ 02:29:43   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/model/props/small_item/brand_02_snaps014.vmdl'
+ 02:29:43   engine/AssetSystem Not compiling imported/a/s/art/model/props/small_item/brand_03_snaps014.vmdl: a content build is running
+ 02:29:43   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/model/props/small_item/brand_03_snaps014.vmdl'
+ 02:29:44   engine/AssetSystem Not compiling imported/a/s/art/model/props/small_item/elcectric_box_01_snaps014.vmdl: a content build is running
+ 02:29:44   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/model/props/small_item/elcectric_box_01_snaps014.vmdl'
+ 02:29:44   engine/AssetSystem Not compiling imported/a/s/art/model/props/small_item/elcectric_box_02_snaps014.vmdl: a content build is running
+ 02:29:44   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/model/props/small_item/elcectric_box_02_snaps014.vmdl'
+ 02:29:44   engine/AssetSystem Not compiling imported/a/s/art/model/props/small_item/switch_01_snaps014.vmdl: a content build is running
+ 02:29:44   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/model/props/small_item/switch_01_snaps014.vmdl'
+ 02:29:45   engine/AssetSystem Not compiling imported/a/s/art/model/props/small_item/switch_02_snaps014.vmdl: a content build is running
+ 02:29:45   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/model/props/small_item/switch_02_snaps014.vmdl'
+ 02:29:45   engine/AssetSystem Not compiling imported/a/s/art/model/structure/ceiling/ceiling_01_snaps014.vmdl: a content build is running
+ 02:29:45   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/model/structure/ceiling/ceiling_01_snaps014.vmdl'
+ 02:29:45   engine/AssetSystem Not compiling imported/a/s/art/model/structure/ceiling/ceiling_02_snaps014.vmdl: a content build is running
+ 02:29:45   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/model/structure/ceiling/ceiling_02_snaps014.vmdl'
+ 02:29:46   engine/AssetSystem Not compiling imported/a/s/art/model/structure/ceiling/restroom_ceiling_01_snaps014.vmdl: a content build is running
+ 02:29:46   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/model/structure/ceiling/restroom_ceiling_01_snaps014.vmdl'
+ 02:29:46   engine/AssetSystem Not compiling imported/a/s/art/model/structure/ceiling/restroom_ceiling_02_snaps014.vmdl: a content build is running
+ 02:29:46   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/model/structure/ceiling/restroom_ceiling_02_snaps014.vmdl'
+ 02:29:46   engine/AssetSystem Not compiling imported/a/s/art/model/structure/doors/door_01/door_01_01_snaps014.vmdl: a content build is running
+ 02:29:46   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/model/structure/doors/door_01/door_01_01_snaps014.vmdl'
+ 02:29:47   engine/AssetSystem Not compiling imported/a/s/art/model/structure/doors/door_01/door_01_02_snaps014.vmdl: a content build is running
+ 02:29:47   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/model/structure/doors/door_01/door_01_02_snaps014.vmdl'
+ 02:29:47   engine/AssetSystem Not compiling imported/a/s/art/model/structure/doors/door_01/door_01_03_snaps014.vmdl: a content build is running
+ 02:29:47   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/model/structure/doors/door_01/door_01_03_snaps014.vmdl'
+ 02:29:47   engine/AssetSystem Not compiling imported/a/s/art/model/structure/doors/door_01/door_01_04_snaps014.vmdl: a content build is running
+ 02:29:47   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/model/structure/doors/door_01/door_01_04_snaps014.vmdl'
+ 02:29:47   engine/AssetSystem Not compiling imported/a/s/art/model/structure/doors/door_01/door_frame_01_snaps014.vmdl: a content build is running
+ 02:29:47   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/model/structure/doors/door_01/door_frame_01_snaps014.vmdl'
+ 02:29:48   engine/AssetSystem Not compiling imported/a/s/art/model/structure/doors/door_02/door_02_01_snaps014.vmdl: a content build is running
+ 02:29:48   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/model/structure/doors/door_02/door_02_01_snaps014.vmdl'
+ 02:29:48   engine/AssetSystem Not compiling imported/a/s/art/model/structure/doors/door_02/door_frame_02_snaps014.vmdl: a content build is running
+ 02:29:48   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/model/structure/doors/door_02/door_frame_02_snaps014.vmdl'
+ 02:29:48   engine/AssetSystem Not compiling imported/a/s/art/model/structure/doors/door_03_snaps014.vmdl: a content build is running
+ 02:29:49   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/model/structure/doors/door_03_snaps014.vmdl'
+ 02:29:49   engine/AssetSystem Not compiling imported/a/s/art/model/structure/doors/door_04/door_04_01_snaps014.vmdl: a content build is running
+ 02:29:49   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/model/structure/doors/door_04/door_04_01_snaps014.vmdl'
+ 02:29:49   engine/AssetSystem Not compiling imported/a/s/art/model/structure/doors/door_04/door_frame_04_snaps014.vmdl: a content build is running
+ 02:29:49   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/model/structure/doors/door_04/door_frame_04_snaps014.vmdl'
+ 02:29:49   engine/AssetSystem Not compiling imported/a/s/art/model/structure/doors/door_05/door_05_01_snaps014.vmdl: a content build is running
+ 02:29:49   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/model/structure/doors/door_05/door_05_01_snaps014.vmdl'
+ 02:29:50   engine/AssetSystem Not compiling imported/a/s/art/model/structure/doors/door_05/door_05_frame_snaps014.vmdl: a content build is running
+ 02:29:50   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/model/structure/doors/door_05/door_05_frame_snaps014.vmdl'
+ 02:29:50   engine/ResourceCompilerSystem      0/   1 (elapsed  6.516):  C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported\a\s\art\material\tiling\urushi_01_albedo_snaps014.vmat
+ 02:29:50   engine/ResourceCompilerSystem Compile of 1 file(s) matching nonrecursive specification "C:\cseliot\1-Development\1-SBox\2-Projects\unityimporterplus\Assets\imported/a/s/art/material/tiling/urushi_01_albedo_snaps014.vmat" took 6.516 seconds
+ 02:29:50   engine/AssetSystem Not compiling imported/a/s/art/model/structure/doors/door_06_snaps014.vmdl: a content build is running
+ 02:29:50   engine/AssetSystem ERROR recompiling: 'imported/a/s/art/model/structure/doors/door_06_snaps014.vmdl'
+ 02:29:50   Generic Content build: 8 compiles, 6 adopted, 2 failed, 32 blocked, 0 removed
+ 02:29:50   Generic local.unityimporterplus:imported/a/s/art/material/props/classroom/poster_01_albedo_snaps014.vmat: describe failed
+ 02:29:52   engine/MaterialCompiler Error loading image file header c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_01/poster_01_albedo_snaps014.tga
+ 02:29:52   engine/ResourceCompilerSystem                                                                       [FAIL]
+ 02:29:52   engine/MaterialCompiler Error loading image file header c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014.tga
+ 02:29:52   engine/ResourceCompilerSystem                                                                       [FAIL]
+ 02:29:52   Generic local.unityimporterplus:imported/a/s/art/material/props/classroom/poster_01_albedo_snaps014.vmat: describe failed
+ 02:29:53   Generic 3 resources: no compiled resource became available after compilation. — imported/a/s/art/hdr/spruit_sunrise_8k.exr.vtex, imported/a/s/art/material/props/classroom/poster_01_albedo_snaps014.vmat, imported/a/s/art/material/props/classroom/poster_02_albedo_snaps014.vmat
+ 02:29:53   Generic 261 resources: compiled resource dependencies did not become ready within 30 seconds. Reimport or run unity_import_repair_resources for this folder. — imported/a/s/scenes/mergev2/lightmap-0_comp_light.exr.vtex, imported/a/s/scenes/mergev2/lightmap-10_comp_light.exr.vtex, imported/a/s/scenes/mergev2/lightmap-11_comp_light.exr.vtex, imported/a/s/scenes/mergev2/lightmap-12_comp_light.exr.vtex, imported/a/s/scenes/mergev2/lightmap-13_comp_light.exr.vtex, imported/a/s/scenes/mergev2/lightmap-14_comp_light.exr.vtex, imported/a/s/scenes/mergev2/lightmap-15_comp_light.exr.vtex, imported/a/s/scenes/mergev2/lightmap-16_comp_light.exr.vtex, imported/a/s/scenes/mergev2/lightmap-17_comp_light.exr.vtex, imported/a/s/scenes/mergev2/lightmap-18_comp_light.exr.vtex (+251 more; full list in the report)
+ 02:29:53   Generic Import completed with errors: 1277 assets. Warnings: 80 · Errors: 264 (2 groups).
+ 02:29:59   engine/MaterialCompiler Error loading image file header c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_02/poster_02_albedo_snaps014.tga
+ 02:29:59   engine/ResourceCompilerSystem                                                                       [FAIL]
+ 02:29:59   engine/MaterialCompiler Error loading image file header c:/cseliot/1-development/1-sbox/2-projects/unityimporterplus/assets/imported/a/s/art/textures/props/classroom/poster_01/poster_01_albedo_snaps014.tga
+ 02:29:59   engine/ResourceCompilerSystem                                                                       [FAIL]
+ 02:29:59   Generic local.unityimporterplus:imported/a/s/art/material/props/classroom/poster_01_albedo_snaps014.vmat: describe failed
+ 03:07:54   engine/RenderSystem  [3] Merging and flushing Vulkan pipeline cache to disk.
