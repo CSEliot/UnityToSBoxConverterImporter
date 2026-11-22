@@ -22,16 +22,14 @@ The canonical field order is line 1 of `.template-task.md`. A header missing any
 
 ## Project
 
-`{project}` is the directory holding `eliots-agentics/`. Here it is:
-`C:/cseliot/1-Development/1-SBox/2-Projects/gamifyd_academy__zero_to_one`
-
+`{project}` is the directory holding `eliots-agentics/`.
 Never read, write, list, or stage `{project}/eliots-agentics/.humans-only/`.
 
 ## Work
 
 Evidence must be on disk. Logs, screenshots, and command output a reviewer must see go into files, not into your return. The commit is the deliverable.
 
-Stage explicit paths only: the files you changed and the task file. Never `git add -A` or `git add .`, and stage nothing under `.humans-only/` or `.obsidian/`. Check `git status --short` before committing; only intended files are staged. This repo has no remote; do not push.
+Stage explicit paths only: the files you changed and the task file. Never `git add -A` or `git add .`, and stage nothing under `.humans-only/` or `.obsidian/`. Check `git status --short` before committing; only intended files are staged. Always git push, though a project may not have a remote.
 
 The protocol messages:
 - `PERMISSION` = "you may start"

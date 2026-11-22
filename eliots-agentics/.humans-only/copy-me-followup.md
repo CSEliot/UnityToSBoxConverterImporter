@@ -1,0 +1,1 @@
+/goal Act according to document {project}/eliots-agentics/roles.md, you are Task Master, I am the Director. This is a follow-up session, so handle all tasks unmarked done and refer to the Follow-Up Post Task section of the task.
