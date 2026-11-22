@@ -239,7 +239,7 @@ public static class UnityImport
 							{
 								if ( !textureSources.TryGetValue( guid, out var source ) )
 								{
-									Issue( asset.Path, "missing-texture", $"Missing or unsupported texture {guid}." );
+									Issue( asset.Path, "missing-texture", $"Missing or unsupported texture {guid}: no Texture asset with that GUID is packed in the source package (source-data gap)." );
 									return null;
 								}
 								var key = $"{guid}_{channel}_{scale.ToString( System.Globalization.CultureInfo.InvariantCulture )}_{invert}";
@@ -259,7 +259,7 @@ public static class UnityImport
 						string Resolve( string guid )
 						{
 							if ( textures.TryGetValue( guid, out var texture ) ) return texture;
-							Issue( asset.Path, "missing-texture", $"Missing or unsupported texture {guid}." );
+							Issue( asset.Path, "missing-texture", $"Missing or unsupported texture {guid}: no Texture asset with that GUID is packed in the source package (source-data gap)." );
 							return null;
 						}
 						if ( planned.Vmat ) { documents.Add( (Output( materialPaths[asset.Guid] + ".vmat" ), material.ToVmat( Resolve )) ); conversions++; }
@@ -340,7 +340,11 @@ public static class UnityImport
 					foreach ( var slot in remaps.Keys.Where( s => !declaredSlots.Contains( s ) ).ToArray() ) remaps.Remove( slot );
 					var defaultMaterial = prefabMaterials.Length == 1 && info.PrefabSlotMaterials.Count == 0 && info.AssignmentWarnings.Count == 0 ? MaterialFor( prefabMaterials[0] ) : null;
 					var missingSlots = info.RenderedMaterials.Where( s => !remaps.ContainsKey( s.ToLowerInvariant() + ".vmat" ) ).ToArray();
-					if ( options.Materials && options.Vmat && defaultMaterial == null && info.Materials.Count == 0 &&
+					// Exporter "N - Default" slots carry no author material. They are not a missing conversion:
+					// the same neutral material used for unnamed FBX slots is their honest target.
+					var defaultSlots = info.RenderedMaterials.Where( UnityModel.IsDefaultSlot ).ToArray();
+					if ( options.Materials && options.Vmat && defaultMaterial == null &&
+						(info.Materials.Count == 0 || defaultSlots.Length > 0) &&
 						(info.RendererSlots.Count == 0 || missingSlots.Length > 0) && asset.Path.EndsWith( ".fbx", StringComparison.OrdinalIgnoreCase ) )
 					{
 						var neutralPath = generatedFiles.Add( asset.Path, "unassigned", ".vmat" );
@@ -349,8 +353,11 @@ public static class UnityImport
 						File.WriteAllText( neutralPath.File, neutral.ToVmat( _ => null ) );
 						conversions++;
 						if ( info.RendererSlots.Count == 0 ) defaultMaterial = neutralPath.Reference;
-						else foreach ( var slot in missingSlots ) remaps[slot.ToLowerInvariant() + ".vmat"] = neutralPath.Reference;
-						Issue( asset.Path, "unassigned-material", "FBX contains no named material slots and no unambiguous prefab assignment was resolved; using a neutral material." );
+						else foreach ( var slot in missingSlots.Where( s => info.Materials.Count == 0 || defaultSlots.Contains( s, StringComparer.OrdinalIgnoreCase ) ) )
+							remaps[slot.ToLowerInvariant() + ".vmat"] = neutralPath.Reference;
+						var reason = info.Materials.Count == 0 ? "FBX contains no named material slots"
+							: $"FBX default slot(s) {string.Join( ", ", defaultSlots )} carry no author material";
+						Issue( asset.Path, "unassigned-material", $"{reason} and no unambiguous prefab assignment was resolved; using a neutral material." );
 					}
 					// Meshes sharing one FBX slot but assigned different materials cannot share a remap
 					// table, so each gets its own model naming only that mesh.

@@ -75,7 +75,7 @@ public sealed class ImportCatalog
 				foreach ( var guid in material.Textures.Values.Distinct( StringComparer.OrdinalIgnoreCase ) )
 				{
 					if ( byGuid.TryGetValue( guid, out var texture ) && texture.Kind == UnityAssetKind.Texture ) Link( asset, texture, "Texture reference" );
-					else Issue( asset, "missing-texture", $"Missing or unsupported texture {guid}." );
+					else Issue( asset, "missing-texture", $"Missing or unsupported texture {guid}: no Texture asset with that GUID is packed in the source package (source-data gap)." );
 				}
 			}
 			catch ( InvalidDataException ex ) { Issue( asset, "conversion-skipped", $"Conversion skipped. {ex.Message}" ); }
@@ -90,12 +90,13 @@ public sealed class ImportCatalog
 			if ( asset.ModelInfo.CollisionOnly ) continue;
 			foreach ( var warning in asset.ModelInfo.AssignmentWarnings ) Issue( asset, "prefab-material-assignment", warning );
 			var referencedMaterials = new HashSet<UnityAsset>();
-			void Match( UnityAsset[] candidates, string reason )
+			void Match( UnityAsset[] candidates, string reason, string[] paths = null )
 			{
 				var referenced = candidates.Where( referencedMaterials.Contains ).ToArray();
 				if ( referenced.Length > 0 ) candidates = referenced;
 				if ( candidates.Length == 1 ) Link( asset, candidates[0], reason + " (inferred)" );
-				else if ( candidates.Length > 1 ) Issue( asset, "ambiguous-material", $"{reason} matches multiple materials; no dependency was inferred." );
+				else if ( candidates.Length > 1 ) Issue( asset, "ambiguous-material", $"{reason} matches multiple materials; no dependency was inferred." +
+					( paths is { Length: > 0 } ? $" Candidates: {string.Join( ", ", paths )}." : "" ) );
 			}
 			var refs = asset.ModelInfo.PrefabMaterials.AsEnumerable();
 			if ( asset.Metadata != null ) refs = refs.Concat( UnityMaterial.References( UnityImport.ReadText( asset.Metadata ) ) );
@@ -105,7 +106,18 @@ public sealed class ImportCatalog
 					Link( asset, dependency, "Model / prefab reference" );
 					if ( dependency.Kind == UnityAssetKind.Material ) referencedMaterials.Add( dependency );
 				}
-			foreach ( var filename in asset.ModelInfo.MaterialAlbedoFiles.Values ) Match( byTexture.GetValueOrDefault( Path.GetFileNameWithoutExtension( filename ), Array.Empty<UnityAsset>() ), $"Color texture {filename}" );
+			foreach ( var (slot, filename) in asset.ModelInfo.MaterialAlbedoFiles )
+			{
+				var candidates = byTexture.GetValueOrDefault( Path.GetFileNameWithoutExtension( filename ), Array.Empty<UnityAsset>() );
+				// A declared slot assignment is stronger evidence than a shared albedo filename: if the
+				// prefab bound exactly one of the albedo's materials to this slot, that is the dependency.
+				var hinted = asset.ModelInfo.PrefabSlotMaterials.TryGetValue( slot, out var prefabGuid )
+					? candidates.Where( c => c.Guid.Equals( prefabGuid, StringComparison.OrdinalIgnoreCase ) ).ToArray()
+					: candidates.Where( c => asset.ModelInfo.MeshSlotMaterials.Values.Any( m =>
+						m.TryGetValue( slot, out var meshGuid ) && c.Guid.Equals( meshGuid, StringComparison.OrdinalIgnoreCase ) ) ).ToArray();
+				if ( hinted.Length == 1 ) candidates = hinted;
+				Match( candidates, $"Color texture {filename}", candidates.Select( c => c.Path ).ToArray() );
+			}
 			foreach ( var slot in asset.ModelInfo.RenderedMaterials.Where( s => !asset.ModelInfo.PrefabSlotMaterials.ContainsKey( s ) && !asset.ModelInfo.UnresolvedPrefabSlots.Contains( s ) ) ) Match( byName.GetValueOrDefault( slot, Array.Empty<UnityAsset>() ), $"Material slot {slot}" );
 			Match( byName.GetValueOrDefault( Path.GetFileNameWithoutExtension( asset.Path ), Array.Empty<UnityAsset>() ), "Model filename" );
 		}

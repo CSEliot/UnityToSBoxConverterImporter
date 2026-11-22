@@ -144,6 +144,10 @@ public sealed class UnityModel
 	/// <summary>Fixed renderer ids whose mesh the file no longer carries (stale sub-assets, merged root meshes).</summary>
 	public HashSet<long> StaleRenderers { get; } = new();
 	public static string Normalize( string name ) => Regex.Replace( name.ToLowerInvariant(), "[^a-z]", "" );
+	/// <summary>Exporter "N - Default" slots carry no author material; they are named residuals, not missing conversions.</summary>
+	public static bool IsDefaultSlot( string name ) => Regex.IsMatch( name ?? "", @"(?i)^\s*\d+\s*-\s*default\s*$" );
+	/// <summary>The mesh stem before an LOD suffix, so a LOD01 override can be paired with its imported LOD0 counterpart.</summary>
+	public static string LodBase( string mesh ) => Regex.Replace( mesh ?? "", @"(?i)_lod\d+$", "" );
 
 	/// <summary>
 	/// Pre-2018 Unity identifies FBX sub-assets by recycle ID (4300000, 4300002, …) listed in the

@@ -101,8 +101,21 @@ internal static class UnityPrefabBindings
 				if ( binding == null ) { candidate.Warnings.Add( "A prefab material override targets an unsupported or unidentified renderer; no slot was guessed." ); return; }
 				// ModelDoc currently imports only LOD0 when present. Other LOD overrides must not change its slots.
 				if ( model.HighestDetailMeshes.Length > 0 && !model.HighestDetailMeshes.Contains( binding.Mesh ) ) return;
-				if ( index < 0 || index >= Math.Max( 1, binding.Slots.Length ) )
+				// A Unity material index can name a declared slot the FBX binding list does not expose
+				// (implicit slots, or an index into RenderedMaterials). Accept it when it maps cleanly.
+				var mapped = index >= 0 ? WrapperMaterialSlot( models[guid], binding, index ) : null;
+				if ( mapped == null && ( index < 0 || index >= Math.Max( 1, binding.Slots.Length ) ) )
 				{
+					// ModelDoc imports LOD0 only. An override aimed at LOD01+ whose LOD0 counterpart
+					// already resolves is not a slot conflict: nothing from that mesh is generated.
+					var lod = Regex.Match( binding.Mesh, @"(?i)_lod(\d+)$" );
+					var stem = UnityModel.LodBase( binding.Mesh );
+					bool lowerLodResolves = lod.Success && lod.Groups[1].Value != "0" &&
+						candidate.MeshSlots.Any( m =>
+							UnityModel.LodBase( m.Key ).Equals( stem, StringComparison.OrdinalIgnoreCase ) &&
+							UnityModel.LodBase( m.Key ).Length != m.Key.Length &&
+							m.Value.Values.SelectMany( v => v ).Any( materialIds.Contains ) );
+					if ( lowerLodResolves ) return;
 					candidate.Warnings.Add( $"A prefab material override puts '{materialNames.GetValueOrDefault( material, material )}' in slot {index} of mesh '{binding.Mesh}', which the FBX gives no material slot for." );
 					// Extra Unity material passes cannot be represented by this mesh's implicit slot.
 					if ( binding.Slots.Length == 0 )
@@ -266,11 +279,18 @@ internal static class UnityPrefabBindings
 				else
 				{
 					model.UnresolvedPrefabSlots.Add( slot );
-					// Every value is accounted for per mesh, so the importer can still produce one model per mesh.
-					if ( values.All( v => materialIds.Contains( v ) ) && model.MeshSlotMaterials.SelectMany( m => m.Value.Values ).Distinct( StringComparer.OrdinalIgnoreCase ).OrderBy( v => v, StringComparer.OrdinalIgnoreCase )
-							.SequenceEqual( values.OrderBy( v => v, StringComparer.OrdinalIgnoreCase ), StringComparer.OrdinalIgnoreCase ) )
-						continue;
-					var competing = string.Join( " vs ", values.Select( v => materialNames.GetValueOrDefault( v, v ) ).OrderBy( v => v, StringComparer.OrdinalIgnoreCase ) );
+					// A cross-mesh conflict is already expressed when each mesh takes one of the values
+					// for THIS slot and ModelSplit writes one model per mesh. Compare per slot, not the
+					// union of every slot on every mesh (which silently swallowed genuine conflicts).
+					var perMesh = chosen.SelectMany( c => c.MeshSlots )
+						.SelectMany( m => m.Value.TryGetValue( slot, out var perMeshValues ) ? perMeshValues : Enumerable.Empty<string>() )
+						.Distinct( StringComparer.OrdinalIgnoreCase ).ToArray();
+					if ( values.Length > 1 && values.All( materialIds.Contains ) && perMesh.Length == values.Length &&
+						values.All( v => perMesh.Contains( v, StringComparer.OrdinalIgnoreCase ) ) ) continue;
+					// Genuine single-mesh conflict: name the prefab asset that supplied each competing material.
+					var competing = string.Join( " vs ", values.OrderBy( v => v, StringComparer.OrdinalIgnoreCase ).Select( v =>
+						$"{materialNames.GetValueOrDefault( v, v )} ({string.Join( ", ", chosen.Where( c => c.Slots.GetValueOrDefault( slot )?.Contains( v, StringComparer.OrdinalIgnoreCase ) == true )
+							.Select( c => Path.GetFileName( c.Path ) ).Distinct( StringComparer.OrdinalIgnoreCase ).OrderBy( n => n, StringComparer.OrdinalIgnoreCase ) )})" ) );
 					model.AssignmentWarnings.Add( $"Prefab assignment for slot '{slot}' is missing or conflicting ({competing}); no material was guessed." );
 				}
 			}

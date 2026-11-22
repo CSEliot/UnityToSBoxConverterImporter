@@ -1,4 +1,4 @@
-## Status: STARTED? YES! CLARIFIED? YES! HISTORY? YES! REVIEWED? YES! DONE? NO! WORKER: sa-0-1ff9c4d0 OTHER: reviewed 20:14 no further changes; HDRP PBR and emission committed
+## Status: STARTED? YES! CLARIFIED? YES! HISTORY? YES! REVIEWED? YES! DONE? YES! WORKER: sa-0-f8024b88 OTHER: reviewed 03:32 no further changes; material-slot regression round committed
 
 ## Task
 
@@ -150,6 +150,79 @@ Verified: build 0/0; fixture 23/20/46/0/0, two runs identical, HDRP 19 and one t
 	both diffs against the populated HEAD baselines are empty. verify_output.py on old_school: 823
 	files, 0 problems. No checker or other tooling was added.
 
+	### Reopened round 2026-11-22 — root-cause evidence (no commit)
+
+	Source-data gap (proposal 5) verified before any code change: streamed all 1.27 GB of
+	Testing/old_school_project.unitypackage. GUIDs 6012db391d795e54f8166f209f6ce80c and
+	8a1b6f6da87cf3c4dbeeeb50c35ed3c5 occur as `m_Texture: {fileID: 2800000, guid: ...}` in exactly
+	eight material assets each (the eight structure materials in unity-expert-review-nov-22.md) and in
+	ZERO asset.meta files. No Texture asset with either GUID is packed. This is a missing source
+	asset, not an unsupported decodable format; no decoder was invented. The three emission sites
+	(ImportPlan.cs:78, UnityImport.cs:242, UnityImport.cs:262) now say so explicitly.
+
+	Root causes and fixes (current-tree line numbers):
+	1. UnityPrefabBindings.cs:274-294 (proposal 1): the old exemption compared the union of ALL
+	   mesh-slot values with one slot's values, so it warned or stayed silent for the wrong reason.
+	   It now compares only THIS slot's values across meshes (:282-289). Values fully accounted for
+	   by distinct per-mesh assignments are expressed by UnityImport.ModelSplit (:675-701) and need
+	   no warning; a genuine single-mesh conflict keeps one warning naming the prefab asset that
+	   supplied each competing material (:290-293). Deviation: the task-02 decision required
+	   source-real residuals to be NAMED, never blanket-suppressed. Only conflicts genuinely
+	   resolved by the per-mesh models lose their warning; every residual that survives is named.
+	2. UnityPrefabBindings.cs:104-120 (proposal 2): before rejecting an index, WrapperMaterialSlot
+	   (:69-76) maps it through EffectiveSlots/RenderedMaterials and accepts a declared slot.
+	   LOD01+ overrides whose LOD0 counterpart resolves are skipped via UnityModel.LodBase
+	   (UnityModel.cs:150) because RenderedMaterials (UnityModel.cs:124-131) imports LOD0 only.
+	   Genuinely out-of-range indices remain, named by model/mesh/material. The three survivors are
+	   Door_06_LOD00 (Wood_05), Outdoor_Wall_01 (School_Wall), Windows_02_Frame_LOD00 (Trim_02).
+	3. UnityImport.cs:344-361 + UnityModel.cs:148 (proposal 3a/3c): "N - Default" slots now take the
+	   existing generated neutral vmat. The neutral-generation condition was widened from
+	   `info.Materials.Count == 0` to also cover models declaring a default slot, while the
+	   `missingSlots` loop was narrowed so genuinely missing semantic slots (Metal, Glass,
+	   lambert2, ...) are NOT silently filled. The _lodN alias expansion at UnityImport.cs:334-335
+	   was checked and covers the LOD01 names in the report. Proposal 3b's blanket semantic hint was
+	   NOT applied: those slots are source-real residuals and stay named, per the task-02 decision.
+	4. ImportPlan.cs:93-99, 109-121 (proposal 4): a declared PrefabSlotMaterials/MeshSlotMaterials
+	   assignment resolves an albedo matching several materials when it selects exactly one
+	   candidate; otherwise the ambiguous warning lists the candidate paths.
+
+	Before/after counts (fresh harness --scenes runs, same package and options; the HEAD-code
+	baseline was built from `git show HEAD:Editor/Core/*.cs` in a scratch mirror with LF sources):
+	  before (HEAD code) 1,277 assets / 936 converted / 2,115 files / 97 warnings / 81 unresolved
+	    = 44 unassigned-material, 20 prefab-material-assignment, 16 missing-texture, 1 ambiguous-material
+	  after (this round) 1,277 assets / 940 converted / 2,119 files / 80 warnings / 64 unresolved
+	    = 45 unassigned-material, 16 missing-texture, 3 prefab-material-assignment, 0 ambiguous-material
+	  The code delta is exactly +4 converted / +4 files: four new neutral .vmat files
+	  (Partition_01, Floor_Drain_01, Metal_Edge_01 and Windows_03_Frame) plus four vmdl remap lines.
+	  Windows_03_Frame was previously unreported and is now named, which is the 44 -> 45 increase.
+	  The pinned editor report (1,277 / 1,034 converted / 2,213 files, terrain materials on) is a
+	  DIFFERENT run; it is retained only as secondary context, not as this comparison's baseline.
+	  0 unidentified / 0 misclassified: 16 missing-texture warnings name the source-data gap, 3 prefab
+	  warnings name model/mesh/material, and 45 unassigned warnings name model and slot (3 default
+	  slots name the neutral material they use).
+
+	Gates measured on the final bytes (logs under scratch/t08):
+	  harness build 0 warnings / 0 errors; fixture 24 assets / 21 converted / 48 files / 0 / 0 with
+	  verify_output.py 21 files / 0 problems; old_school --scenes 64 unresolved with verify_output.py
+	  843 files / 0 problems; two old_school runs' imported trees byte-identical (diff -r
+	  --strip-trailing-cr empty) and report.json identical except TextureProcessing timing
+	  (165021 vs 166666 ms) and the run's Destination path, as in the previous round.
+	  HDRP features unchanged: F_ALPHA_TEST 13, F_RENDER_BACKFACES 11, glass 1.
+	  building 24 files / 0 warnings / 0 unresolved and city--1 1,166 files / 3 warnings / 3
+	  unresolved, both byte-identical to a HEAD-code baseline built from the same LF sources
+	  (diff -r --strip-trailing-cr empty for both trees). All four edited Editor/Core files are
+	  BOM-less. No checker, script or tooling was added; Documentation/sbox-console-logs.txt, the
+	  harness CLI and the c7f922a FBX sanitize fix were not touched. Headless only: no editor or
+	  visual result is claimed.
+
+	Commit-path list (explicit paths only; NO COMMIT yet, awaiting critic):
+	  Editor/Core/ImportPlan.cs
+	  Editor/Core/UnityImport.cs
+	  Editor/Core/UnityModel.cs
+	  Editor/Core/UnityPrefabBindings.cs
+	  eliots-agentics/tasks/08 HDRP Lit PBR and Emission Fidelity.md
+	  The Director's archive moves (deleted tasks/01-05, untracked .humans-only/) are NOT staged.
+
 ## Clarification Q&A
 
 	Q: Should transmission/SSS be approximated with translucency?
@@ -163,6 +236,17 @@ Verified: build 0/0; fixture 23/20/46/0/0, two runs identical, HDRP 19 and one t
 
 	Task 07 owns alpha/double-sided/transparency; this task owns the remaining HDRP Lit PBR semantics.
 	Task 06 supplies detection and the fixture.
+
+	Reopened 2026-11-22 on the review feedback in unity-expert-review-nov-22.md: the five proposals
+	were re-checked against the current tree, and the source-GUID gap was proved from the packed
+	package before editing. The implementation changes material-slot classification and per-mesh
+	remaps in Editor/Core (ImportPlan, UnityImport, UnityModel, UnityPrefabBindings), not HDRP
+	surface conversion; the HDRP feature counts and both no-scenes baselines are unchanged. The
+	task-02 decision that source-real residuals are named (never silently zeroed) was preserved:
+	the only warnings removed are those genuinely resolved by ModelSplit, LOD0-only import, a
+	declared prefab slot or a neutral default-slot material. Full counts and file:line evidence are
+	in this file's ## Notes under "Reopened round 2026-11-22". REVIEWED? is NO! because
+	Editor/Core/UnityImport.cs changed after the prior review; a critic must re-review before commit.
 
 ## Stylistic Task Notes:
 
@@ -231,3 +315,23 @@ Round-2 finding fixed: acceptance again names Fan_01, Corridor_Floor_01 and Plas
 Re-checked after the wording edit: the three source hashes and the fixture archive md5 are unchanged, so every gate recorded for review 2 stands unaltered — Release rebuild 0 warnings / 0 errors; fixture 23 assets / 20 converted / 46 files / 0 warnings / 0 unresolved with 19 HDRP materials and one transmission sample; old_school 1,275/920/2,097/97/81 with the single 10/9 grouped line and its four metalness PNGs removed; building 24/0/0 and city--1 1,166/3/3 unchanged against the HEAD baselines; verify_output.py 20 files 0 problems and 823 files 0 problems. Metal and smoothness remaps stay HDRP-gated and epsilon-safe, the eight remapped materials carry g_flMetalness 0.000, emission splits HDR peaks into brightness plus normalised tint, transmission and subsurface are reported once instead of being silently flattened, and no checker or unrelated edit was added.
 
 Commit as is.
+
+### Work Review
+
+2026-11-22 03:32 - Verdict: no further changes
+
+Tree (HEAD c7f922a + the four staged Editor/Core files):
+  git hash-object --path=Editor/Core/ImportPlan.cs "Editor/Core/ImportPlan.cs" -> 802619652605eeeae648a802d2d37fc46d767b6b
+  git hash-object --path=Editor/Core/UnityImport.cs "Editor/Core/UnityImport.cs" -> 71f2f719e1e11e59c357f1e893017a2a045b71c4
+  git hash-object --path=Editor/Core/UnityModel.cs "Editor/Core/UnityModel.cs" -> 2c6af9b23c1cb57b926152e886c48ef81d23a494
+  git hash-object --path=Editor/Core/UnityPrefabBindings.cs "Editor/Core/UnityPrefabBindings.cs" -> 43806719c1d1f3754643f9a767b78e75bf69aeb7
+
+Highest-priority gate passed. A fresh HEAD-code mirror (git show HEAD:Editor/Core/*.cs, LF, hashes 7d0a643/147705a/da3ae01/72db226) built 0 warnings / 0 errors and, with --scenes on the same package/options as the worker's after-run, gave 1,277 assets / 936 converted / 2,115 files / 97 warnings / 81 unresolved = 44 unassigned-material, 20 prefab-material-assignment, 16 missing-texture, 1 ambiguous-material. This matches the parent's independent baseline, so the 81 -> 64 reduction is attributable to the code, not the terrain-option difference. The staged code built 0/0 and gave 1,277 / 940 / 2,119 / 80 warnings / 64 unresolved = 45 unassigned, 16 missing-texture, 3 prefab, 0 ambiguous. The only tree delta HEAD -> work is four _iup_unassigned.vmat files (Partition_01, Floor_Drain_01, Metal_Edge_01, Windows_03_Frame) and four vmdl remap lines.
+
+The 44 -> 45 unassigned count is one added asset, Windows_03_Frame_Snaps014.FBX, previously unreported; no existing warning was removed. The 17 removed prefab warnings and one ambiguous warning are false positives: per-mesh LOD splits such as partition_02_lod00/01.vmdl carry different per-slot materials and are byte-identical to HEAD. The three surviving prefab warnings name model/mesh/material (Door_06/Wood_05/Door_06_LOD00, Outdoor_Wall_01/School_Wall, Windows_02_Frame/Trim_02/Windows_02_Frame_LOD00). Proposal 3b's blanket semantic hint was not applied: the ImportPlan.cs:93-121 hint only narrows albedo matches and only when hinted.Length == 1, so semantic slots stay named; the deviation is recorded in Notes. UnityPrefabBindings.cs:285-289 compares THIS slot's per-mesh values via TryGetValue(slot,…); :69-76 and :104-128 map the index through EffectiveSlots/RenderedMaterials without an out-of-range write, and :109-118 skips LOD01 overrides whose LOD0 counterpart resolves. UnityModel.cs:148/150 IsDefaultSlot and LodBase are correct. Streaming the package confirmed the two texture GUIDs appear as m_Texture references in eight material payloads each and in zero of 1,462 asset.meta files, so the 16 warnings correctly report a source-data gap; all 16 name it.
+
+Gates: harness builds 0/0; F_ALPHA_TEST 13, F_RENDER_BACKFACES 11 and glass 1 are identical to HEAD; building 24 files / 0 warnings / 0 unresolved and city--1 1,166 / 3 / 3 are byte-identical to a HEAD-code baseline (diff -r --strip-trailing-cr empty); verify_output.py with the correct Assets root (parent of imported/) reports 843 files, 0 problems; two old_school runs give byte-identical imported trees, with report.json differing only in TextureProcessing elapsed ms and Destination. All four edited sources are BOM-less; no checker or tooling was added; Editor/Core/UnityFbxRewrite.cs (c7f922a) and the harness CLI (b4292f0) are byte-identical to HEAD. Headless only; no editor or visual result is claimed.
+
+1. [Medium] Task file Notes lines 189-198: the heading says "fresh harness --scenes runs, same package and options" but labels "before (pinned report)" as 1,277 / 1,034 converted / 2,213 files, which is the EDITOR run with terrain materials on, and explains a 94-file delta via 98 .tmat files. The pinned numbers are quoted accurately but are not a same-options baseline. Fix: report the apples-to-apples HEAD harness baseline, 1,277 assets / 936 converted / 2,115 files / 81 unresolved = 44/20/16/1, and state that after is 1,277 / 940 / 2,119 / 64, so the code delta is exactly +4 converted / +4 files (the four neutral vmats). Keep the pinned editor report only as a secondary note. Documentation hygiene in the task file only; all code gates pass and no code change is required.
+
+2026-11-22 03:45 - Master resolution of finding 1: applied. The ## Notes before/after block was rewritten to the apples-to-apples HEAD harness baseline (1,277 / 936 / 2,115 / 81 = 44/20/16/1) and after (1,277 / 940 / 2,119 / 64), with the pinned editor report demoted to secondary context and the code delta stated as +4 converted / +4 files. Only this task file changed; re-checked the four reviewed Editor/Core hashes above and they are byte-identical to the Tree manifest, so the `no further changes` verdict still binds the code. No re-review required: the task file is the review record, not a reviewed deliverable.
