@@ -350,34 +350,60 @@ public static class UnityImport
 						.Select( s => s.ToLowerInvariant() + ".vmat" ).ToHashSet( StringComparer.OrdinalIgnoreCase );
 					foreach ( var slot in remaps.Keys.Where( s => !declaredSlots.Contains( s ) ).ToArray() ) remaps.Remove( slot );
 					var defaultMaterial = prefabMaterials.Length == 1 && info.PrefabSlotMaterials.Count == 0 && info.AssignmentWarnings.Count == 0 ? MaterialFor( prefabMaterials[0] ) : null;
+					// Remember the pre-fallback state: the warning loop below must report what the source failed
+					// to resolve, not the neutral remap we synthesize for it.
+					var defaultMaterialWasResolved = defaultMaterial != null;
 					var missingSlots = info.RenderedMaterials.Where( s => !remaps.ContainsKey( s.ToLowerInvariant() + ".vmat" ) ).ToArray();
 					// Exporter "N - Default" slots carry no author material. They are not a missing conversion:
 					// the same neutral material used for unnamed FBX slots is their honest target.
 					var defaultSlots = info.RenderedMaterials.Where( UnityModel.IsDefaultSlot ).ToArray();
-					if ( options.Materials && options.Vmat && defaultMaterial == null &&
+					// Named slots with no converted material are still reported one by one after remapping, so
+					// the loss stays visible; default/no-slot FBXs keep their single grouped report.
+					var unassignedSlots = info.Materials.Count == 0
+						? Array.Empty<string>()
+						: missingSlots.Where( s => !defaultSlots.Contains( s, StringComparer.OrdinalIgnoreCase ) ).ToArray();
+					// Meshes sharing one FBX slot but assigned different materials cannot share a remap
+					// table, so each gets its own model naming only that mesh. Decide the models before
+					// synthesizing a neutral material: a split model's own remaps win over the shared table.
+					var meshGroups = ModelSplit( info, materialPaths, selected, MaterialFor );
+					string[] GroupSlots( ModelGroup group ) => group.Remaps == null
+						? missingSlots
+						: group.Meshes.SelectMany( m => info.MeshSlotMaterials.GetValueOrDefault( m )?.Keys ?? Enumerable.Empty<string>() )
+							.Distinct( StringComparer.OrdinalIgnoreCase ).ToArray();
+					var groupedWarning = options.Materials && options.Vmat && defaultMaterial == null &&
 						(info.Materials.Count == 0 || defaultSlots.Length > 0) &&
-						(info.RendererSlots.Count == 0 || missingSlots.Length > 0) && asset.Path.EndsWith( ".fbx", StringComparison.OrdinalIgnoreCase ) )
+						(info.RendererSlots.Count == 0 || missingSlots.Length > 0);
+					var needsNeutral = groupedWarning
+						|| meshGroups.Any( g => GroupSlots( g )
+							.Any( s => !(g.Remaps ?? remaps).ContainsKey( s.ToLowerInvariant() + ".vmat" ) ) );
+					string neutralReference = null;
+					if ( options.Materials && options.Vmat && defaultMaterial == null && needsNeutral && asset.Path.EndsWith( ".fbx", StringComparison.OrdinalIgnoreCase ) )
 					{
 						var neutralPath = generatedFiles.Add( asset.Path, "unassigned", ".vmat" );
 						var neutral = new UnityMaterial();
 						neutral.Colors["_Color"] = new[] { 0.5, 0.5, 0.5, 1.0 };
 						File.WriteAllText( neutralPath.File, neutral.ToVmat( _ => null ) );
 						conversions++;
-						if ( info.RendererSlots.Count == 0 ) defaultMaterial = neutralPath.Reference;
-						else foreach ( var slot in missingSlots.Where( s => info.Materials.Count == 0 || defaultSlots.Contains( s, StringComparer.OrdinalIgnoreCase ) ) )
-							remaps[slot.ToLowerInvariant() + ".vmat"] = neutralPath.Reference;
-						var reason = info.Materials.Count == 0 ? "FBX contains no named material slots"
-							: $"FBX default slot(s) {string.Join( ", ", defaultSlots )} carry no author material";
-						Issue( asset.Path, "unassigned-material", $"{reason} and no unambiguous prefab assignment was resolved; using a neutral material." );
+						neutralReference = neutralPath.Reference;
+						if ( info.RendererSlots.Count == 0 ) defaultMaterial = neutralReference;
+						else foreach ( var slot in missingSlots ) remaps[slot.ToLowerInvariant() + ".vmat"] = neutralReference;
+						if ( groupedWarning )
+						{
+							var reason = info.Materials.Count == 0 ? "FBX contains no named material slots"
+								: $"FBX default slot(s) {string.Join( ", ", defaultSlots )} carry no author material";
+							Issue( asset.Path, "unassigned-material", $"{reason} and no unambiguous prefab assignment was resolved; using a neutral material." );
+						}
 					}
-					// Meshes sharing one FBX slot but assigned different materials cannot share a remap
-					// table, so each gets its own model naming only that mesh.
-					var meshGroups = ModelSplit( info, materialPaths, selected, MaterialFor );
+					if ( neutralReference != null )
+						foreach ( var group in meshGroups )
+							if ( group.Remaps != null )
+								foreach ( var slot in GroupSlots( group ) )
+									group.Remaps.TryAdd( slot.ToLowerInvariant() + ".vmat", neutralReference );
 					if ( meshGroups.Count > 1 )
 						information.Add( $"{asset.Path}: meshes use different materials through the same FBX material slot; one model was written per mesh." );
-					if ( options.Materials && options.Vmat && defaultMaterial == null && meshGroups.Count <= 1 )
-						foreach ( var slot in info.RenderedMaterials.Where( s => !remaps.ContainsKey( s.ToLowerInvariant() + ".vmat" ) ) )
-							Issue( asset.Path, "unassigned-material", $"No converted material was resolved for slot '{slot}'." );
+					if ( options.Materials && options.Vmat && !defaultMaterialWasResolved && meshGroups.Count <= 1 )
+						foreach ( var slot in unassignedSlots )
+							Issue( asset.Path, "unassigned-material", $"No converted material was resolved for slot '{slot}'; using a neutral material." );
 					var modelDirectory = Path.GetDirectoryName( asset.Path )?.Replace( '\\', '/' );
 					// A skinned FBX's meshes are switched by bodygroups, laid out the way its prefabs use them.
 					var bodyGroups = info.Skinned && meshGroups.Count == 1 ? info.BodyGroups : Array.Empty<UnityModel.BodyGroup>();
