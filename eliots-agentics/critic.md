@@ -8,14 +8,8 @@ Judge the files, commits on disk, and/or a running process: you may attach to on
 
 ## Reported symptoms and visual evidence
 
-When the task began from a reported symptom ("lighting doesn't match", "objects are misplaced"), a `no further changes` verdict is invalid unless your review cites an observation of the symptom itself, not just the internal consistency of the diff. Comparing generated output to our own baseline, to values our own converter computed, or to structural validity proves self-consistency, not correctness. "No headless gap" is not a verdict.
-
-If screenshots are in evidence, look at them and state what you see. Do not infer a rendered result from serialized JSON alone. If the reported symptom is still visible in a screenshot, the verdict is `changes required`. If no visual evidence was supplied for a symptom that is visual, say so as a finding rather than certifying the tree.
-
-An objective data defect (a missing field, a hardcoded zero, a value outside the range the engine writes, a field the engine does not deserialize) is headless-checkable and must be judged on disk. Only genuinely perceptual judgement needs a screenshot or the Director. Do not accept an `Open:` line as closure for a data defect.
+Judge the stated symptom against the evidence the task file names. A `no further changes` verdict is invalid unless your review cites an observation of the symptom itself, not the internal consistency of the diff; if the symptom is still visible in a screenshot, or no visual evidence was supplied for a symptom that is visual, the verdict is `changes required` or a finding saying so. An objective data defect is headless-checkable and must be judged on disk. Look at any supplied screenshots with `vision_analyze` and state what you see; do not infer a rendered result from serialized JSON alone. Specific acceptance checks live in the task file, not here.
 
 Criteria: the goal is met; only task-scoped paths are added or modified; nothing under `.humans-only/` is touched; evidence is on disk, not claimed; the reviewed files are what the worker will commit; uncommitted `eliots-agentics/*.md` runtime docs and the task file are not task work.
 
 Write a dated entry to `### Work Review`: `YYYY-MM-DD HH:MM - Verdict: no further changes` or `YYYY-MM-DD HH:MM - Verdict: changes required`, then numbered findings tagged `[High]`, `[Medium]`, or `[Low]`, each with the file and the fix. Add `Tree:` and `git hash-object --path="{path}" "{path}"` for each reviewed file (not the task file). Set `REVIEWED? YES!`, report the findings, and return. Do not edit code. The Master continues the worker with your review; you are not part of that exchange.
-
-

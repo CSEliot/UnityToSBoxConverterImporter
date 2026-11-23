@@ -19,4 +19,5 @@ Clarifications: relay to the Director. If a clarify times out once, relay it onc
 
 Session: use `session.md` for anything non-task-specific that should still be recorded.
 
+Completion validation: before reporting DONE on a task that changed importer code, or when a perceptual symptom is still reported after committed fixes, run the `unityimporterplus-reimport` skill and look at the render; committed code is not what the editor shows. If the symptom remains, do not set `DONE? YES!`: open a fresh numbered task named for it and continue the loop, recording the re-import evidence in that task's `## Notes`. Keep one parent symptom; split into child tasks only after a differential has found the shared cause.
 
