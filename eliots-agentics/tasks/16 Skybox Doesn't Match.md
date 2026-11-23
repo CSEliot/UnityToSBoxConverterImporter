@@ -105,6 +105,11 @@ on the shared-root-cause inference; it needs a fresh rendered frame AFTER a re-i
 Director's editor observation. Also note: the live editor scene is STALE (mtime 02:09, predates
 all today's fixes) and carries editor-added fog fields; no pixel-exact render of the clean
 generated output exists yet.
+CORRECTION 16:35: a Unity reference render DOES exist — Testing/Unity-Screenshot.png. See
+visual/UNITY-ORACLE.md. It is a well-lit WARM classroom with NO heavy fog and NO visible open
+sky (dark blue-gray window panes), so it VALIDATES task 15's wall removal but WEAKENS the
+SkyAffect=0 justification: Unity shows no bright blue sky here. An objective oracle is now
+available for a real side-by-side; do not defer on "no oracle".
 
 MASTER ADDENDUM 16:10 — PRINCIPLED FIX FOUND (falsifier RUN, not a pinned value): engine
 Fog.cs:280-283 defines `SkyAffect` = "How strongly fog covers the sky", default 1; the importer

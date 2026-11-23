@@ -101,6 +101,29 @@ editor scene is STALE (mtime 02:09, predates all today's fixes) and carries edit
 fields; a re-import + reload is required before perceptual judgement of current output. No Unity
 reference render exists. Do NOT close this task on the shared-root-cause inference.
 
+MASTER ADDENDUM 16:25 — SIX-CAMERA RENDER SWEEP (visual/camera_frames.py,
+camera_frames_paths.json, camera_sheet.jpg, cam*_fix.jpg). Rendered all SIX scene cameras with
+the FIX fog values + SkyAffect=0 applied in memory; all edits discarded after (editor left clean).
+Result: a tree IS now in frame, but NOT as green foliage. cam0_Setting_Main shows a dark,
+backlit TREE-CROWN SILHOUETTE (charcoal/black, not green) at the edge of a window with pale-blue
+sky (vision_analyze); cam1_Setting_Main1 shows pale-blue sky with cloud streaks; none of the six
+cameras show recognisably GREEN trees/foliage. Greenish-pixel counts (G>R,G>B) are tiny:
+cam0 217, cam1 54, cam2 29, cam4 132, cam5 164 out of 921600 pixels.
+This SHARPENS the mechanism: the reported "trees are the wrong colour (greenness?)" is very
+likely NOT a tree material/colour bug but an EXPOSURE problem — the trees are backlit silhouettes
+crushed to black by the same underexposure documented in task 17 (with fog fully OFF the scene is
+also dark, mean 17.48). Falsifier to run AFTER re-import: brighten exposure / pick a camera facing
+the trees from the lit side; if the crowns turn green, the colour was never wrong. Do NOT close
+this task on a shared-root-cause inference; it needs a lit, post-re-import frame with visibly
+green foliage plus the Director's editor observation. No Unity reference render exists.
+
+CORRECTION 16:35 — that last claim is WRONG. A Unity reference render DOES exist
+(Testing/Unity-Screenshot.png; analysis visual/UNITY-ORACLE.md). Looked at: it is a well-lit
+classroom interior and ALSO shows NO trees / green foliage (greenish 112 px of ~1.2M) and NO
+visible open sky. So this oracle cannot judge tree colour at all — the symptom needs a view
+that contains trees in BOTH engines. Do not use "no oracle" as a reason to defer an objective
+comparison; the oracle exists but is the wrong view for this symptom. Task stays open.
+
 MASTER ADDENDUM 16:10 — one blocker has a principled fix: engine Fog.cs:280-283 `SkyAffect`
 (default 1, "How strongly fog covers the sky") is not emitted, so distance fog covers the SKY
 with flat grey. Falsifier RUN: SkyAffect 1->0 restores 31846 coloured pixels and a blue-to-pale

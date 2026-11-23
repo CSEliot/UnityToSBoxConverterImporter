@@ -135,6 +135,16 @@ addendum. Residual (2), the fog-independent underexposure, is still unexplained 
 task's remaining objective question — do not close until both are addressed and a fresh
 post-re-import frame is looked at.
 
+CORRECTION 16:35 — a Unity reference render DOES exist (Testing/Unity-Screenshot.png; full
+analysis visual/UNITY-ORACLE.md), so "no oracle" must not be used to defer. It is a well-lit
+WARM classroom: golden low-angle sunlight patches on warm-brown wood, mean 46.09, 730872
+coloured px, NO heavy fog, NO visible sky, NO trees. s&box cam0 (fix+SkyAffect=0) has mean
+45.47 — nearly IDENTICAL overall brightness — but only 46699 coloured px vs Unity's 730872.
+So the dominant residual here is NOT exposure level but DESATURATION / missing WARM sunlight
+and warm wood tones: a LIGHTING/MATERIAL issue, exactly this task's scope. Objective oracle
+available for a real side-by-side; compare emitted LightColor/Intensity + auto-exposure against
+Unity source, re-import, and capture from the MATCHING camera. Do not close on self-consistency.
+
 ## Clarification Q&A
 
 ANSWERED (Director, 2026-11-23 bedtime directive): "1. All those things we originally mentioned
