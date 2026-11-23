@@ -613,6 +613,24 @@ internal static class UnityPrefabExport
 		return new( unity, name, active, flags );
 	}
 
+	/// <summary>
+	/// The transform fileID a model-prefab instance uses to place the model's root. 400000 is only the FBX's
+	/// first root node: with several roots Unity names the others 400004, 400008, … and both the wrapper's own
+	/// m_Local* overrides and the stripped root Transform in its file address that id.
+	/// </summary>
+	internal static long WrapperRootTransform( Block instance, string modelGuid )
+	{
+		foreach ( Match modification in ModificationPattern.Matches( instance.Body ) )
+		{
+			var path = modification.Groups["path"].Value.Trim( '\'' );
+			if ( !path.StartsWith( "m_Local" ) || path.StartsWith( "m_LocalEulerAnglesHint" ) ) continue;
+			var target = modification.Groups["target"].Value;
+			if ( !GuidOf( target ).Equals( modelGuid, StringComparison.OrdinalIgnoreCase ) ) continue;
+			return IdOf( target );
+		}
+		return ModelRootTransform;
+	}
+
 	internal sealed class Result
 	{
 		public string Json;
@@ -946,6 +964,10 @@ internal static class UnityPrefabExport
 			public bool IsWrapper;
 			/// <summary>The root's Unity transform id: 400000 inside a model wrapper, the root Transform's fileID otherwise.</summary>
 			public long RootTransformId;
+			/// <summary>A wrapper's actual model-root transform fileID: 400000, or 400004/400008 when the FBX has several
+			/// roots. The wrapper's stripped root Transform resolves to it, so an instance override naming that stripped
+			/// id is a root override even though the id is a real block in this file.</summary>
+			public long WrapperRootTransformId;
 			/// <summary>The root's Unity local transform, with the source prefab's own root overrides applied.</summary>
 			public UnityTransform RootTransform = NoTransform;
 			/// <summary>The root object's name and active state as the source prefab sets them.</summary>
@@ -1065,6 +1087,7 @@ internal static class UnityPrefabExport
 					{
 						source.IsWrapper = true;
 						source.RootTransformId = ModelRootTransform;
+						source.WrapperRootTransformId = WrapperRootTransform( wrapper, GuidOf( Field( wrapper.Body, "m_SourcePrefab" ) ) );
 						var root = RootOf( wrapper, Path.GetFileNameWithoutExtension( wrapperModel.Path ) );
 						source.RootTransform = root.Transform;
 						source.RootName = root.Name;
@@ -1563,8 +1586,14 @@ internal static class UnityPrefabExport
 				// overrides, and an object override names a stripped object, whose source is the model's root.
 				var targetObject = component is { Type: "1", Stripped: true } ? Reference( component.Body, "m_CorrespondingSourceObject" )
 					: plain.IsWrapper && component == null ? sourceRootObject : target;
+				var localPath = path.StartsWith( "m_Local" ) && !path.StartsWith( "m_LocalEulerAnglesHint" );
+				// A wrapper's root Transform is a stripped block in its file, not an absent id, so the fallback
+				// below cannot see it. Its m_CorrespondingSourceObject resolves to the FBX root transform the
+				// wrapper's own instance addresses; only that stripped transform is the generated root.
+				var wrapperRoot = plain.IsWrapper && component is { Type: "4" or "224", Stripped: true }
+					&& Reference( component.Body, "m_CorrespondingSourceObject" ) == plain.WrapperRootTransformId;
 				var rootTransform = target == plain.RootTransformId
-					|| plain.IsWrapper && !plain.ById.ContainsKey( target ) && path.StartsWith( "m_Local" ) && !path.StartsWith( "m_LocalEulerAnglesHint" );
+					|| plain.IsWrapper && localPath && ( wrapperRoot || !plain.ById.ContainsKey( target ) );
 				if ( rootTransform && path.StartsWith( "m_LocalPosition." ) && axis is >= 0 and < 3 ) unity.Position[axis] = Parse();
 				else if ( rootTransform && path.StartsWith( "m_LocalRotation." ) && axis >= 0 ) unity.Rotation[axis] = Parse();
 				else if ( rootTransform && path.StartsWith( "m_LocalScale." ) && axis is >= 0 and < 3 ) unity.Scale[axis] = Parse();
