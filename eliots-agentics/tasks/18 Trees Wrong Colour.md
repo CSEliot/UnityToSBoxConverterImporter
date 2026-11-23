@@ -73,6 +73,17 @@ Final answer in English.
 
 ## Notes
 
+MASTER LIVE-EDITOR FINDING 2026-11-23 (shared root cause; tree colour unjudgeable yet):
+The imported mergev2.scene renders as a flat uniform grey WALL (main-camera frame mean
+114.74, stddev 0.51, 0 coloured pixels, i.e. NO colour anywhere). Root cause is an opaque
+height-fog layer: importer UnitySceneExport.cs emits HeightColor "0.5,0.5,0.5,1" (alpha 1
+= FULL opacity per engine Fog.cs:172) with HeightOffset=0, occluding the whole frame. Verified
+by 28-variant in-editor ablation: fog OFF yields 132767 coloured pixels (a real scene);
+HeightColor.a 1->0 restores geometry (0->177 grey levels). Full evidence:
+scratch/taskmaster-nov22/visual/LIVE-EDITOR-FOG-DIAGNOSIS.md. Tree colour/greenness CANNOT
+be judged while the entire frame is a flat grey wash — the earlier verdict "likely downstream
+of lighting/fog" is now CONFIRMED as downstream of fog. Reassess this task AFTER the task 15
+fog fix with a fresh rendered frame that actually shows trees. Do not close on self-consistency.
 
 ## Clarification Q&A
 

@@ -75,6 +75,17 @@ Final answer in English.
 
 ## Notes
 
+MASTER LIVE-EDITOR FINDING 2026-11-23 (shared root cause; do NOT fix skybox independently yet):
+The imported mergev2.scene renders as a flat uniform grey WALL (main-camera frame mean
+114.74, stddev 0.51, 0 coloured pixels). Root cause is an opaque height-fog layer, NOT
+the skybox: importer UnitySceneExport.cs emits HeightColor "0.5,0.5,0.5,1" (alpha 1 = FULL
+opacity per engine Fog.cs:172) with HeightOffset=0, so the whole frame is occluded. Verified
+by 28-variant in-editor ablation: fog OFF reveals a dimly-lit building interior with bright
+windows to pale sky; HeightColor.a 1->0 restores geometry (0->177 grey levels). Full evidence:
+scratch/taskmaster-nov22/visual/LIVE-EDITOR-FOG-DIAGNOSIS.md. The "skybox doesn't match"
+symptom could not be judged while the scene was invisible; SkyMaterial bare-string premise
+was already FALSIFIED (engine-authored SkyBox2D uses the same bare string). Reassess this
+task AFTER the task 15 fog fix with a fresh rendered frame. Do not close on self-consistency.
 
 ## Clarification Q&A
 

@@ -81,6 +81,28 @@ Final answer in English.
 
 ## Notes
 
+MASTER LIVE-EDITOR FINDING 2026-11-23 — PREMISE FALSIFIED (mechanism + falsifier run):
+The investigation that created this task inferred "no active main camera -> flat/unrendered
+frame" from serialized JSON (only IsMainCamera=True camera under disabled /Setting root).
+Live-editor test DISPROVES that as the cause of the flat frame. In the Dev editor I rendered
+BOTH the scene main camera (camera_screenshot '{}') AND the active non-main "Japanese School
+Camera" (41ba4fe2-4e64-3b3a-baed-bdb1ed89f3f7): both frames are BYTE-IDENTICAL flat grey
+(md5 862da996...), mean 114.74, 0 coloured pixels. So camera designation changes nothing.
+The flat frame is an OPAQUE HEIGHT-FOG layer (see task 15 / LIVE-EDITOR-FOG-DIAGNOSIS.md).
+Falsifier (RUN, PASSED): disabling fog (or setting HeightColor.a 1->0) makes the SAME main
+camera render a full 3D building interior (132767 coloured pixels). Also both fog-off frames
+had identical md5 regardless of which camera was used.
+
+This does NOT mean the "inactive main camera" is faithful: Unity source MergeV2.unity has
+SIX cameras tagged MainCamera and the Setting root m_IsActive:0, so Enabled=False on /Setting
+is faithful to Unity; the real issue is that Unity's ACTIVE "Japanese School Camera" is left
+IsMainCamera=False by UnityPrefabExport.cs:MainCamera() (:922-937), which skips only a
+camera's OWN m_IsActive:0, not the ancestor chain. That is a genuine but SEPARATE objective
+data defect worth its own headless check; it is NOT the cause of the flat/grey mismatch.
+Sequencing: do NOT "fix the camera" to address a visual symptom that fog causes. Reassess
+this task AFTER the task 15 fog fix with a fresh rendered frame; decide closure based on
+whether the main-camera designation defect is real and in-scope, not on self-consistency.
+Evidence: scratch/taskmaster-nov22/visual/LIVE-EDITOR-FOG-DIAGNOSIS.md.
 
 ## Clarification Q&A
 
@@ -110,6 +132,20 @@ oracle evidence and falsified several premises (folded into tasks 16, 17, 19); `
 (task 14/18 research) found a confirmed placement root cause (folded into task 14). All three
 were truncated at the iteration cap.
 
+
+MASTER READ-ONLY FINDING 2026-11-23 (mechanism located; fix NOT yet written): `IsMainCamera` is assigned by
+`Editor/Core/UnityPrefabExport.cs:MainCamera()` at `:922-937`, called at `:914` and used at `:1496`
+(`UnitySceneExport.Camera(..., component.Id == mainCamera)`). `MainCamera()` skips a camera only when its OWN
+GameObject has `m_IsActive: 0` (`:929-931`); it does NOT check the ancestor chain. Verification against the
+Unity source `.../Scenes/MergeV2.unity`: SIX cameras are tagged `m_TagString: MainCamera` (lines 7567, 155740,
+188683, 200401, 206671, 297015 = "Main Camera (4)/(3)/(2)/Main Camera/(1)" and "Japanese School Camera").
+Their `Setting` root is `m_IsActive: 0` (`:319087`), which the importer faithfully emits as `Enabled=False`, so
+the five "Main Camera" children are effectively inactive in s&box too, yet one is designated main. The active
+`Japanese School Camera` (under the enabled `JapaneseSchoolSettings` root) is left `IsMainCamera=False`.
+This is a candidate root cause, NOT a confirmed defect: the named falsifier in the task (PLAY-mode frame with
+`Setting` enabled or main reassigned to the active camera) has NOT been run. A task-20 code fix must be sequenced
+AFTER task 14 is committed, because `MainCamera()` lives in the SAME file task 14 modifies
+(`UnityPrefabExport.cs`) and an edit now would invalidate task 14's reviewed Tree hash.
 
 ## Stylistic Task Notes:
 References to variables like X and Y automatically imply that these are to be exposed properties for developer tweaking.
