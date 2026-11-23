@@ -299,11 +299,12 @@ internal static class UnitySceneExport
 		if ( environment.Fog is UnityVolume.Fog volumeFog )
 		{
 			// HDRP's exponential fog is an extinction with a 63 % attenuating distance, which is exactly
-			// Sandbox.Fog's exponential mode; the height ramp is HDRP's fogBaseHeight/attenuation pair.
-			var height = volumeFog.BaseHeight != 0 || volumeFog.HeightAttenuation > 0 || volumeFog.MaximumHeight > 0;
-			var heightLength = volumeFog.MaximumHeight > volumeFog.BaseHeight
-				? volumeFog.MaximumHeight - volumeFog.BaseHeight
-				: volumeFog.HeightAttenuation > 0 ? 1 / volumeFog.HeightAttenuation : 50;
+			// Sandbox.Fog's exponential mode; that is the faithful mapping. Never copy the Unity fog
+			// colour's alpha into HeightColor: Fog.cs:172-175 makes HeightColor.a the height layer's
+			// maximum opacity (independent of distance fog), while Fog.cs:184-187 says the distance
+			// Color.a is ignored. Unity's a:1 is a colour swatch, not an authored opacity, and HDRP's
+			// height ramp is a density modifier with no s&box opacity counterpart, so emitting it
+			// produced a fully opaque grey wall over the whole frame.
 			result.Information.Add( volumeFog.Note );
 			objects.Add( SceneObject( $"{c.Key}:fog", "Fog", "", Component( "Sandbox.Fog", StableGuid( $"{c.Key}:fog:component" ), true, new()
 			{
@@ -314,12 +315,7 @@ internal static class UnitySceneExport
 				["DistanceRange"] = FogDistanceRange( 0, volumeFog.Distance * UnitsPerMetre ),
 				["FalloffExponent"] = 1,
 				["FogEnabled"] = true,
-				["HeightColor"] = Colour( volumeFog.Colour ),
-				["HeightColorSource"] = "Constant",
-				["HeightEnabled"] = height,
-				["HeightExponent"] = 1,
-				["HeightGradientLength"] = Single( heightLength * UnitsPerMetre ),
-				["HeightOffset"] = Single( volumeFog.BaseHeight * UnitsPerMetre ),
+				["HeightEnabled"] = false,
 				["MaximumOpacity"] = 1,
 				["Mode"] = "Exponential",
 				["StartDistance"] = 0

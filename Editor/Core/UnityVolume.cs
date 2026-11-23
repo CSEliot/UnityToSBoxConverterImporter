@@ -397,8 +397,8 @@ internal static class UnityVolume
 			motion.Fog = new( colour, skyColour, distance, baseHeight, attenuation, maximumHeight, legacy,
 				"HDRP's exponential fog becomes Sandbox.Fog's exponential mode: AttenuationDistance is its fog distance in engine units and the colour is read as authored (linear)." +
 				(legacy ? " ExponentialFog is deprecated in HDRP 17 but is the only fog record in the profile." : "") +
-				(fogType == FogVolumetric || Value( source, "enableVolumetricFog" ) == "1" ? " Volumetric fog is not reproduced; only distance and height fog are." : "") +
-				(attenuation > 0 || maximumHeight > 0 ? " Height fog maps to Sandbox.Fog's height ramp, a different falloff curve." : "") );
+				(fogType == FogVolumetric || Value( source, "enableVolumetricFog" ) == "1" ? " Volumetric fog is not reproduced; only exponential distance fog is emitted." : "") +
+				(attenuation > 0 || maximumHeight > 0 ? " HDRP height fog (baseHeight / attenuation / maximumHeight) is not reproduced: s&box's HeightColor alpha is a full height-fog opacity with no authored Unity counterpart." : "") );
 		}
 
 		// Exposure lives in the Volume, not in HDAdditionalCameraData, which has no exposure field at all.
