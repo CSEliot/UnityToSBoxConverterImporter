@@ -257,6 +257,30 @@ internal static class UnitySceneExport
 		result.Information.AddRange( environment.Information );
 		// Exposure is a Volume override, so its EV range belongs to the scene's report, not to a camera.
 		if ( environment.Exposure != null ) result.Information.Add( environment.Exposure.Note );
+		// DirectionalLight.SkyColor is the ambient sky contribution (DirectionalLight.cs:16-21). Unity keeps
+		// it in RenderSettings or an HDRP Volume, never on the light block, so carry that source-derived
+		// colour into every generated directional light (including lights added to prefab instances).
+		string sceneSkyColour = environment.Ambient != null ? Colour( environment.Ambient ) : null;
+		if ( sceneSkyColour == null && c.Blocks.FirstOrDefault( b => b.Type == "104" ) is Block skyRender )
+		{
+			var ambient = Scalar( skyRender.Body, "m_AmbientIntensity" ).Length == 0 ? 1 : Number( skyRender.Body, "m_AmbientIntensity" );
+			sceneSkyColour = Colour( Vector( skyRender.Body, "m_AmbientSkyColor", "r", "g", "b" ).Select( v => Linear( v ) * ambient ) );
+		}
+		if ( sceneSkyColour != null )
+		{
+			void SkyColour( JsonNode node )
+			{
+				if ( node is JsonObject obj )
+				{
+					if ( obj["__type"]?.GetValue<string>() == "Sandbox.DirectionalLight" ) obj["SkyColor"] = sceneSkyColour;
+					foreach ( var property in obj.ToArray() )
+						if ( property.Value is { } child && ( child is JsonObject || child is JsonArray ) ) SkyColour( child );
+				}
+				else if ( node is JsonArray array )
+					foreach ( var child in array.ToArray() ) SkyColour( child );
+			}
+			foreach ( var node in objects.ToArray() ) SkyColour( node );
+		}
 		if ( environment.Sky is UnityVolume.Sky volumeSky )
 		{
 			result.Information.Add( volumeSky.Note );
@@ -287,6 +311,7 @@ internal static class UnitySceneExport
 				["Color"] = Colour( volumeFog.Colour ),
 				["ColorSource"] = volumeFog.SkyColour ? "SceneSky" : "Constant",
 				["DistanceEnabled"] = true,
+				["DistanceRange"] = FogDistanceRange( 0, volumeFog.Distance * UnitsPerMetre ),
 				["FalloffExponent"] = 1,
 				["FogEnabled"] = true,
 				["HeightColor"] = Colour( volumeFog.Colour ),
@@ -344,6 +369,7 @@ internal static class UnitySceneExport
 					["Color"] = Colour( Vector( render.Body, "m_FogColor", "r", "g", "b" ).Select( Linear ) ),
 					["ColorSource"] = "Constant",
 					["DistanceEnabled"] = true,
+					["DistanceRange"] = FogDistanceRange( Math.Max( 0, start ), attenuation ),
 					["FalloffExponent"] = 1,
 					["FogEnabled"] = true,
 					["HeightEnabled"] = false,
@@ -556,10 +582,30 @@ internal static class UnitySceneExport
 
 	// ---- components ----------------------------------------------------------------------------------------------
 
+	/// <summary>
+	/// Current engine component versions, from Sandbox.Engine/Scene/Components (Light.cs:18, Fog.cs:34,
+	/// EnvmapProbe.Upgrade.cs:7, Bloom.cs:110, Tonemapping.cs:101, AmbientOcclusion.cs:16). Components
+	/// absent from this table have version 0 and the editor writes no __version key for them.
+	/// </summary>
+	static readonly IReadOnlyDictionary<string, int> ComponentVersions = new Dictionary<string, int>( StringComparer.Ordinal )
+	{
+		["Sandbox.AmbientOcclusion"] = 1,
+		["Sandbox.Bloom"] = 1,
+		["Sandbox.DirectionalLight"] = 1,
+		["Sandbox.EnvmapProbe"] = 1,
+		["Sandbox.Fog"] = 1,
+		["Sandbox.PointLight"] = 1,
+		["Sandbox.SpotLight"] = 1,
+		["Sandbox.Tonemapping"] = 3,
+	};
+
 	/// <summary>A component as the editor writes one: header keys, then every property and callback in name order.</summary>
 	internal static JsonObject Component( string type, Guid id, bool enabled, Dictionary<string, JsonNode> properties )
 	{
 		var component = new JsonObject { ["__type"] = type, ["__guid"] = id.ToString(), ["__enabled"] = enabled, ["Flags"] = 0 };
+		// Emit the version the engine currently authors, so a generated component is never fed through
+		// the JsonUpgrader chain (Fog's v1 upgrader, for instance, rewrites StartDistance/EndDistance).
+		if ( ComponentVersions.TryGetValue( type, out var version ) ) component["__version"] = version;
 		foreach ( var callback in new[] { "OnComponentDestroy", "OnComponentDisabled", "OnComponentEnabled", "OnComponentFixedUpdate", "OnComponentStart", "OnComponentUpdate" } ) properties[callback] = null;
 		foreach ( var (key, value) in properties.OrderBy( p => p.Key, StringComparer.Ordinal ) ) component[key] = value;
 		return component;
@@ -572,6 +618,13 @@ internal static class UnitySceneExport
 
 	/// <summary>r,g,b,a with five decimals, enough for a colour and stable across platforms.</summary>
 	static string Colour( IEnumerable<double> rgb ) => Join( rgb.Select( v => Math.Round( v, 5 ) ).Append( 1 ).ToArray() );
+
+	/// <summary>
+	/// Fog's current DistanceRange (Fog.cs:96). The importer emits exponential fog, where AttenuationDistance
+	/// removes ~63% and three of them ~95%; carrying the start and that endpoint makes the vector meaningful
+	/// if an editor user switches modes, and keeps Fog's v1 upgrader from rewriting the component on load.
+	/// </summary>
+	static string FogDistanceRange( double start, double attenuation ) => Join( new[] { start, start + 3 * attenuation } );
 
 	/// <summary>Unity 6000.3 Mathf.CorrelatedColorTemperatureToRGB sampled every 500 K (fewer steps above 10000 K):
 	/// kelvin, r, g, b. Linear interpolation stays within 0.009 of Unity. Not linearised: Unity multiplies the
@@ -643,11 +696,15 @@ internal static class UnitySceneExport
 	internal static JsonObject AudioListener( Guid id, bool enabled ) => Component( "Sandbox.AudioListener", id, enabled, new() { ["UseCameraDirection"] = true } );
 
 	/// <summary>Unity Light (class 108): directional, point and spot lights. Unity (linear colour space, as every URP
-	/// project) lights with linear(m_Color) × colour temperature × intensity; s&amp;box carries the intensity in
-	/// the colour's magnitude. Point and spot brightness is approximate: Unity's intensity is a unit-based
-	/// multiplier, s&amp;box attenuates the colour over Radius. An HDRP light takes its intensity from
-	/// HDAdditionalLightData through <see cref="UnityHdrpLighting"/>; <paramref name="hd"/> is that component's
-	/// body, or null for a non-HDRP light. Area lights return null.
+	/// project) lights with linear(m_Color) × colour temperature as the tint, and keeps m_Intensity as a
+	/// SEPARATE multiplier: Light.cs:144-172,204-223 applies rendered = LightColor * Intensity *
+	/// normalized Temperature. The importer therefore writes the tint into LightColor and the source
+	/// intensity into Intensity instead of folding brightness into the colour string. Point and spot
+	/// brightness is approximate: Unity's intensity is a unit-based multiplier, s&amp;box attenuates the
+	/// colour over Radius. An HDRP light takes its intensity from HDAdditionalLightData through
+	/// <see cref="UnityHdrpLighting"/>; <paramref name="hd"/> is that component's body, or null for a
+	/// non-HDRP light. Area lights return null. The colour temperature stays baked into the tint so the
+	/// engine's 6500 K neutral default does not apply the curve twice.
 	/// </summary>
 	internal static JsonObject Light( Guid id, string body, string hd, bool enabled, out string tag, out UnityHdrpLighting.Converted converted )
 	{
@@ -661,7 +718,10 @@ internal static class UnitySceneExport
 		var intensity = converted.Hdrp && !converted.ReportOnly
 			? converted.Intensity
 			: Scalar( body, "m_Intensity" ).Length == 0 ? 1 : Number( body, "m_Intensity" );
-		var lightColour = Colour( colour.Select( v => v * intensity ) );
+		// The engine setter clamps non-finite intensity to 1 and negative to 0 (Light.cs:166); match it here
+		// so the serialized value is the one the editor will show, not a value that changes on load.
+		var brightness = double.IsFinite( intensity ) ? Math.Max( 0, intensity ) : 1;
+		var lightColour = Colour( colour );
 		var shadows = Regex.Match( body, @"(?ms)^\s*m_Shadows:\s*\r?\n\s*m_Type:\s*([0-9]+)" ) is { Success: true } shadow && shadow.Groups[1].Value != "0";
 		var radius = Single( Number( body, "m_Range" ) * UnitsPerMetre );
 		switch ( type )
@@ -670,13 +730,16 @@ internal static class UnitySceneExport
 				tag = "light_directional,light";
 				return Component( "Sandbox.DirectionalLight", id, enabled, new()
 				{
-					["FogMode"] = "Enabled", ["FogStrength"] = 1, ["LightColor"] = lightColour, ["Shadows"] = shadows, ["SkyColor"] = "0,0,0,0"
+					["FogMode"] = "Enabled", ["FogStrength"] = 1, ["Intensity"] = Single( brightness ), ["LightColor"] = lightColour, ["Shadows"] = shadows,
+					// Prefab-only conversions have no scene ambient to borrow; the sun's own tint is the
+					// source-derived sky contribution. Scene conversion overwrites it with the ambient colour.
+					["SkyColor"] = lightColour
 				} );
 			case 2:
 				tag = "light_point,light";
 				return Component( "Sandbox.PointLight", id, enabled, new()
 				{
-					["Attenuation"] = 1, ["FogMode"] = "Enabled", ["FogStrength"] = 1, ["LightColor"] = lightColour, ["Radius"] = radius, ["Shadows"] = shadows
+					["Attenuation"] = 1, ["FogMode"] = "Enabled", ["FogStrength"] = 1, ["Intensity"] = Single( brightness ), ["LightColor"] = lightColour, ["Radius"] = radius, ["Shadows"] = shadows
 				} );
 			default:
 				tag = "light_spot,light";
@@ -688,7 +751,7 @@ internal static class UnitySceneExport
 					: Scalar( body, "m_InnerSpotAngle" ).Length == 0 ? outer * 0.75 : Math.Clamp( Number( body, "m_InnerSpotAngle" ) / 2, 0, outer );
 				return Component( "Sandbox.SpotLight", id, enabled, new()
 				{
-					["Attenuation"] = 1, ["ConeInner"] = Single( inner ), ["ConeOuter"] = Single( outer ), ["FogMode"] = "Enabled", ["FogStrength"] = 1,
+					["Attenuation"] = 1, ["ConeInner"] = Single( inner ), ["ConeOuter"] = Single( outer ), ["FogMode"] = "Enabled", ["FogStrength"] = 1, ["Intensity"] = Single( brightness ),
 					["LightColor"] = lightColour, ["Radius"] = radius, ["Shadows"] = shadows
 				} );
 		}
