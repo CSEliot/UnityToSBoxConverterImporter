@@ -917,18 +917,27 @@ internal static class UnityPrefabExport
 		/// <summary>The mirror a file's root starts under: the variant's axis, or none.</summary>
 		int[] RootMirror => MirrorAxis < 0 ? NoMirror : Enumerable.Range( 0, 3 ).Select( i => i == MirrorAxis ? -1 : 1 ).ToArray();
 
-		/// <summary>The camera that becomes s&amp;box's main camera: enabled on an active object, tagged MainCamera
-		/// before untagged, the highest Unity depth before lower ones, then file order.</summary>
+		/// <summary>The camera that becomes s&amp;box's main camera: enabled on an object active all the way up
+		/// to the root, tagged MainCamera before untagged, the highest Unity depth before lower ones,
+		/// then file order.</summary>
 		long MainCamera()
 		{
 			Block best = null;
 			var bestTagged = false;
 			double bestDepth = 0;
+			// Unity's Camera.main ignores a camera under an inactive ancestor, not just one on an inactive
+			// object. Walk the ParentOf chain already baked for this file; the seen set stops parent cycles.
+			bool ActiveChain( long objectId )
+			{
+				for ( var (id, seen) = (objectId, new HashSet<long>()); id != 0 && seen.Add( id ); id = ParentOf.GetValueOrDefault( id ) )
+					if ( ById.GetValueOrDefault( id ) is Block ancestor && Scalar( ancestor.Body, "m_IsActive" ) == "0" ) return false;
+				return true;
+			}
 			foreach ( var camera in Blocks.Where( b => b.Type == "20" && !b.Stripped ) )
 			{
 				if ( Scalar( camera.Body, "m_Enabled" ) == "0" ) continue;
 				var go = ById.GetValueOrDefault( IdOf( Field( camera.Body, "m_GameObject" ) ) );
-				if ( go == null || Scalar( go.Body, "m_IsActive" ) == "0" ) continue;
+				if ( go == null || !ActiveChain( go.Id ) ) continue;
 				var tagged = Scalar( go.Body, "m_TagString" ) == "MainCamera";
 				var depth = Number( camera.Body, "m_Depth" );
 				if ( best == null || tagged && !bestTagged || tagged == bestTagged && depth > bestDepth ) { best = camera; bestTagged = tagged; bestDepth = depth; }

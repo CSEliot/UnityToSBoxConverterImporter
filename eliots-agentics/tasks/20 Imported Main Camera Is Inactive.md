@@ -1,4 +1,4 @@
-## Status: STARTED? NO! CLARIFIED? YES! HISTORY? YES! REVIEWED? NO! DONE? NO! WORKER: NONE OTHER: NEW task from 2026-11-23 subagent differential-ablation investigation, per Director bedtime item 4
+## Status: STARTED? YES! CLARIFIED? YES! HISTORY? YES! REVIEWED? YES! DONE? YES! WORKER: sa-1-cfcbe5b6 OTHER: reviewed 16:36 no further changes; MainCamera() now walks the ParentOf ancestor chain so IsMainCamera=True lands on the ACTIVE Japanese School Camera, matching Unity Camera.main; 6 gates PASS; separate headless data defect (NOT the flat-frame cause)
 
 ## Task
 The imported scene has no active main camera.
@@ -78,6 +78,15 @@ Final answer in English.
 
 ### Work Review
 
+2026-11-23 16:36 - Verdict: no further changes
+
+1. [High] ROOT CAUSE FIXED CORRECTLY — `Editor/Core/UnityPrefabExport.cs:923-946`: `ActiveChain(go.Id)` begins at the camera's own GameObject (so the old self `m_IsActive:0` rejection is preserved) then walks the file's already-baked `ParentOf` map (GameObject fileID -> parent GameObject fileID, built at :143 and :901) with a `HashSet` cycle guard and `id != 0` root stop. This faithfully implements Unity's `Camera.main` eligibility rule that a camera under an inactive ancestor does not count, without altering Unity's own faithful `Enabled=False` on `/Setting`. Fix: none required.
+2. [High] DEFECT CONFIRMED RESOLVED ON DISK — generated scene `after/oldschool/imported/assetstoreoriginals/school/scenes/mergev2.scene`, independently re-censused: `/Setting/Main Camera (4)` is now `IsMainCamera=False` (ancestor `/Setting` Enabled=False), and `/JapaneseSchoolSettings/Japanese School Camera` is now `IsMainCamera=True` (own Enabled=True, ancestor `/JapaneseSchoolSettings` Enabled=True). Exactly one MAIN camera and it is ACTIVE; all six cameras retain priority=1/clear=All, so only the designation moved. Fix: none required.
+3. [Medium] TIE-BREAKS AND SCOPE PRESERVED — `Editor/Core/UnityPrefabExport.cs:943`: the selection condition (tagged before untagged, highest `m_Depth`, then file order) is byte-identical to HEAD. Verified gates: whole-tree `--scenes` diff is exactly two `IsMainCamera` flips in one file; building 24/24 and city--1 1166/1166 byte-identical to baseline; harness build 0 Warning(s)/0 Error(s); verify_output 874 files/0 problems; two runs byte-identical; BOM scan 25 files/0; no stray artifacts. Fix: none required.
+4. [Low] HONESTY / OUT OF SCOPE — task-file Notes and `Testing/Unity-Screenshot.png`: the Worker correctly claims no visual result. The separate Unity reference screenshot (well-lit classroom, no fog) is NOT this task's concern, and the flat/grey frame remains task 15's fog issue (commit e9e71cf); this review judges only the headless data defect. Fix: none required; do not record this designation fix as a visual fix.
+
+Tree:
+`git hash-object --path=Editor/Core/UnityPrefabExport.cs Editor/Core/UnityPrefabExport.cs` -> 83d6a618df39bc8b2c753e223b695f16d337b96a
 
 ## Notes
 
@@ -103,6 +112,72 @@ Sequencing: do NOT "fix the camera" to address a visual symptom that fog causes.
 this task AFTER the task 15 fog fix with a fresh rendered frame; decide closure based on
 whether the main-camera designation defect is real and in-scope, not on self-consistency.
 Evidence: scratch/taskmaster-nov22/visual/LIVE-EDITOR-FOG-DIAGNOSIS.md.
+
+TASK 20 CODE FIX 2026-11-23 (worker; headless gates only, NO visual claim). PLAN: isolate a scratch tree;
+archive a fresh baseline from the task-specified HEAD b686595; build the .NET 10 harness against that
+snapshot and against the working tree; capture a pre-fix --scenes census; change ONLY
+`Editor/Core/UnityPrefabExport.cs:MainCamera()`; rebuild; re-run the same gates; append evidence here.
+MECHANISM: the old test rejected a camera only when its OWN GameObject had `m_IsActive: 0`. The file already
+has the ancestor map `Converter.ParentOf` (GameObject fileID -> parent GameObject fileID, baked by
+`BakedChains` at :133-160; field at :831) and the walk idiom with a `HashSet` cycle guard at :368-375.
+`MainCamera()` now walks that existing map from the camera's own GameObject up to the root via a local
+`ActiveChain()` and rejects the camera if ANY object in the chain has `m_IsActive: 0`. Tie-breaks are
+untouched (tagged MainCamera before untagged, highest `m_Depth`, then file order). With Unity's six
+MainCamera-tagged cameras under the disabled `/Setting` root, all five "Main Camera" children are skipped;
+the ACTIVE `/JapaneseSchoolSettings/Japanese School Camera` (also tagged MainCamera in Unity) now wins.
+SCOPE HONESTY: this is a data fix for PLAY-mode camera designation only. It is NOT a visual fix and did not
+change the flat grey frame; that cause is the fog layer (task 15). No screenshot was captured in this task.
+
+GATES (exact numbers; all PASS):
+1) Harness build with `IUP_ROOT=<project root>`: 0 Warning(s) / 0 Error(s) (also 0/0 for the b686595 snapshot
+   build). `evidence/harness-build-AFTER.txt`, `evidence/harness-build-head.txt`.
+2) No --scenes regression vs a fresh b686595 HEAD baseline (`diff -r --strip-trailing-cr`): building.unitypackage
+   24/24 files, 0 diff lines; city--1.unitypackage 1166/1166 files, 0 diff lines.
+   `evidence/after-building-vs-HEAD.diff`, `evidence/after-city-vs-HEAD.diff`.
+3) ONE --scenes run of `Testing/old_school_project.unitypackage` (fixed build): 2150 output files. Whole-tree
+   diff against the pre-fix run of the same source: 9 diff lines, exactly ONE differing file
+   (`.../scenes/mergev2.scene`), exactly TWO changed fields, both `IsMainCamera` (line 407 true->false on
+   `/Setting/Main Camera (4)`; line 127897 false->true on `/JapaneseSchoolSettings/Japanese School Camera`).
+   `evidence/oldschool-whole-tree.diff`, `evidence/oldschool-differing-files.txt`.
+4) `verify_output.py <outRoot> <outRoot>/imported`: `checked 874 files, 0 problems`.
+   `evidence/verify_output_AFTER.log`.
+5) Determinism: two identical fixed-code --scenes runs, 2150 files each, `diff -r --strip-trailing-cr` = 0 lines.
+   `evidence/determinism.diff`.
+6) BOM scan of `Editor/Core/*.cs`: 25 files scanned, 0 BOM files. `evidence/bom-scan.txt`. No artifacts created
+   in the repo; the only untracked file in the final status (`eliots-agentics/tasks/oracle-check-screenshot.md`,
+   mtime Nov 22 00:56) predates and is unrelated to this task. `evidence/git-status.txt`, `evidence/code-fix.diff`.
+
+EXACT CAMERA CENSUS (ACTIVE = own Enabled AND all ancestors Enabled; source
+`evidence/camera-census-BEFORE.txt` / `evidence/camera-census-AFTER.txt`):
+BEFORE:
+  INACTIVE nonmain /Setting/Main Camera                              priority=1 clear=All
+  INACTIVE nonmain /Setting/Main Camera (1)                          priority=1 clear=All
+  INACTIVE nonmain /Setting/Main Camera (2)                          priority=1 clear=All
+  INACTIVE nonmain /Setting/Main Camera (3)                          priority=1 clear=All
+  INACTIVE MAIN    /Setting/Main Camera (4)                          priority=1 clear=All  <-- only main, inactive
+  ACTIVE   nonmain /JapaneseSchoolSettings/Japanese School Camera    priority=1 clear=All
+AFTER:
+  INACTIVE nonmain /Setting/Main Camera                              priority=1 clear=All
+  INACTIVE nonmain /Setting/Main Camera (1)                          priority=1 clear=All
+  INACTIVE nonmain /Setting/Main Camera (2)                          priority=1 clear=All
+  INACTIVE nonmain /Setting/Main Camera (3)                          priority=1 clear=All
+  INACTIVE nonmain /Setting/Main Camera (4)                          priority=1 clear=All
+  ACTIVE   MAIN    /JapaneseSchoolSettings/Japanese School Camera    priority=1 clear=All  <-- main is active
+Camera positions, priorities, clear flags, Enabled flags and GUIDs are unchanged; only the designation moved.
+
+EVIDENCE root (absolute):
+C:/Users/Eliot/AppData/Local/hermes/profiles/hermes-sbox/cache/scratch/taskmaster-nov22/task20-fix/
+  evidence/camera_census.py, camera-census-BEFORE.txt, camera-census-AFTER.txt,
+  harness-build-head.txt, harness-build-preworking.txt, harness-build-AFTER.txt,
+  pre-building-vs-head.diff, pre-city-vs-head.diff,
+  after-building-vs-HEAD.diff, after-city-vs-HEAD.diff,
+  oldschool-whole-tree.diff, oldschool-differing-files.txt, verify_output_AFTER.log,
+  determinism.diff, bom-scan.txt, git-status.txt, code-fix.diff
+  head-source/ (fresh b686595 archive), base/ (HEAD baseline outputs),
+  pre/ (pre-fix outputs), after/ and after2/ (two fixed-code runs).
+HEAD moved mid-task (b686595 -> 27402a2: fog fix committed by the Master). Baseline and all gates above use
+the task-specified HEAD b686595 archived at task start; source bytes for UnitySceneExport.cs/UnityVolume.cs
+were identical before and after this edit, so the before/after camera diff isolates this change only.
 
 ## Clarification Q&A
 
@@ -146,6 +221,16 @@ This is a candidate root cause, NOT a confirmed defect: the named falsifier in t
 `Setting` enabled or main reassigned to the active camera) has NOT been run. A task-20 code fix must be sequenced
 AFTER task 14 is committed, because `MainCamera()` lives in the SAME file task 14 modifies
 (`UnityPrefabExport.cs`) and an edit now would invalidate task 14's reviewed Tree hash.
+
+WORKER HISTORY 2026-11-23: the confirmed data defect was fixed in `UnityPrefabExport.cs:MainCamera()` only —
+ancestor activation now uses the file's existing baked `ParentOf` map instead of a single-object check. All
+six regression gates passed (build 0/0; building 24/24 and city--1 1166/1166 byte-identical to a fresh
+b686595 HEAD baseline; one --scenes run with a whole-tree diff of only two `IsMainCamera` flips; verify_output
+874 files/0 problems; two runs byte-identical; 25 Editor/Core files/0 BOM). The exact census, mechanism,
+falsified visual premise and absolute evidence paths are appended to `## Notes` above. No commit, no push, no
+staging, no editor touch, no visual result claimed. Sequence note: task 14 is already committed (it landed
+before this edit), and HEAD advanced to 27402a2 mid-task with the independent fog fix; neither invalidates
+the isolated before/after comparison because both runs used the same source bytes apart from this fix.
 
 ## Stylistic Task Notes:
 References to variables like X and Y automatically imply that these are to be exposed properties for developer tweaking.
