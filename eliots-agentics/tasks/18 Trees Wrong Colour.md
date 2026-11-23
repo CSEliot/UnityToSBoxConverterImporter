@@ -85,6 +85,33 @@ be judged while the entire frame is a flat grey wash — the earlier verdict "li
 of lighting/fog" is now CONFIRMED as downstream of fog. Reassess this task AFTER the task 15
 fog fix with a fresh rendered frame that actually shows trees. Do not close on self-consistency.
 
+MASTER RENDERED VERIFICATION 2026-11-23 (task 15 fix landed; this task STILL cannot be judged):
+The opaque height-fog wall is CONFIRMED removed (rendered before/after: 0 -> 177 grey levels,
+geometry visible; six headless gates PASS; evidence visual/RENDERED-VERIFICATION.md). BUT the
+FIX frame shows an UNDER-ROOF INTERIOR (dark roof slab, columns, floor, bright window openings)
+and vision_analyze explicitly reports NO green trees, NO foliage, NO warm light — the frame is
+"essentially MONOCHROME GREY" with 37 coloured pixels. Even with MaximumOpacity 1->0.3 (which
+restores 123562 coloured pixels and a blue-grey sky) vision reports "No visible trees, people,
+green foliage" (11_fixed_max03_small.jpg). So NO rendered frame has yet shown a tree at all;
+tree colour/greenness remains UNJUDGEABLE. This is not a verdict. Two named residuals block it:
+(1) distance fog desaturation (shared with tasks 16/17, needs Director decision); (2) the camera
+is aimed at a dark interior, so a fresh frame that actually contains trees is required — likely
+after repositioning the editor camera or choosing another scene/camera. HONESTY CAVEAT: the live
+editor scene is STALE (mtime 02:09, predates all today's fixes) and carries editor-added fog
+fields; a re-import + reload is required before perceptual judgement of current output. No Unity
+reference render exists. Do NOT close this task on the shared-root-cause inference.
+
+MASTER ADDENDUM 16:10 — one blocker has a principled fix: engine Fog.cs:280-283 `SkyAffect`
+(default 1, "How strongly fog covers the sky") is not emitted, so distance fog covers the SKY
+with flat grey. Falsifier RUN: SkyAffect 1->0 restores 31846 coloured pixels and a blue-to-pale
+grey sky (vision_analyze confirmed) while KEEPING Unity's authored custom grey; it is an
+ENGINE-DEFINED knob, not a pinned magic opacity. Evidence: visual/skyaffect_probe.py,
+skyaffect_paths.json, RENDERED-VERIFICATION.md addendum. BUT even with that, vision_analyze of
+b_fixed_skyaffect0_small.jpg reports NO recognizable trees/foliage (only a tiny green patch),
+because the camera looks out of an interior. Blocker (2) stands: a frame that actually contains
+trees is required — likely a different scene camera or a repositioned editor camera. Tree colour
+remains UNJUDGEABLE; do not close.
+
 ## Clarification Q&A
 
 ANSWERED (Director, 2026-11-23 bedtime directive): "1. All those things we originally mentioned

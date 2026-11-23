@@ -87,6 +87,36 @@ symptom could not be judged while the scene was invisible; SkyMaterial bare-stri
 was already FALSIFIED (engine-authored SkyBox2D uses the same bare string). Reassess this
 task AFTER the task 15 fog fix with a fresh rendered frame. Do not close on self-consistency.
 
+MASTER RENDERED VERIFICATION 2026-11-23 (task 15 fix landed; NEW objective residual defect for THIS task):
+The opaque height-fog wall is CONFIRMED removed (rendered before/after: 0 -> 177 grey levels,
+geometry visible; six headless gates PASS; evidence visual/RENDERED-VERIFICATION.md). But the
+FIX frame is still "essentially MONOCHROME GREY" with a flat grey sky — only 37 coloured pixels.
+This is a SECOND, separable mechanism and it is the real cause of "skybox doesn't match":
+distance fog at MaximumOpacity=1 + ColorSource=Constant + Color 0.5 grey fogs the SKY/infinite
+distance to flat grey. Engine Fog.cs:181 sets ColorSource default = SceneSky (the sky is sampled,
+not replaced); the importer emits Constant because Unity authored colorMode 1 (custom grey) at
+VolumeSettings.asset:120-125. Falsifier RUN, on the live editor: MaximumOpacity 1->0.3 restores
+123562 coloured pixels and a muted blue-grey sky; ColorSource=SceneSky restores 128015 coloured
+pixels (visual/verify_fix.py, frames visual/*_CAM.jpg). So this is proven causal, not a guess.
+Fix tradeoff (needs Director decision, no Unity reference render exists): a bounded
+MaximumOpacity is a pinned magic value (Director forbids pinned values as oracle); SceneSky is
+the engine default (principled) but ignores Unity's authored custom grey. Do NOT close this task
+on the shared-root-cause inference; it needs a fresh rendered frame AFTER a re-import plus the
+Director's editor observation. Also note: the live editor scene is STALE (mtime 02:09, predates
+all today's fixes) and carries editor-added fog fields; no pixel-exact render of the clean
+generated output exists yet.
+
+MASTER ADDENDUM 16:10 — PRINCIPLED FIX FOUND (falsifier RUN, not a pinned value): engine
+Fog.cs:280-283 defines `SkyAffect` = "How strongly fog covers the sky", default 1; the importer
+does not emit it, so distance fog covers the SKY with flat grey. Holding the FIX values constant,
+SkyAffect 1->0 restores 31846 coloured pixels and a BLUE-TO-PALE-GREY SKY GRADIENT through the
+windows (vision_analyze confirmed), while KEEPING Unity's authored custom grey (ColorSource=
+Constant). SkyAffect=0 is an ENGINE-DEFINED knob, NOT a pinned magic opacity, so the earlier
+"pinned value vs discard authored colour" tradeoff is resolved: this residual has an objective,
+headless-justifiable fix. Evidence: visual/skyaffect_probe.py, skyaffect_paths.json,
+RENDERED-VERIFICATION.md addendum. This is a real fix target for THIS task — do not close until
+it (or a Director decision) lands and a fresh post-re-import frame shows the sky.
+
 ## Clarification Q&A
 
 ANSWERED (Director, 2026-11-23 bedtime directive): "1. All those things we originally mentioned

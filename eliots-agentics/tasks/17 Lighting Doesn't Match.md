@@ -106,6 +106,35 @@ objective fix and stays closed, but "lighting doesn't match" could not be visual
 while the scene was invisible. Reassess this task AFTER the task 15 fog fix with a fresh
 rendered frame. Do not close on self-consistency.
 
+MASTER RENDERED VERIFICATION 2026-11-23 (task 15 fix landed; residual findings for THIS task):
+The opaque height-fog wall is CONFIRMED removed (rendered before/after: 0 -> 177 grey levels,
+geometry visible; six headless gates PASS; evidence visual/RENDERED-VERIFICATION.md). But the
+FIX frame is still very dark and "essentially MONOCHROME GREY" (37 coloured pixels). Crucially,
+with fog FULLY OFF the scene is ALSO dark (mean 17.48), so the darkness is NOT caused by fog —
+it is a genuine lighting/exposure question and belongs to THIS task, not task 15. Falsifier RUN
+on the live editor (visual/verify_fix.py): MaximumOpacity 1->0.3 restores 123562 coloured pixels
+and a blue-grey sky, but the geometry stays "strongly underexposed" with "little visible material
+detail" (vision_analyze of 11_fixed_max03_small.jpg). So two separable residuals remain here:
+(1) distance fog at MaximumOpacity=1 + ColorSource=Constant + Color 0.5 grey desaturates the
+far field/sky (shared with task 16, needs Director decision — pinned value forbidden,
+SceneSky is engine default but ignores Unity's authored custom grey); (2) underexposure,
+independent of fog. The task 19 schema fix (Intensity/LightColor separation, SkyColor,
+__version, commit 3a548b7) is a real objective fix and stays closed. HONESTY CAVEAT: the live
+editor scene is STALE (mtime 02:09, predates ALL of today's fixes) and carries editor-added
+fog fields; the Director's editor is showing an old import, so NO perceptual judgement of the
+CURRENT importer output is possible until a re-import + reload. Re-importing fixed scenes into
+Assets/imported is gitignored and will not dirty the repo. Do NOT close on self-consistency.
+
+MASTER ADDENDUM 16:10 — PRINCIPLED FIX for residual (1): engine Fog.cs:280-283 `SkyAffect`
+("How strongly fog covers the sky", default 1) is not emitted by the importer, so distance fog
+covers the SKY with flat grey. Falsifier RUN: SkyAffect 1->0 restores 31846 coloured pixels and
+a blue-to-pale-grey sky gradient (vision_analyze confirmed) while KEEPING Unity's authored custom
+grey. It is an ENGINE-DEFINED knob, NOT a pinned magic opacity, so the earlier tradeoff is
+resolved. Evidence: visual/skyaffect_probe.py, skyaffect_paths.json, RENDERED-VERIFICATION.md
+addendum. Residual (2), the fog-independent underexposure, is still unexplained and is THIS
+task's remaining objective question — do not close until both are addressed and a fresh
+post-re-import frame is looked at.
+
 ## Clarification Q&A
 
 ANSWERED (Director, 2026-11-23 bedtime directive): "1. All those things we originally mentioned
