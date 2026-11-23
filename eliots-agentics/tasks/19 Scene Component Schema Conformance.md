@@ -1,4 +1,4 @@
-## Status: STARTED? NO! CLARIFIED? YES! HISTORY? YES! REVIEWED? NO! DONE? NO! WORKER: NONE OTHER: NEW task from 2026-11-23 subagent investigation; class-level objective defect, per Director bedtime item 4
+## Status: STARTED? YES! CLARIFIED? YES! HISTORY? YES! REVIEWED? NO! DONE? NO! WORKER: sa-0-bb00b315 OTHER: NEW task from 2026-11-23 subagent investigation; class-level objective defect, per Director bedtime item 4; implementer running
 
 ## Task
 Generated .scene component blocks do not conform to the engine's authored schema.
@@ -27,16 +27,26 @@ on the Dev build `.../1-Engine-Builds/Dev/sbox-public/game`.
 Known defects already identified (verify, do not assume these are the only ones):
 1. `Editor/Core/UnitySceneExport.cs:673` hardcodes `["SkyColor"] = "0,0,0,0"` for EVERY
    generated `Sandbox.DirectionalLight`.
-2. Generated directional lights emit NO `Intensity` key; intensity is folded into `LightColor`
-   (`Light.LightColor` is documented "Tint multiplied by the light's intensity and color
-   temperature", `Light.Intensity` is a SEPARATE multiplier). This misuses the schema.
-3. Generated lights have NO `__version`. `Light.ComponentVersion` ("Versions light defaults so
-   existing scenes retain their original tint"), `UpgradeDirectionalLightTint` and
-   `UpgradeLegacyTint` mean an unversioned generated light is treated as legacy and can be
-   re-defaulted on load, so the value in the file is NOT what the editor displays.
+2. Generated directional lights emit NO `Intensity` key; intensity is folded into `LightColor`.
+   Engine source `.../Dev/sbox-public/engine/Sandbox.Engine/Scene/Components/Light/Light.cs:18,144-172,204-223`
+   proves `LightColor` and `Intensity` are SEPARATE serialized properties and rendered colour =
+   `LightColor * Intensity * normalized Temperature`; folding happens at `UnitySceneExport.cs:658-693`.
+   This is the real, headless-checkable schema misuse.
+3. Generated lights have NO `__version`. `Fog.cs:34-59` shows `Sandbox.Fog` is version 1 with an
+   upgrader that injects `DistanceRange` when absent, so a generated Fog with no `__version` and
+   no `DistanceRange` is MUTATED on load — falsifier: a generated Fog with `__version 1` and
+   `DistanceRange` surviving load unchanged. HOWEVER the "unversioned LIGHT re-defaults to black
+   tint" mechanism is FALSIFIED 2026-11-23: `Light.cs:35-45` upgraders only set `LightColor` when
+   MISSING (#E9FAFF), and generated lights already have it. Add `__version` for schema conformance
+   but do NOT claim it fixes a black-tint upgrade.
 4. Hardcoded sentinels elsewhere: `Sandbox.Fog` `ColorSource = Constant`,
-   `MaximumOpacity = 1`, `Color 0.5,0.5,0.5,1`; `SkyBox2D.SkyMaterial` written as a bare string
-   path instead of a resource object.
+   `MaximumOpacity = 1`, `Color 0.5,0.5,0.5,1`.
+   FALSIFIED 2026-11-23 (drop): `SkyBox2D.SkyMaterial` as a bare `.vmat` string is NOT a defect —
+   engine-authored scenes use the same bare string; only editor-resaved scenes use the object form.
+   FALSIFIED 2026-11-23 (drop): authored `LightColor` is NOT limited to 0..2 (directional reaches
+   3.96, point ~36.89); do not use that range as a gate.
+5. No authored `Sandbox.Fog` instance exists in either install's scenes/prefabs, so Fog key-set
+   comparison must rely on engine source (`Fog.cs`) plus XML docs, not an authored `.scene` sample.
 
 Required method:
 1. Enumerate EVERY `Sandbox.*` component type the exporter emits (grep the `Editor/Core/*.cs`

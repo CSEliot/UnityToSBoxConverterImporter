@@ -1,4 +1,4 @@
-## Status: STARTED? NO! CLARIFIED? YES! HISTORY? YES! REVIEWED? NO! DONE? NO! WORKER: NONE OTHER: fresh symptom task; split from investigated-only task 15 per Director bedtime instructions
+## Status: STARTED? YES! CLARIFIED? YES! HISTORY? YES! REVIEWED? NO! DONE? NO! WORKER: NONE OTHER: fresh symptom task; split from investigated-only task 15 per Director bedtime instructions; read-only differential ablation (sa-1-fbca556e) in flight
 
 ## Task
 Skybox doesn't match.
@@ -30,11 +30,12 @@ Required method:
       scene would produce a sky that does not match. Falsifier: read both source scenes' sky
       settings; if the importer emits a source-derived sky material/path instead of the constant,
       this mechanism is false.
-   b. `SkyMaterial` is written as a bare string path. Engine-authored `SkyBox2D` blocks store a
-      resource object (`{"Id":..., "Path":...}`) — see `references/engine-schema-conformance.md`
-      and the sbox-scene-prefab-inspection skill. A shape the engine does not deserialize is an
-      objective data defect, headless-checkable. Falsifier: diff the generated `SkyMaterial`
-      key/value shape against engine-authored `.scene` `SkyBox2D` blocks; if they match, false.
+   b. MASTER-VERIFIED FALSIFIED 2026-11-23 (do not pursue): `SkyMaterial` as a bare
+      `.vmat` string is NOT a defect. Engine-authored `SkyBox2D` blocks in both installs also
+      serialize it as a bare string; the `{"Id":...,"Path":...}` object form only appears in the
+      editor-resaved working-tree `mergev2.scene`. The clean-HEAD harness output and the working
+      city--1 scene both use the bare string. See scratch `research-diff/diffsummary.md:139-165`.
+      Falsifier was applied and this mechanism is FALSE; drop it from scope.
    c. `SkyIndirectLighting: true` and `Tint 1,1,1,1` are emitted for both scenes. In city--1 the
       2D Skybox lights materials and the scene renders fine; in MergeV2 it does not. Falsifier:
       compare the working city--1 `demo.scene` `SkyBox2D` block to MergeV2's; if the blocks are

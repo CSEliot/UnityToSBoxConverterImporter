@@ -1,4 +1,4 @@
-## Status: STARTED? NO! CLARIFIED? YES! HISTORY? YES! REVIEWED? NO! DONE? NO! WORKER: NONE OTHER: fresh symptom task; split from investigated-only task 15 per Director bedtime instructions
+## Status: STARTED? YES! CLARIFIED? YES! HISTORY? YES! REVIEWED? NO! DONE? NO! WORKER: NONE OTHER: fresh symptom task; split from investigated-only task 15 per Director bedtime instructions; read-only differential ablation (sa-1-fbca556e) in flight
 
 ## Task
 Lighting doesn't match.
@@ -35,17 +35,22 @@ Required method:
    `Light.LightColor`, `Light.ComponentVersion`, `UpgradeDirectionalLightTint`,
    `UpgradeLegacyTint`, `DirectionalLight.SkyColor`, `AmbientLight`.
 3. Candidate mechanisms (verify, do not assume):
-   a. OBJECTIVE DATA DEFECT: `Editor/Core/UnitySceneExport.cs:673` hardcodes
-      `["SkyColor"] = "0,0,0,0"` for EVERY generated directional light, emits no `Intensity`
-      key, emits no `__version`, and folds intensity INTO `LightColor`
-      (mergev2 sun `7.82938,4.77047,2.59516,1`; a value outside the authored 0..2 HDR range).
-      Engine-authored `__version: 1` lights carry `LightColor` (roughly 0..2), a separate
-      `Intensity` multiplier (1 preserves brightness), `Temperature`, `SkyColor`, `FogMode`,
-      `Shadows` and cascade fields. An unversioned generated light is treated as legacy on load
-      and can be re-defaulted by the engine upgrade path, so the file value is NOT what the
-      editor shows. Falsifier: diff the generated light block against an engine-authored
-      `__version: 1` `DirectionalLight`; if the key sets, `__version`, `Intensity` and
-      `SkyColor` all conform, this mechanism is false.
+   a. OBJECTIVE DATA DEFECT (verified against engine source): `Editor/Core/UnitySceneExport.cs:673`
+      hardcodes `["SkyColor"] = "0,0,0,0"` for EVERY generated directional light, emits no
+      `Intensity` key, and folds intensity INTO `LightColor` (mergev2 sun
+      `7.82938,4.77047,2.59516,1`). Engine source
+      `C:/cseliot/1-Development/1-SBox/1-Engine-Builds/Dev/sbox-public/engine/Sandbox.Engine/Scene/Components/Light/Light.cs:18,144-172,204-223`
+      proves `LightColor` and `Intensity` are SEPARATE serialized properties and rendered colour =
+      `LightColor * Intensity * normalized Temperature`; the folding occurs at
+      `UnitySceneExport.cs:658-693`. Falsifier: if generated `LightColor` equalled the source tint
+      with a sibling `Intensity` equal to source intensity and the product preserved, the defect
+      is gone. Two premises from this task's first draft were FALSIFIED 2026-11-23 and must NOT be
+      used: (i) authored `LightColor` is NOT limited to 0..2 — authored directional lights reach
+      3.96 and point lights ~36.89; (ii) `Light.ComponentVersion=1` upgraders
+      (`Light.cs:35-45`) only set `LightColor` when it is MISSING (#E9FAFF), and generated lights
+      already have `LightColor`, so the "unversioned light re-defaults to black tint on load"
+      mechanism is FALSE in this engine build. The separation of `Intensity` remains the real,
+      headless-checkable schema misuse.
    b. The engine upgrade path (`Light.ComponentVersion` "Versions light defaults so existing
       scenes retain their original tint") re-defaults unversioned lights. Falsifier: an
       unversioned generated light in an engine-authored scene that still displays its authored
