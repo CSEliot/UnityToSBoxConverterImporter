@@ -62,14 +62,21 @@ When nothing else exists, the Director's editor observation is the closing oracl
 
 The Master and vision-capable workers can SEE a rendered frame. "Headless" describes the import pipeline, not our ability to look at the result. A task whose symptom is visual must produce a screenshot and look at it; do not certify a rendered result from serialized JSON alone.
 
-Which bridge: the running editor may be the Dev checkout, not the Steam install. Check before capturing. `D:/SteamLibrary/steamapps/common/sbox/bin/managed/sbox-cli.exe --list` returned `[]` while the Dev editor was live. Use the CLI that belongs to the running editor:
+Which bridge: TWO s&box installs can host a live editor here, and each owns its own named-pipe
+bridge and CLI. Identify the live editor by its process CommandLine BEFORE choosing a CLI; `--list`
+on the wrong install's CLI returns `[]` even while the editor is up. Use the CLI from the install
+the editor launched from, for starting, closing, playing and screenshotting alike.
 
+  powershell -NoProfile -Command "Get-CimInstance Win32_Process | Where-Object { $_.Name -match 'sbox-dev' } | Select-Object ProcessId,CommandLine | Format-List"
+
+  STEAM="D:/SteamLibrary/steamapps/common/sbox/bin/managed/sbox-cli.exe"
   DEV="C:/cseliot/1-Development/1-SBox/1-Engine-Builds/Dev/sbox-public/game/bin/managed/sbox-cli.exe"
-  "$DEV" --list                                  # editor pid + project
-  "$DEV" --call editor_status '{}'               # ActiveScene, IsPlaying, SceneHasUnsavedChanges
-  "$DEV" --call editor_camera_screenshot '{}'    # prints the absolute PNG path
+  CLI=<whichever install matches the CommandLine>
+  "$CLI" --list                                  # editor pid + project; [] means wrong bridge
+  "$CLI" --call editor_status '{}'               # ActiveScene, IsPlaying, SceneHasUnsavedChanges
+  "$CLI" --call editor_camera_screenshot '{}'    # prints the absolute PNG path
 
-Before any capture, read `editor_status`. Do not save, play, or change the scene if `SceneHasUnsavedChanges` is true: that is the Director's live work. Position the view with `set_editor_camera` first. For a play-mode frame use `console_command '{"command":"screenshot_highres 1280 720"}'` and take the newest file under the engine's `screenshots/` directory; confirm freshness by timestamp, not `ls -t` alone. On Linux/Vulkan the plain `screenshot` command swaps red and blue; use `screenshot_highres` whenever colour matters.
+Before any capture, read `editor_status`. Do not save, play, or change the scene if `SceneHasUnsavedChanges` is true: that is the Director's live work. Position the view with `set_editor_camera` first. For a play-mode frame use `console_command '{"command":"screenshot_highres 1280 720"}'` and take the newest file under that install's `screenshots/` directory (`<install>/screenshots` for Steam, `<install>/game/screenshots` for Dev); confirm freshness by timestamp, not `ls -t` alone. On Linux/Vulkan the plain `screenshot` command swaps red and blue; use `screenshot_highres` whenever colour matters.
 
 Copy the PNG into the scratch directory immediately (the CLI's temp path is per-connection). Keep it out of the repo and cite its path in the task file's evidence. Large PNGs can time out in `vision_analyze`: downscale to a ~960x540 JPEG (about 10 KB) and load that with `vision_analyze`. Pass screenshots to workers and critics through `delegate_task(images=...)` so the pixels arrive with the turn; a child with `vision_analyze` can also load a path itself. State which you used.
 
