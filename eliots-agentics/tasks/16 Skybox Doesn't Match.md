@@ -1,4 +1,4 @@
-## Status: STARTED? YES! CLARIFIED? YES! HISTORY? YES! REVIEWED? NO! DONE? NO! WORKER: NONE OTHER: fresh symptom task; split from investigated-only task 15 per Director bedtime instructions; read-only differential ablation (sa-1-fbca556e) in flight
+## Status: STARTED? YES! CLARIFIED? YES! HISTORY? YES! REVIEWED? NO! DONE? NO! WORKER: NONE OTHER: fresh symptom task; split from investigated-only task 15; differential ablation report on disk (research-diff/differential-report.md); SkyMaterial bare-string premise FALSIFIED
 
 ## Task
 Skybox doesn't match.

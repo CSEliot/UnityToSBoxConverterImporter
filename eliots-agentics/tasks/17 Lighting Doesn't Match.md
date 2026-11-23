@@ -1,4 +1,4 @@
-## Status: STARTED? YES! CLARIFIED? YES! HISTORY? YES! REVIEWED? NO! DONE? NO! WORKER: NONE OTHER: fresh symptom task; split from investigated-only task 15 per Director bedtime instructions; read-only differential ablation (sa-1-fbca556e) in flight
+## Status: STARTED? YES! CLARIFIED? YES! HISTORY? YES! REVIEWED? NO! DONE? NO! WORKER: NONE OTHER: fresh symptom task; split from investigated-only task 15; differential report on disk; 3 falsified premises dropped from Description; Intensity/LightColor separation is the real fix (shared with task 19)
 
 ## Task
 Lighting doesn't match.

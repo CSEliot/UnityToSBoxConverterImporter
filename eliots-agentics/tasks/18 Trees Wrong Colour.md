@@ -1,4 +1,4 @@
-## Status: STARTED? YES! CLARIFIED? YES! HISTORY? YES! REVIEWED? NO! DONE? NO! WORKER: NONE OTHER: fresh symptom task; split from investigated-only task 15 per Director bedtime instructions; read-only tree-colour probes (sa-2-32793b5e) in flight
+## Status: STARTED? YES! CLARIFIED? YES! HISTORY? YES! REVIEWED? NO! DONE? NO! WORKER: NONE OTHER: fresh symptom task; split from investigated-only task 15; probes-report.md on disk; all tree-colour mechanisms UNTESTED (no verdict); assets located; likely downstream of lighting/fog
 
 ## Task
 The trees aren't the correct color.

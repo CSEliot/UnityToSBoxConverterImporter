@@ -1,4 +1,4 @@
-## Status: STARTED? YES! CLARIFIED? YES! HISTORY? YES! REVIEWED? NO! DONE? NO! WORKER: NONE OTHER: fresh symptom task; reopened 2026-11-23 per Director bedtime instructions; read-only placement research (sa-2-32793b5e) in flight
+## Status: STARTED? YES! CLARIFIED? YES! HISTORY? YES! REVIEWED? NO! DONE? NO! WORKER: sa-0-e185acdc OTHER: fresh symptom task; reopened 2026-11-23; CONFIRMED root cause (17 nested prefabs at origin) in Description; fix worker running
 
 ## Task
 Too many objects are misplaced.

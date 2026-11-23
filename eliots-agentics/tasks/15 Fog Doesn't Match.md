@@ -1,4 +1,4 @@
-## Status: STARTED? YES! CLARIFIED? YES! HISTORY? YES! REVIEWED? NO! DONE? NO! WORKER: NONE OTHER: fresh symptom task; split from investigated-only task 15 per Director bedtime instructions; read-only differential ablation (sa-1-fbca556e) in flight
+## Status: STARTED? YES! CLARIFIED? YES! HISTORY? YES! REVIEWED? NO! DONE? NO! WORKER: NONE OTHER: fresh symptom task; split from investigated-only task 15; differential report on disk; fog wash (MaximumOpacity 1 / Constant grey 0.5) is strongest candidate; baseline frame is 3 grey levels, not empty
 
 ## Task
 Fog in sbox doesn't match unity fog (is there one in the unity scene?).
