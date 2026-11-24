@@ -1,4 +1,4 @@
-## Status: STARTED? NO! CLARIFIED? NO! HISTORY? NO! REVIEWED? NO! DONE? NO! WORKER: {subagent_id} OTHER: {state here}
+## Status: STARTED? NO! CLARIFIED? YES! HISTORY? YES! REVIEWED? NO! DONE? NO! WORKER: NONE OTHER: kickoff 2026-11-25; batch 02 answered; baseline c91e87b
 
 ## Task
 Imported objects wrong/missing in transform.
@@ -37,12 +37,21 @@ Unity project we're importing: C:\cseliot\1-Development\4-Unity\2-Projects\old_s
 
 ## Notes
 
+Master plan (2026-11-25): symptom task - Flowerbeds_03_LOD00 and Floor_03 missing from the s&box export; Restroom_Floor_02 and Outdoor_Floor_01 in the wrong location; "the collider is much more correct". Phase 1 read-only diagnosis: resolve each named object in the Unity YAML and in the generated .prefab/.scene, including its activation chain and transform basis, and identify ONE candidate mechanism per symptom with a named falsifying observation. Phase 2 one implementer on Editor/Core with a HEAD baseline diff, the harness gate and an independent placement audit. Phase 3 regenerate Assets/imported from fixed HEAD, verify_output, editor play frame, critic review.
+Decisions: baseline c91e87b (Q1=1A; includes the wrapper-root override guard in UnityPrefabExport.cs). Q2: no standing HDRP abandonment ban; scope comes from this task file. Q3: this task may close DONE? YES! with a self-contained Open: line for the Director's own final judgement; objective data defects must still be fixed headlessly. Q4=4B: full clean re-import loop with two editor play frames IS authorized and required. Oracle: Testing/Unity-Screenshot-Outside.png and Unity project C:/cseliot/1-Development/4-Unity/2-Projects/old_school_model.
 
 ## Clarification Q&A
 
+Kickoff batch 02 / 03 (Director, 2026-11-25, chat; full record in eliots-agentics/session.md):
+An (Q1, verbatim): "Adopt as baseline: commit those 4 files by explicit path in ONE baseline commit so every task diff and critic review is against a clean HEAD. Consequence: fog removal, directional scale and wrapper-root guard become official HEAD." Landed c91e87b.
+An (Q2, verbatim): "ignore the git diff"; clarified: "And also, what I meant by 2: Ignore what you learned from the git diff of session.md".
+An (Q3, verbatim): "The skybox and tree color you should be able to discern from a screenshot. the others you'll have to marke done yes i guess because that's on me to finalize."
+An (Q4, verbatim): "Yes: run the full clean re-import loop (launch editor, open scene, play, capture two play frames against Testing/Unity-Screenshot-Outside.png). Consequence: costs a full editor open/compile/play cycle per verification round."
+This task is one of "the others": closes with an Open: line (Q3).
 
 ## Relevant History 
 
+Reopens archived task 14 "Objects Are Misplaced" (eliots-agentics/archive/14 Objects Are Misplaced.md; DONE? NO!, critic verdict "no further changes" 2026-11-24 22:23). It reported a 67/67 independent placement audit and six gates standing, but Restroom_Wall_01 (3) remained misplaced/rotated and was not identifiable in OUTDOOR-main-640.jpg; untested channels were rotation/scale basis, mirror variants, and rotation/scale nested overrides. New symptom (2026-11-25) names Flowerbeds_03_LOD00 and Floor_03 missing, Restroom_Floor_02 and Outdoor_Floor_01 in wrong locations, with the collider much more correct. The wrapper-root override guard in UnityPrefabExport.cs is now baseline (c91e87b). Prior evidence: C:/Users/Eliot/AppData/Local/hermes/profiles/hermes-sbox/cache/scratch/taskmaster-nov22/outdoor-compare/COMPARISON-2026-11-24.md and the archived differential reports. Baseline c91e87b; HEAD 2c17e22 removed the old standing constraints.
 
 ## Stylistic Task Notes:
 References to variables like X and Y automatically imply that these are to be exposed properties for developer tweaking.
