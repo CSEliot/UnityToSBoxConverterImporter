@@ -137,7 +137,8 @@ internal static class UnityVolume
 	/// <summary>What HDRP supplies as a sky: the kind, the tint s&amp;box's default sky takes, and the report line.</summary>
 	internal sealed record Sky( string Kind, double[] Tint, string Texture, string Note );
 
-	/// <summary>The fog a Volume override asks for, in Unity units; the scene export converts to engine units.</summary>
+	/// <summary>The fog a Volume override asks for, in Unity units. Report-only: fog is intentionally omitted
+	/// from the emitted scene per the 2026-11-24 Director decision, so these values feed the report alone.</summary>
 	internal sealed record Fog( double[] Colour, bool SkyColour, double Distance, double BaseHeight, double HeightAttenuation, double MaximumHeight, bool Legacy, string Note );
 
 	/// <summary>HDRP's Exposure override, in EV100. s&amp;box's CameraComponent.AutoExposure is a multiplier

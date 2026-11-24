@@ -9,28 +9,35 @@ namespace ImportUnityPackage;
 /// Light component: every light in the source project is authored in lumen or lux, so reading Unity's
 /// m_Intensity as a multiplier lands a 150-lumen downlight and a 20,000-lux sun two orders of magnitude
 /// apart in the wrong direction. s&box has no photometric unit at all - a light's brightness is the
-/// magnitude of its colour, a plain multiplier - so one documented scale maps candela onto that
-/// multiplier and the whole set keeps its relative brightness.
+/// magnitude of its colour, a plain multiplier.
 ///
-/// The table (one scale, no per-light special cases):
+/// Units first become candela:
 ///   Lumen    → candela = lm / 4π          (an isotropic emitter's mean intensity over the full sphere)
 ///   Lux      → candela = lx × d²          (punctual: d = m_LuxAtDistance; directional keeps the lux value)
 ///   Candela  → itself
 ///   EV100    → not converted: reported, never guessed
-/// then s&box intensity = candela × m_LightDimmer / <see cref="CandelaPerUnit"/>, clamped at
-/// <see cref="MaxIntensity"/> so a single outlier (the 20,000-lux sun) cannot write a 19,573-magnitude
-/// LightColor. Every other light stays under the clamp, so their ordering matches the source exactly.
+/// then TWO scales apply the dimmer, clamped at <see cref="MaxIntensity"/>:
+///   Directional lights: intensity = candela × m_LightDimmer                    (no 1000 divisor)
+///   Every other light:  intensity = candela × m_LightDimmer / <see cref="CandelaPerUnit"/>
+///
+/// The directional scale is NOT a photometric unit conversion. The source scene's baked GI cannot be
+/// reproduced in s&box, so raising the active directional light is a Director-approved brightness
+/// approximation for that missing baked light (2026-11-24). Directional saturation at
+/// <see cref="MaxIntensity"/> is intentional: an enabled bright sun clamped to the same ceiling as the
+/// active light is an accepted limitation (such sun roots are disabled in the source), and the original
+/// ordering between directional lights is deliberately not preserved.
 /// </summary>
 internal static class UnityHdrpLighting
 {
 	/// <summary>HDAdditionalLightData.m_LightUnit, in HDRP's declaration order (LightUnit: Lumen, Candela, Lux, Ev100).</summary>
 	internal enum Unit { Lumen, Candela, Lux, Ev }
 
-	/// <summary>1 s&box intensity unit = 1000 candela. Half the corpus' interior lights land at 0.01-2
-	/// and the sun is the only value above the clamp; relative brightness is what survives, not absolute.</summary>
+	/// <summary>Divisor for the non-directional scale: 1000 candela per s&box intensity unit. Interior
+	/// lumen/lux/candela lights use it; directional lights bypass it (see the class doc).</summary>
 	internal const int CandelaPerUnit = 1000;
 
-	/// <summary>The brightest light multiplier the importer writes; s&box lights above it bloom to white.</summary>
+	/// <summary>The brightest multiplier the importer writes; s&box lights above it bloom to white.
+	/// Directional lights saturate here intentionally - see the class doc.</summary>
 	internal const int MaxIntensity = 8;
 
 	/// <summary>What one HDRP light becomes: its s&box multiplier and how it was read.</summary>
@@ -74,7 +81,7 @@ internal static class UnityHdrpLighting
 				break;
 			default: return new Converted { Hdrp = true, Unit = unit, ReportOnly = true, Intensity = 1 };
 		}
-		var intensity = candela * dimmer / CandelaPerUnit;
+		var intensity = type == 1 ? candela * dimmer : candela * dimmer / CandelaPerUnit;
 		var clamped = intensity > MaxIntensity;
 		return new Converted { Hdrp = true, Unit = unit, Unclamped = intensity, Intensity = clamped ? MaxIntensity : intensity, Clamped = clamped };
 	}
@@ -129,7 +136,7 @@ internal static class UnityHdrpLighting
 				information.Add( $"{areaLights} area light(s) not converted; s&box has no rectangle, disc or tube light: {string.Join( ", ", areaNames )}{(areaLights > areaNames.Count ? ", …" : "")}." );
 			if ( lumen + lux + candela + ev > 0 )
 			{
-				var line = $"HDRP light units converted at 1 s&box intensity unit = {CandelaPerUnit} cd: {lumen} lumen (value / 4 pi), {lux} lux (x m_LuxAtDistance^2, directional lux as-is), {candela} candela; {clamped} clamped at {MaxIntensity}.";
+				var line = $"HDRP light units: {lumen} lumen (value / 4 pi), {lux} lux (x m_LuxAtDistance^2, directional lux as-is), {candela} candela; two scales - non-directional candela x dimmer / {CandelaPerUnit} cd per s&box unit, directional candela x dimmer with no divisor (a Director-approved brightness approximation for missing baked GI, not a photometric conversion); {clamped} clamped at {MaxIntensity}, directional saturation at the clamp intentional.";
 				if ( areaLights > 0 ) line += $" The {areaLights} area lights are counted in these totals but are not converted.";
 				if ( ev > 0 ) line += $" {ev} EV100 light(s) reported only; their Unity intensity is kept unconverted.";
 				information.Add( line + " Per-light shadow resolution, shadow dimmer and volumetric settings have no s&box counterpart." );

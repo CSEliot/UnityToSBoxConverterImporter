@@ -298,28 +298,7 @@ internal static class UnitySceneExport
 			} ) ) );
 		if ( environment.Fog is UnityVolume.Fog volumeFog )
 		{
-			// HDRP's exponential fog is an extinction with a 63 % attenuating distance, which is exactly
-			// Sandbox.Fog's exponential mode; that is the faithful mapping. Never copy the Unity fog
-			// colour's alpha into HeightColor: Fog.cs:172-175 makes HeightColor.a the height layer's
-			// maximum opacity (independent of distance fog), while Fog.cs:184-187 says the distance
-			// Color.a is ignored. Unity's a:1 is a colour swatch, not an authored opacity, and HDRP's
-			// height ramp is a density modifier with no s&box opacity counterpart, so emitting it
-			// produced a fully opaque grey wall over the whole frame.
-			result.Information.Add( volumeFog.Note );
-			objects.Add( SceneObject( $"{c.Key}:fog", "Fog", "", Component( "Sandbox.Fog", StableGuid( $"{c.Key}:fog:component" ), true, new()
-			{
-				["AttenuationDistance"] = Single( volumeFog.Distance * UnitsPerMetre ),
-				["Color"] = Colour( volumeFog.Colour ),
-				["ColorSource"] = volumeFog.SkyColour ? "SceneSky" : "Constant",
-				["DistanceEnabled"] = true,
-				["DistanceRange"] = FogDistanceRange( 0, volumeFog.Distance * UnitsPerMetre ),
-				["FalloffExponent"] = 1,
-				["FogEnabled"] = true,
-				["HeightEnabled"] = false,
-				["MaximumOpacity"] = 1,
-				["Mode"] = "Exponential",
-				["StartDistance"] = 0
-			} ) ) );
+			result.Information.Add( "HDRP Volume fog is not emitted: the Director observed no visible fog at scene scale, and the authored Volume fog is long-range/volumetric, so it is intentionally omitted per the 2026-11-24 decision and the imported scene carries no Sandbox.Fog component." );
 		}
 		if ( c.Blocks.FirstOrDefault( b => b.Type == "104" ) is Block render )
 		{

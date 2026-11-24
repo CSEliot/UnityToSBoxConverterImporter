@@ -1581,7 +1581,25 @@ internal static class UnityPrefabExport
 			var childTransforms = new Dictionary<long, UnityTransform>();
 			var childNames = new Dictionary<long, string>();
 			var childActive = new Dictionary<long, bool>();
-			foreach ( Match modification in Regex.Matches( instance.Body, @"(?ms)^\s*- target:\s*\{(?<target>[^}]+)\}\s*\r?\n\s*propertyPath:\s*(?<path>[^\r\n]+?)\s*\r?\n\s*value:[ \t]*(?<value>[^\r\n]*?)[ \t]*\r?$(?:\r?\n\s*objectReference:\s*\{(?<reference>[^}]*)\})?" ) )
+			// A wrapper's stripped root Transform is the one object that stands for the emitted root. When this
+			// instance overrides it, any other absent-id local override names a scene-only child Transform, which
+			// has no counterpart in the generated prefab and must not be applied to the root.
+			var wrapperRootIds = plain.IsWrapper
+				? plain.ById.Values.Where( b => b is { Type: "4" or "224", Stripped: true }
+					&& Reference( b.Body, "m_CorrespondingSourceObject" ) == plain.WrapperRootTransformId )
+					.Select( b => b.Id ).ToHashSet()
+				: new HashSet<long>();
+			var hasWrapperRootOverride = wrapperRootIds.Count > 0 && ModificationPattern.Matches( instance.Body ).Any( m =>
+			{
+				var path = m.Groups["path"].Value.Trim( '\'' );
+				var axis = path.Length > 2 && path[^2] == '.' ? "xyzw".IndexOf( path[^1] ) : -1;
+				return wrapperRootIds.Contains( IdOf( m.Groups["target"].Value ) )
+					&& axis >= 0 && !path.StartsWith( "m_LocalEulerAnglesHint" )
+					&& ( path.StartsWith( "m_LocalPosition." ) && axis < 3
+						|| path.StartsWith( "m_LocalRotation." )
+						|| path.StartsWith( "m_LocalScale." ) && axis < 3 );
+			} );
+			foreach ( Match modification in Regex.Matches( instance.Body, @"(?ms)^\s*- target:\s*\{(?<target>[^}]+)\}\s*\r?\n\s*propertyPath:\s*(?<path>[^\r\n]+?)\s*\r?\n\s*value:[ 	]*(?<value>[^\r\n]*?)[ 	]*\r?$(?:\r?\n\s*objectReference:\s*\{(?<reference>[^}]*)\})?" ) )
 			{
 				var target = IdOf( modification.Groups["target"].Value );
 				var path = modification.Groups["path"].Value.Trim( '\'' );
@@ -1602,7 +1620,7 @@ internal static class UnityPrefabExport
 				var wrapperRoot = plain.IsWrapper && component is { Type: "4" or "224", Stripped: true }
 					&& Reference( component.Body, "m_CorrespondingSourceObject" ) == plain.WrapperRootTransformId;
 				var rootTransform = target == plain.RootTransformId
-					|| plain.IsWrapper && localPath && ( wrapperRoot || !plain.ById.ContainsKey( target ) );
+					|| plain.IsWrapper && localPath && ( wrapperRoot || !hasWrapperRootOverride && !plain.ById.ContainsKey( target ) );
 				if ( rootTransform && path.StartsWith( "m_LocalPosition." ) && axis is >= 0 and < 3 ) unity.Position[axis] = Parse();
 				else if ( rootTransform && path.StartsWith( "m_LocalRotation." ) && axis >= 0 ) unity.Rotation[axis] = Parse();
 				else if ( rootTransform && path.StartsWith( "m_LocalScale." ) && axis is >= 0 and < 3 ) unity.Scale[axis] = Parse();
