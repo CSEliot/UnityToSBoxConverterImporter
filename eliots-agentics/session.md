@@ -18,6 +18,14 @@ Standing constraints (Director 2026-11-25, recorded by Task Master; copy into ev
 - Assets/imported held 5431 files before the loop (editor-compiled); a fresh headless import is expected to be smaller.
 - NTFY status ping fired (HTTP 200) announcing the authorised editor loop before it started.
 
+### Master-run headless observation 2026-11-25 (ONE discriminating observation before implementers)
+Evidence file: C:/Users/Eliot/AppData/Local/hermes/profiles/hermes-sbox/cache/scratch/taskmaster-nov25/oracle-state-observation-2026-11-25.md. Run on the CURRENT Unity source (MergeV2.unity mtime 2026-11-25 00:32), not archived records.
+- Confirmed: MergeV2.unity:53 m_EnableBakedLightmaps: 1; Assets/School/Scenes/MergeV2/LightingData.asset exists; 71 *_comp_light.exr files beside the scene.
+- Confirmed: only 2 inactive GameObjects in MergeV2.unity - 'Post-process Volume' (151205) and 'Setting' (319087), whose Transform is 2006277128.
+- Confirmed: the 20,000-lux Lux directional light (GameObject 2035111233, Light 2035111234, HD data m_Intensity 20000) has Transform 2035111235 -> m_Father 129731605 -> m_Father 2006277128 (Setting). It is therefore OFF in the serialized scene by the ancestor activation rule despite its own m_IsActive: 1 / m_Enabled: 1. The other active directional light is only 12 lux.
+- Partial OBS-L4: 0 class-205 LODGroup blocks in any source .unity/.prefab. Partial OBS-T8: no red/burgundy foliage asset by NAME (only a red wall material).
+- Parent decision: this is an OBSERVATION, not a verdict. The render-state proof (did the reference screenshot come from the baked state?) and the scene identity (MergeV2 versus OutdoorsScene) are unverified. common.md precedence makes the Director's dated Q3 instruction ('skybox and tree color you should be able to discern from a screenshot') outrank the skill's 'Director-level blocker' wording, so I am NOT unilaterally closing or blocking those tasks: I am reporting the mismatch and asking him to confirm the acceptance oracle. The skill's ban still binds: never emit an inactive light as active or map an unrelated sky/celestial intensity field into Intensity to fake the missing baked sunlight.
+
 ## Clarification Q&A
 
 ### Kickoff batch 01 / 02 / 03 (Director, 2026-11-25, chat)

@@ -36,6 +36,7 @@ Full record: C:/Users/Eliot/AppData/Local/hermes/profiles/hermes-sbox/cache/scra
 - L4 HYPOTHESIS: no Unity LODGroup (class 205) block exists for this scene, so no distance data reaches s&box (UnitySceneExport.cs:554 maps 205 only as a reported name). OBS-L4 headless: a !u!205 block or m_LodGroup reference with culling thresholds reachable from the named object falsifies L4.
 - Perceptual: the z-fighting verdict and the LOD switch at distance need a before/after play-frame pair on the same camera. No authored static s&box LOD oracle exists (engine LodTestModel.cs:6 states Core has no static model with LODs); the task says "try first", so no oracle is requested yet.
 - None of L1-L4 carries a verdict. Prior-pass generated artifact paths in the census predate HEAD 8bb1eaa and are pointers for re-measurement only.
+- Master-run partial OBS-L4 (2026-11-25): `grep -rl '^--- !u!205' Assets --include=*.unity --include=*.prefab | wc -l` on the current Unity source returned 0 - no class-205 LODGroup block in any source scene or prefab. Evidence: C:/Users/Eliot/AppData/Local/hermes/profiles/hermes-sbox/cache/scratch/taskmaster-nov25/oracle-state-observation-2026-11-25.md. This is a source-file observation; the falsifier's "fresh Unity export of the named prefab" part is still owed, so L4 remains a HYPOTHESIS.
 
 ## Clarification Q&A
 
