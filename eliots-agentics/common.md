@@ -1,8 +1,12 @@
 # common.md
 
+During conflicting instructions: Director's dated instruction > project role/task files > skills > global defaults
+
 A subagent runs exactly one turn. Nothing survives it except files on disk and its transcript.
 
 The task file is the only shared memory. Read it at the start of every turn. The Director's answers and the critic's review arrive there between turns. Uncommitted prose in it is a hypothesis, not a gate: commit it, label it, or delete it before it steers a worker.
+
+role instruction behaviour files are NOT to be modified. NO EDIT: common.md, critic.md, master.md, worker.md, roles.md.
 
 ## Task file
 
@@ -12,7 +16,7 @@ The header is shared state. Any role may update it when the state changes. Rewri
 - `CLARIFIED?` the Director's answers are recorded.
 - `HISTORY?` the context summary is written.
 - `REVIEWED?` a critic reviewed the current tree. A change to the reviewed files after the review sets `REVIEWED? NO!`. The critic's entry and flag, and the worker's reply and `DONE?` write, are not changes to the reviewed files.
-- `DONE?` the work is finished and the commit was attempted. A failed commit or a change to the reviewed files after the commit sets `DONE? NO!` and `REVIEWED? NO!` until re-reviewed and re-committed.
+- `DONE?` YES/FAILED/REJECTED. YES = Task complete according to all rules. FAILED = Task could not be complete by ai. REJECTED = Bad and impossible task given by Director, as determined by AI.
 - `WORKER:` the current subagent id, or `MASTER` when the Master did the work.
 - `OTHER:` free-form; use it sparingly.
 

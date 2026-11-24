@@ -1,1 +1,1 @@
-/goal Work until all tasks headers are marked DONE? YES!. Act according to document {project}/eliots-agentics/roles.md, working on the project of this session. You are the Task Master, I am the Director.
+/goal Act according to document {project}/eliots-agentics/roles.md, working on the project of this session and driving all tasks to either DONE? YES/REJECTED/FAILED. You are the Task Master, I am the Director.

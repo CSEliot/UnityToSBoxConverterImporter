@@ -1,4 +1,4 @@
-## Status: STARTED? YES! CLARIFIED? YES! HISTORY? YES! REVIEWED? NO! DONE? NO! WORKER: NONE OTHER: fresh symptom task; split from investigated-only task 15; differential ablation report on disk (research-diff/differential-report.md); SkyMaterial bare-string premise FALSIFIED
+## Status: STARTED? REJECTED! CLARIFIED? YES! HISTORY? YES! REVIEWED? YES! DONE? NO! WORKER: NONE OTHER: fresh symptom task; split from investigated-only task 15; differential ablation report on disk (research-diff/differential-report.md); SkyMaterial bare-string premise FALSIFIED
 
 ## Task
 Skybox doesn't match.
@@ -72,6 +72,18 @@ Final answer in English.
 
 ### Work Review
 
+2026-11-24 22:23 - Verdict: changes required
+Reviewer role: Review Critic (bounded adversarial re-review); judged the four uncommitted Editor/Core files plus the closing evidence, not a missing worker trail.
+
+1. [High] COMPARISON-2026-11-24.md:75-79 - the parent excuses the sky gap as "plausibly HDRP-side consequences" and therefore abandoned scope. I looked at both frames myself: OUTDOOR-main-640.jpg has a clear pale-to-medium blue daylight sky with thin white cloud streaks and no horizon haze; Testing/Unity-Screenshot-Outside.png has a hazy deep navy/blue-grey twilight sky with a pale band near the horizon. The symptom is visibly present. The Director's standing constraint says the skybox symptom is NOT HDRP-related, so this excuse is falsified by the very authority cited for the closure. Fix: do not close on "HDRP abandoned"; either reopen a non-HDRP skybox investigation or obtain an explicit Director acceptance of this specific gap on these two frames. Keep DONE? NO!.
+2. [Medium] Editor/Core/UnitySceneExport.cs:266,315 - the closing evidence does not address this task's Description candidate (a): the emitted SkyBox2D material is still the hardcoded DefaultSky rather than a source-derived sky. Fix: ground a source-derived sky material/texture or record that the task-09 default-sky approximation is explicitly re-approved against the new outdoor oracle; it is not acceptance by implication.
+3. [Low] COMPARISON-2026-11-24.md:35-40 - the sky claims rest on vision reads; no sky-region crop or pixel measurement is recorded. Fix: sample sky RGB in a matched crop of both frames before any close.
+
+Tree (four reviewed source files at HEAD ae9781a):
+- Editor/Core/UnityHdrpLighting.cs — `git hash-object --path="Editor/Core/UnityHdrpLighting.cs" "Editor/Core/UnityHdrpLighting.cs"` => 3de49ef03d589016281b43d044910382893f34ac
+- Editor/Core/UnityPrefabExport.cs — `git hash-object --path="Editor/Core/UnityPrefabExport.cs" "Editor/Core/UnityPrefabExport.cs"` => 7c80ad48c817952ae79aa2935775e32616249049
+- Editor/Core/UnitySceneExport.cs — `git hash-object --path="Editor/Core/UnitySceneExport.cs" "Editor/Core/UnitySceneExport.cs"` => 6bc6a265c16a18cc84b1e7677fbc45f14f1637ae
+- Editor/Core/UnityVolume.cs — `git hash-object --path="Editor/Core/UnityVolume.cs" "Editor/Core/UnityVolume.cs"` => 420f4633aac52e30cb9547819171efe06f428786
 
 ## Notes
 
@@ -121,6 +133,70 @@ Constant). SkyAffect=0 is an ENGINE-DEFINED knob, NOT a pinned magic opacity, so
 headless-justifiable fix. Evidence: visual/skyaffect_probe.py, skyaffect_paths.json,
 RENDERED-VERIFICATION.md addendum. This is a real fix target for THIS task — do not close until
 it (or a Director decision) lands and a fresh post-re-import frame shows the sky.
+
+MASTER CLEAN-OUTPUT PERCEPTUAL GATE 2026-11-24 (first run of this gate):
+Regenerated Assets/imported from HEAD ae9781a (harness rebuild 0/0, 2154 files,
+verify_output.py 875 files 0 problems, mergev2.scene HeightEnabled:false,
+HeightColor count 0). Opened the Dev editor, played mergev2, captured a play
+frame from the main camera. Unity oracle mean 46.09 / 730872 coloured px /
+391051 warm px; clean s&box frame mean 55.46 / 152052 coloured px / 91 warm px.
+The opaque height-fog wall is GONE, but the frame is still dim, cool and
+desaturated with a flat pale-grey exterior and no golden sunlight. So the
+skybox symptom is STILL PRESENT. Falsifier RUN: Unity's 20000-lux bright sun
+is ALSO under the inactive Setting root, so the imported disabled warm sun is
+FAITHFUL, not an importer bug; drop that candidate. Full numbers, capture paths
+and remaining mechanisms: <scratch>/taskmaster-nov22/visual/CLEAN-PERCEPTUAL-GATE.md.
+
+FOLLOW-UP 2026-11-24 (two candidates FALSIFIED, parent-verified on disk):
+the active Unity light conversion 12 lux -> Intensity 0.012 is the documented
+1000 cd/unit scale (UnityHdrpLighting.cs:31,77), not a defect; the SkyAffect=0
+mirror patch must NOT ship (sky-pixel-only, stale-scene falsifier, oracle has
+dark blue-grey panes and no open sky). The remaining gap is task 09's
+Director-approved default-sky approximation (UnityVolume.cs:334-340: sun,
+atmosphere and time of day explicitly not reproduced), not an unfixed importer
+bug. See visual/CLEAN-PERCEPTUAL-GATE.md. DONE? stays NO!.
+
+FINAL ROOT CAUSE 2026-11-24 (parent-verified): MergeV2 has 25+ baked
+Lightmap-*_comp_light.exr + LightingData.asset and m_EnableBakedLightmaps:1
+(MergeV2.unity:53); UnitySceneExport.cs:18-19 reports lightmaps as not
+converted. The golden sun is BAKED GI that s&box cannot reproduce. The
+offered sunIntensity fix is FALSIFIED against local HDRP source (sunIntensity
+is a sky-disk default, not scene illumination). Isolation ABLATION5 shows the
+disabled sun branch causes ~90% of the warm shift. No source-faithful importer
+defect remains; an active-sun approximation needs an explicit Director
+decision. See visual/CLEAN-PERCEPTUAL-GATE.md. DONE? stays NO!.
+
+REGENERATED COMPILED FRAME 2026-11-24: no fog wash, no grey sky; window exteriors
+are flat dark blue-grey / pale blue-white panes with NO open sky, matching the
+Unity oracle's dark blue-grey panes. The grey-sky symptom is gone. Full verdict:
+visual/REGENERATED-FRAME-VERDICT.md. This is a compiled-file render, not the
+earlier in-memory ablation.
+
+DIRECTOR DECISION 2026-11-24 (recorded by Task Master): "Fix trees and skybox
+100% (i'm confident those are fixable) and then fix lighting to "best ability"."
+Work order: trees -> skybox -> lighting. BEST EFFORT now applies to LIGHTING ONLY,
+not trees or skybox. This real Director turn is the fresh decision that unblocks
+re-tuning directional intensity against the outdoor dusk oracle. Any code change
+resets REVIEWED? to NO! on affected tasks and needs a fresh critic "no further
+changes" before DONE? YES!. Evidence:
+<scratch>/taskmaster-nov22/outdoor-compare/COMPARISON-2026-11-24.md.
+Research child sa-0-1b8f9add is pinning the source-authored mechanism; no code
+changed yet.
+
+RESEARCH VERDICT 2026-11-24 (parent-verified on disk, deleg_d9eb2472):
+SKY = SOURCE-FAITHFUL for serialized data; visual cause UNKNOWN. Verified:
+MergeV2.unity:29 m_SkyboxMaterial {fileID: 0} (no sky asset to convert);
+UnityVolume.cs:337-341 averages white horizon/zenith HDRP tints into the emitted
+Tint; UnitySceneExport.cs:287-291 emits SkyMaterial = DefaultSky (hardcoded
+skybox_day_01.vmat at :34) with that white Tint; fallback :316 hardcodes
+"1,1,1,1". Generic Unity ambient colours (sky 0.212,0.227,0.259, intensity 1)
+are already carried into DirectionalLight.SkyColor 0.03697,0.04215,0.05455
+(generated scene line 71, verified). Engine lever: SkyBox2D.Tint (Color, default
+White, SkyBox2D.cs:15-26, drives SkyTint + env-probe TintColor); SkyMaterial is
+the only other lever. No source-authored sky darkness exists to map without a
+new mapping. The Director's "not HDRP-related" premise is unsupported on disk.
+Full report: <scratch>/taskmaster-nov22/outdoor-compare/TREE-SKY-DIAGNOSIS.md.
+Holding for a fresh Director decision (no invented dark sky / new mapping).
 
 ## Clarification Q&A
 

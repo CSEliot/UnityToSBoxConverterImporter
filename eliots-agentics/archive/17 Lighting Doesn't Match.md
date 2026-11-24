@@ -1,4 +1,4 @@
-## Status: STARTED? YES! CLARIFIED? YES! HISTORY? YES! REVIEWED? NO! DONE? NO! WORKER: NONE OTHER: fresh symptom task; split from investigated-only task 15; differential report on disk; 3 falsified premises dropped from Description; Intensity/LightColor separation is the real fix (shared with task 19)
+## Status: STARTED? REJECTED! CLARIFIED? YES! HISTORY? YES! REVIEWED? YES! DONE? NO! WORKER: NONE OTHER: fresh symptom task; split from investigated-only task 15; differential report on disk; 3 falsified premises dropped from Description; Intensity/LightColor separation is the real fix (shared with task 19)
 
 ## Task
 Lighting doesn't match.
@@ -90,6 +90,18 @@ Final answer in English.
 
 ### Work Review
 
+2026-11-24 22:23 - Verdict: changes required
+Reviewer role: Review Critic (bounded adversarial re-review); judged the four uncommitted Editor/Core files plus the closing evidence, not a missing worker trail.
+
+1. [High] Editor/Core/UnityHdrpLighting.cs:84 - the emitted directional intensity 8 was selected against the earlier indoor oracle (mean 46.09) and is now measured at 100.16 mean / 0.374 warm against the current outdoor oracle's 48.54 / 0.053. I looked at both frames: s&box is bright clear daylight with hard high-contrast shadows, Unity is dim dusk. That is a 2.06x brightness overshoot, not parity. Fix: re-evaluate the directional scale against the current oracle with an explicit Director decision, or record the Director's acceptance of the overshoot; keep DONE? NO! until then.
+2. [Medium] COMPARISON-2026-11-24.md:75-79 - attributing gap 1 to abandoned HDRP-side exposure is incomplete: the Director himself ordered the intensity raise and it is an in-scope importer change, so HDRP abandonment cannot silently excuse its present overshoot. Fix: present the two frames and the numbers to the Director rather than deciding acceptance in the Task Master's notes.
+3. [Low] Editor/Core/UnityHdrpLighting.cs:19-28,139 - the rewritten class doc and report line honestly label the change a Director-approved baked-GI approximation with intentional saturation; that wording is accurate and is not a defect.
+
+Tree (four reviewed source files at HEAD ae9781a):
+- Editor/Core/UnityHdrpLighting.cs — `git hash-object --path="Editor/Core/UnityHdrpLighting.cs" "Editor/Core/UnityHdrpLighting.cs"` => 3de49ef03d589016281b43d044910382893f34ac
+- Editor/Core/UnityPrefabExport.cs — `git hash-object --path="Editor/Core/UnityPrefabExport.cs" "Editor/Core/UnityPrefabExport.cs"` => 7c80ad48c817952ae79aa2935775e32616249049
+- Editor/Core/UnitySceneExport.cs — `git hash-object --path="Editor/Core/UnitySceneExport.cs" "Editor/Core/UnitySceneExport.cs"` => 6bc6a265c16a18cc84b1e7677fbc45f14f1637ae
+- Editor/Core/UnityVolume.cs — `git hash-object --path="Editor/Core/UnityVolume.cs" "Editor/Core/UnityVolume.cs"` => 420f4633aac52e30cb9547819171efe06f428786
 
 ## Notes
 
@@ -144,6 +156,135 @@ So the dominant residual here is NOT exposure level but DESATURATION / missing W
 and warm wood tones: a LIGHTING/MATERIAL issue, exactly this task's scope. Objective oracle
 available for a real side-by-side; compare emitted LightColor/Intensity + auto-exposure against
 Unity source, re-import, and capture from the MATCHING camera. Do not close on self-consistency.
+
+MASTER CLEAN-OUTPUT PERCEPTUAL GATE 2026-11-24 (first run of this gate):
+Regenerated Assets/imported from HEAD ae9781a (harness rebuild 0/0, 2154 files,
+verify_output.py 875 files 0 problems, mergev2.scene HeightEnabled:false,
+HeightColor count 0). Opened the Dev editor, played mergev2, captured a play
+frame from the main camera. Unity oracle mean 46.09 / 730872 coloured px /
+391051 warm px; clean s&box frame mean 55.46 / 152052 coloured px / 91 warm px.
+Overall brightness is close (55.46 vs 46.09) but warm sunlight is absent
+(91 vs 391051 warm px): the dominant residual is desaturation / missing warm
+light, not exposure level. The symptom is STILL PRESENT. Falsifier RUN: Unity's
+20000-lux bright sun is ALSO under the inactive Setting root, so the imported
+disabled warm sun is FAITHFUL, not an importer bug; drop that candidate. Next
+candidate to test: the ACTIVE Unity directional light m_Intensity:12 converts
+to Intensity:0.012 (1000 cd/unit) - read the source light unit and engine
+Light.Intensity semantics before calling it a defect. Full numbers and capture
+paths: <scratch>/taskmaster-nov22/visual/CLEAN-PERCEPTUAL-GATE.md.
+
+FOLLOW-UP 2026-11-24 (two candidates FALSIFIED, parent-verified on disk):
+the active Unity light conversion 12 lux -> Intensity 0.012 is the documented
+1000 cd/unit scale (UnityHdrpLighting.cs:31,77), not a defect; the SkyAffect=0
+mirror patch must NOT ship (sky-pixel-only, stale-scene falsifier). CORRECTION:
+sunIntensity 130000 at MergeV2.unity:697-698 is an HDAdditionalLightData
+celestial-body field on the 12-lux light itself, NOT a PhysicallyBasedSky
+override; its rendering meaning is unverified. The remaining gap is task 09's
+Director-approved default-sky approximation (UnityVolume.cs:334-340: sun,
+atmosphere and time of day explicitly not reproduced), not an unfixed importer
+bug. See visual/CLEAN-PERCEPTUAL-GATE.md. DONE? stays NO!.
+
+DECISIVE DIFFERENTIAL 2026-11-24 (same pinned camera, in-memory, restored):
+toggling ONLY `Setting.Enabled` false->true->false in PLAY moves mean 55.52 ->
+80.34, coloured 152374 -> 427066, warm 90 -> 297882 (warm fraction 0.3232 vs
+Unity 0.3263), and the restore returns to baseline with the scene clean. So the
+missing warm light is the DISABLED Setting subtree, not fog, sky material or
+the 0.012 conversion. Caveat: a vision read still calls the enabled frame
+dim/cool, and mean 80.34 over-brightens vs Unity 46.09, so this identifies the
+mechanism, not perceptual parity. Unity has Setting m_IsActive:0 and
+m_EnableBakedLightmaps:1, so the golden sun is plausibly baked GI. Full table:
+visual/CLEAN-PERCEPTUAL-GATE.md. DONE? stays NO!.
+
+FINAL ROOT CAUSE 2026-11-24 (parent-verified): MergeV2 has 25+ baked
+Lightmap-*_comp_light.exr + LightingData.asset and m_EnableBakedLightmaps:1
+(MergeV2.unity:53); UnitySceneExport.cs:18-19 reports lightmaps as not
+converted. The golden sun is BAKED GI that s&box cannot reproduce. The
+offered sunIntensity fix is FALSIFIED against local HDRP source (sunIntensity
+is a sky-disk default, not scene illumination). Isolation ABLATION5 shows the
+disabled sun branch causes ~90% of the warm shift. No source-faithful importer
+defect remains; an active-sun approximation needs an explicit Director
+decision. See visual/CLEAN-PERCEPTUAL-GATE.md. DONE? stays NO!.
+
+MASTER INTENSITY SWEEP 2026-11-24 (scratch editor, pinned camera, play mode;
+in-memory set_component on the active DirectionalLight, restored to 0.012 after):
+  0.012 -> mean 40.92, stddev 15.39, warm 290013 (31.5%)
+  0.5   -> 41.70 / 15.87 / 301472
+  1     -> 42.17 / 16.55 / 306871
+  2     -> 43.14 / 18.00 / 311793
+  4     -> 44.14 / 20.40 / 319795
+  8     -> 45.75 / 24.03 / 328621 (35.7%)
+  16    -> 47.85 / 28.81 / 348475 (37.8%)
+  Unity -> 46.09 / 32.68 / 391051 (32.6%)
+Mean and contrast improve monotonically with intensity; 8-12 is the closest
+source-derived range. Warm fraction overshoots above ~2 and vision still reports
+a red/magenta cast with no long shadows, so intensity alone is not full parity.
+Log: visual/intensity-sweep.log. Per the Director's note 5 the next code step is
+to emit a higher, SOURCE-DERIVED directional intensity (not a pinned magic
+value) by abandoning the HDRP 1000 cd/unit divisor for directional lights only;
+spec: scratch/taskmaster-nov22/LIGHTING-FIX-SPEC.md.
+
+MASTER FINAL GATES 2026-11-24 (all three fixes, parent-run):
+harness build 0/0; old_school --scenes 2154 files, verify_output.py 875 files /
+0 problems, grep Sandbox.Fog across generated *.scene = 0; building 24/24 and
+city--1 1166/1166 byte-identical to the fresh HEAD baseline (0 diff lines);
+two identical runs 0-byte diff; BOM 0; no stray repo artifacts. Diff vs the
+pre-lighting output is EXACTLY two Intensity values: mergev2.scene active
+directional 0.012 -> 8 (LightColor 1,0.56937,0.27636,1) and test_range.scene
+0.005 -> 5; disabled sun stays 8, every point/spot/prefab unchanged. Code diff:
+Editor/Core/UnityHdrpLighting.cs:77 one line (`type == 1 ? candela * dimmer :
+candela * dimmer / CandelaPerUnit`), clamp and all other members untouched.
+Rendered-frame equivalence: SWEEP-8.png was captured from the same generated
+output with the active light set to 8 in memory, which is exactly what the fixed
+importer now emits, so it is the final frame (mean 45.75, stddev 24.03, warm
+35.7% vs Unity 46.09 / 32.68 / 32.6%). Vision still reports a red/magenta cast
+and no long golden shadows, so intensity improves brightness/contrast but is NOT
+full golden-hour parity. Logs: scratch/taskmaster-nov22/final-gate/out/.
+
+REVIEW DISPOSITIONS 2026-11-24 (adversarial review deleg_a58a8db3):
+F1/F5 ACCEPT the stale class doc, comments and report line at
+UnityHdrpLighting.cs:8-23,29-34,132; REJECT the ordering fix as a blocker (the
+Director abandoned HDRP photometric fidelity, the 20000-lux sun is disabled in
+the source so its intensity is inert, and 8 was chosen by rendered measurement).
+F2: the reviewer's "12 is closer" claim is FALSIFIED by an actual sweep - 12
+gives mean 47.63 vs 8's 45.75 against Unity 46.09; 8 stays best on a multi-metric
+criterion. ACCEPT labelling the change a Director-approved baked-GI approximation,
+re-rendering the regenerated output, and capturing test_range. Full answers and
+the dispatched fixes: scratch/taskmaster-nov22/
+REVIEW-DISPOSITIONS-AND-FIX-SPEC.md. REGENERATED frames: visual/
+RENDER-FINAL-regenerated.png (mean 47.21, stddev 26.0, warm 351156) and
+RENDER-FINAL-test_range.png (mean 88.97; no Unity oracle exists for test_range).
+
+REGENERATED COMPILED FRAME 2026-11-24 (revised; supersedes the in-memory
+readings): the actual compiled regenerated output shows a WARM GOLDEN SUNLIGHT
+POOL on the floor and NO red/magenta cast (single vision read); dark blue-grey
+window panes with no open sky. TWO vision reads of the SAME frame DISAGREE on
+long crisp shadows, so NO shadow claim is made - stddev 26.0 vs Unity 32.68 is
+consistent with weaker shadow contrast. Full verdict: visual/
+REGENERATED-FRAME-VERDICT.md. Numeric residual: mean 47.21 (Unity 46.09),
+stddev 26.0 (32.68), warm 38.1% (32.6%). The earlier "intensity is not parity"
+note is only PARTLY superseded: brightness/warmth/fog/cast improved, contrast
+and shadow structure remain open.
+
+SCOPED RE-REVIEW 2026-11-24 (deleg_3f43681c): verdict "changes required"
+with ONE LOW finding R1 - the rewritten report line at UnityHdrpLighting.cs:139
+dropped ", directional lux as-is", falsely implying directional lux is scaled by
+m_LuxAtDistance^2 (runtime at :80 keeps the lux value for type 1). ACCEPTED and
+FIXED by the parent (one-line text change); harness build 0/0 after the fix.
+All other checks passed: only the four authorized fixes present, F4's strict
+regex correct, runtime expression and clamp byte-unchanged, no new defects.
+The same critic was continued for a bounded re-check of R1. No commit until its
+final verdict lands.
+
+DIRECTOR DECISION 2026-11-24 (recorded by Task Master): "Fix trees and skybox
+100% (i'm confident those are fixable) and then fix lighting to "best ability"."
+Work order: trees -> skybox -> lighting. BEST EFFORT now applies to LIGHTING ONLY,
+not trees or skybox. This real Director turn is the fresh decision that unblocks
+re-tuning directional intensity against the outdoor dusk oracle. Any code change
+resets REVIEWED? to NO! on affected tasks and needs a fresh critic "no further
+changes" before DONE? YES!. Evidence:
+<scratch>/taskmaster-nov22/outdoor-compare/COMPARISON-2026-11-24.md.
+Research child sa-0-1b8f9add is pinning the source-authored mechanism; no code
+changed yet.
 
 ## Clarification Q&A
 

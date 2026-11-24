@@ -1,4 +1,4 @@
-## Status: STARTED? YES! CLARIFIED? YES! HISTORY? YES! REVIEWED? NO! DONE? NO! WORKER: NONE OTHER: fresh symptom task; split from investigated-only task 15; probes-report.md on disk; all tree-colour mechanisms UNTESTED (no verdict); assets located; likely downstream of lighting/fog
+## Status: STARTED? REJECTED! CLARIFIED? YES! HISTORY? YES! REVIEWED? YES! DONE? NO! WORKER: NONE OTHER: fresh symptom task; split from investigated-only task 15; probes-report.md on disk; all tree-colour mechanisms UNTESTED (no verdict); assets located; likely downstream of lighting/fog
 
 ## Task
 The trees aren't the correct color.
@@ -70,6 +70,17 @@ Final answer in English.
 
 ### Work Review
 
+2026-11-24 22:23 - Verdict: changes required
+Reviewer role: Review Critic (bounded adversarial re-review); judged the four uncommitted Editor/Core files plus the closing evidence, not a missing worker trail.
+
+1. [High] COMPARISON-2026-11-24.md:71-73 - the tree-colour symptom is visibly present and the cause is recorded OPEN, not resolved. My own vision read of OUTDOOR-main-640.jpg gives dark olive-green rounded crowns; Testing/Unity-Screenshot-Outside.png gives deep burgundy/red-purple crowns. Acceptance says the symptom is finished when it is GONE; a disclosed gap under BEST EFFORT is not acceptance by the Director. Fix: keep DONE? NO! until the Director accepts this frame pair or a Unity-side cause is diagnosed; no importer code change is justified by the evidence available.
+2. [Low] Editor/Core/UnityMaterial.cs / source tree assets - I tried to falsify the parent's "importer carries tree data faithfully" claim and failed, so the claim survives: (a) Tree_01_Snaps014.FBX does contain three LayerElementColor streams, but a binary probe shows all 8365+4526+2789 vertex colours are RGB (0,0,0) with alpha about 0.99, i.e. no burgundy vertex tint; (b) the courtyard also contains 10-11 Tree_Brick_01 instances, whose material references resolve to outdoor_trim and earth_floor in both the Unity prefab and the generated prefab; (c) source and generated albedo TGAs are byte-comparable in mean colour (leaf 61.6,69.9,40.5; earth floor 105.9,94.2,69.7). Fix: record these observations beside the disclosed gap; do not treat them as a pass.
+
+Tree (four reviewed source files at HEAD ae9781a):
+- Editor/Core/UnityHdrpLighting.cs — `git hash-object --path="Editor/Core/UnityHdrpLighting.cs" "Editor/Core/UnityHdrpLighting.cs"` => 3de49ef03d589016281b43d044910382893f34ac
+- Editor/Core/UnityPrefabExport.cs — `git hash-object --path="Editor/Core/UnityPrefabExport.cs" "Editor/Core/UnityPrefabExport.cs"` => 7c80ad48c817952ae79aa2935775e32616249049
+- Editor/Core/UnitySceneExport.cs — `git hash-object --path="Editor/Core/UnitySceneExport.cs" "Editor/Core/UnitySceneExport.cs"` => 6bc6a265c16a18cc84b1e7677fbc45f14f1637ae
+- Editor/Core/UnityVolume.cs — `git hash-object --path="Editor/Core/UnityVolume.cs" "Editor/Core/UnityVolume.cs"` => 420f4633aac52e30cb9547819171efe06f428786
 
 ## Notes
 
@@ -134,6 +145,95 @@ b_fixed_skyaffect0_small.jpg reports NO recognizable trees/foliage (only a tiny 
 because the camera looks out of an interior. Blocker (2) stands: a frame that actually contains
 trees is required — likely a different scene camera or a repositioned editor camera. Tree colour
 remains UNJUDGEABLE; do not close.
+
+MASTER CLEAN-OUTPUT PERCEPTUAL GATE 2026-11-24 (first run of this gate):
+Regenerated Assets/imported from HEAD ae9781a (harness rebuild 0/0, 2154 files,
+verify_output.py 875 files 0 problems). Opened the Dev editor, played mergev2,
+captured a play frame from the main camera. Clean frame: 230 green pixels vs
+Unity oracle 8630; vision reports only a narrow strip of dark low foliage at
+the bottom of the windows and NO readable green tree crowns. The Unity oracle
+itself shows NO trees, so this symptom still needs a view containing trees in
+BOTH engines; it remains UNJUDGEABLE, not resolved. The clean frame is no
+longer a flat grey wall (152052 coloured px) but is dim/cool/desaturated, so
+the downstream lighting/fog confound is still live. Full numbers and capture
+paths: <scratch>/taskmaster-nov22/visual/CLEAN-PERCEPTUAL-GATE.md.
+
+FOLLOW-UP 2026-11-24: both the disabled-warm-sun and 0.012-conversion
+candidates are FALSIFIED (faithful to Unity); the SkyAffect=0 patch is
+contraindicated. The clean frame still has no readable green foliage (230 green
+px) and the Unity oracle itself shows no trees, so this symptom needs a view
+containing trees in BOTH engines. parent-verified evidence and the recorded
+task-09 default-sky scope decision: visual/CLEAN-PERCEPTUAL-GATE.md.
+DONE? stays NO!.
+
+FINAL ROOT CAUSE 2026-11-24 (parent-verified): MergeV2 has 25+ baked
+Lightmap-*_comp_light.exr + LightingData.asset and m_EnableBakedLightmaps:1
+(MergeV2.unity:53); UnitySceneExport.cs:18-19 reports lightmaps as not
+converted. The golden sun is BAKED GI that s&box cannot reproduce. The
+offered sunIntensity fix is FALSIFIED against local HDRP source (sunIntensity
+is a sky-disk default, not scene illumination). Isolation ABLATION5 shows the
+disabled sun branch causes ~90% of the warm shift. No source-faithful importer
+defect remains; an active-sun approximation needs an explicit Director
+decision. See visual/CLEAN-PERCEPTUAL-GATE.md. DONE? stays NO!.
+
+REGENERATED COMPILED FRAME 2026-11-24: NO green trees or foliage visible in the
+matching-camera render, and the Unity oracle also shows no trees. Tree colour
+therefore remains UNJUDGEABLE on this camera; this is not a pass. Full verdict:
+visual/REGENERATED-FRAME-VERDICT.md. A view containing trees in BOTH engines is
+still required before this header can close.
+
+TREE-CAMERA SWEEP 2026-11-24 (scratch mirror, final regenerated output, play):
+captured the five `Setting` Main Camera variants plus the Japanese School Camera.
+Green-pixel counts: cam0 87, cam1 96769, cam2 13, cam3 0, cam4 414494, pinned
+Japanese School Camera 3743. vision_analyze of the two green-heavy frames
+(cam1, cam4) shows NO trees or foliage - the green pixels come from large dark
+olive/forest-green FLOORS/carpets and a small EXIT sign, not vegetation. The
+Unity oracle also shows no trees. So tree colour remains UNJUDGEABLE on every
+available camera: there is no view containing trees in both engines, and no
+observation can confirm or refute "the trees aren't the correct color".
+Frames: visual/TREE-*.png and -960.jpg. This is a genuine blocker, not a pass;
+a view with trees in BOTH engines or the Director's own observation is needed.
+
+TREE-COLOUR DISCRIMINATING OBSERVATION 2026-11-24 (parent-run, headless):
+the "importer dropped/mis-mapped the tree colour" candidate is FALSIFIED by
+measurement on disk. Unity and generated leaf albedo TGAs have identical
+meanRGB (61.6,69.9,40.5) and 75.1% green-ish pixels; both engine materials
+carry a white tint (_BaseColor/_Color 1,1,1 and g_vColorTint 1,1,1); all 11
+Unity Tree_01_Snaps014 prefab instances have no m_Materials/colour overrides.
+The s&box render's dark olive-green trees are faithful to the source data.
+Unity's burgundy trees therefore come from Unity-side rendering (cause still
+OPEN, not dismissed - the active HDRP Volume's ColorAdjustments/WhiteBalance
+are neutral, so a red colour filter is not it). Under the Director's BEST
+EFFORT bar and HDRP abandonment this is disclosed, not claimed resolved.
+Evidence: <scratch>/taskmaster-nov22/outdoor-compare/COMPARISON-2026-11-24.md.
+
+DIRECTOR DECISION 2026-11-24 (recorded by Task Master): "Fix trees and skybox
+100% (i'm confident those are fixable) and then fix lighting to "best ability"."
+Work order: trees -> skybox -> lighting. BEST EFFORT now applies to LIGHTING ONLY,
+not trees or skybox. This real Director turn is the fresh decision that unblocks
+re-tuning directional intensity against the outdoor dusk oracle. Any code change
+resets REVIEWED? to NO! on affected tasks and needs a fresh critic "no further
+changes" before DONE? YES!. Evidence:
+<scratch>/taskmaster-nov22/outdoor-compare/COMPARISON-2026-11-24.md.
+TREE-COLOUR DISCRIMINATING OBSERVATION (parent-run): importer data defect
+FALSIFIED - Unity/generated leaf albedo TGAs identical (61.6,69.9,40.5), white
+tints both engines, 11 prefab instances with no material/colour overrides. The
+Director is confident the symptom is fixable, so the mechanism is being
+RE-OPENED from the source side (other tree assets, vertex-colour handling,
+deleted 2760-file AssetStoreOriginals cleanup). Research child sa-0-1b8f9add.
+No code changed yet.
+
+RESEARCH VERDICT 2026-11-24 (parent-verified on disk, deleg_d9eb2472):
+TREE = SOURCE-FAITHFUL, no importer-side colour defect. Full census: all 78
+flora instances in MergeV2.unity resolve to six prefabs (Tree_01 11, Tree_Brick
+10, Shrubs_01 36, Flowerbeds 21) with white _BaseColor/_Color and green/grey-brown
+albedos; leaf (61.6,69.9,40.5), shrubs (63.7,73.1,43.4), trunk (129.6,107.2,85.5)
+brick-brown. Generated textures/tints identical, no vertex-colour tint path in
+Editor/Core, no burgundy asset at 657970f/ca07499/49a49ea (R100 moves only).
+Verified myself: trunk/leaf TGAs identical, white tints, MergeV2.unity:29 has
+m_SkyboxMaterial {fileID: 0}. A burgundy canopy has NO source representation.
+Full report: <scratch>/taskmaster-nov22/outdoor-compare/TREE-SKY-DIAGNOSIS.md.
+Holding for a fresh Director decision (no invented red tint).
 
 ## Clarification Q&A
 
