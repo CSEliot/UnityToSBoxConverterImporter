@@ -10,6 +10,13 @@ Standing constraints (Director 2026-11-25, recorded by Task Master; copy into ev
 - Oracle: Testing/Unity-Screenshot-Outside.png; Unity source C:/cseliot/1-Development/4-Unity/2-Projects/old_school_model (HDRP GraphicsSettings).
 - Session-start harness gate on the adopted baseline: 0 warnings / 0 errors, log C:/Users/Eliot/AppData/Local/hermes/profiles/hermes-sbox/cache/scratch/taskmaster-nov25/session-start-harness-build.log.
 
+### Dispatch record 2026-11-25 (parent decisions, not task-local)
+- sa-0-9e2a362d (deleg_74fb5993): clean re-import loop from HEAD 8bb1eaa + two editor play frames + measured comparison; evidence dir C:/Users/Eliot/AppData/Local/hermes/profiles/hermes-sbox/cache/scratch/taskmaster-nov25/reimport-evidence/. Authorised by Q4=4B. Owning install: Dev checkout; no unityimporterplus editor was open (the only live sbox-dev.exe, PID 3464, runs good_boy_come_home and is untouched).
+- sa-0-44e5326e (deleg_744073f9): read-only per-symptom mechanism census for all four tasks; output .../taskmaster-nov25/diagnosis-census.md. Forbidden to read PROJ/Assets/imported while the sibling regenerates it.
+- No Task Workers spawned yet: all four task headers remain STARTED? NO!, CLARIFIED? YES!, HISTORY? YES!, REVIEWED? NO!, DONE? NO!, WORKER: NONE.
+- Assets/imported held 5431 files before the loop (editor-compiled); a fresh headless import is expected to be smaller.
+- NTFY status ping fired (HTTP 200) announcing the authorised editor loop before it started.
+
 ## Clarification Q&A
 
 ### Kickoff batch 01 / 02 / 03 (Director, 2026-11-25, chat)
