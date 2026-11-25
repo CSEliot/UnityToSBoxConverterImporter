@@ -1,4 +1,4 @@
-## Status: STARTED? YES! CLARIFIED? YES! HISTORY? YES! REVIEWED? NO! DONE? NO! WORKER: sa-0-4ea4b5c6 OTHER: sa-0-44a89c13 Phase 1 read-only worker; M7 fix implementer delegated 2026-11-25 19:24; baseline c91e87b
+## Status: STARTED? YES! CLARIFIED? YES! HISTORY? YES! REVIEWED? YES! DONE? NO! WORKER: sa-0-4ea4b5c6 OTHER: sa-0-44a89c13 Phase 1 read-only worker; M7 fix implementer delegated 2026-11-25 19:24; baseline c91e87b
 
 ## Task
 Imported objects wrong/missing in transform.
@@ -49,6 +49,26 @@ Unity project we're importing: C:\cseliot\1-Development\4-Unity\2-Projects\old_s
 
 ### Work Review
 
+2026-11-25 19:40 - Verdict: no further changes
+
+SCOPE: This review covers ONLY the two M7 hunks in `Editor/Core/UnityPrefabExport.cs` - the renderer model selection in `ModelRoot` (~:1159) and the MeshCollider model selection in `WrapperRoot` (~:1270). It explicitly EXCLUDES the unshipped Phase 4 code: the +4/+173/+20 deltas in `UnityImport.cs`, `UnitySceneExport.cs`, `UnityVolume.cs`, the untouched Phase 4 `foreach ( var cameraComponent in UnitySceneExport.Camera(...) )` line at ~:1504 of this same file (observed in the diff, not reviewed), and the Director's `eliots-agentics/common.md` edit. No code was edited, staged, committed or pushed; DONE? unchanged.
+
+1. [Low] (a) `ModelThrough` exists with the assumed signature and behaviour. `string ModelThrough( int[] mirror, UnityAsset model, string mesh, string plain )` is a private `Converter` method at `Editor/Core/UnityPrefabExport.cs:949-953`; both new call sites pass `(RootMirror, model, mesh, Context.ModelFor( model, mesh ))`, matching it exactly. It returns `plain` unless `IsMirror( mirror )` (:725) is true, then calls `Context.MirroredModelFor?.Invoke( model, mesh, UnityPrefabExport.MirrorAxis( mirror ) ) ?? plain`. `MirroredModelFor` is `Func<UnityAsset, string, int, string>` (:711), wired at `UnityImport.cs:541` to the local function at `UnityImport.cs:459-470`, which demand-generates and caches a `<name>_mirror_<axis>.vmdl`. The same helper already serves the scene renderer paths (:1467, :1526), so no new dependency. Fix: none needed.
+
+2. [Low] (b) `RootMirror` is in scope and correct at BOTH call sites. It is a private `Converter` property at :918 derived from `readonly int MirrorAxis` (:797) set by the constructor (:872-877); `ModelRoot` (:1149) and `WrapperRoot` (:1197) are methods of that same class. A mirrored wrapper variant is converted via `MirroredPrefabFor` -> `Convert( asset, context, axis )` (`UnityImport.cs:480`, `UnityPrefabExport.cs:1814-1818`), so `RootMirror` has exactly one -1 and both model paths request the mirror VMDL. Plain conversion and `ConvertModel` (:1844-1849) use the default `MirrorAxis = -1`, giving `NoMirror`. `RootMirror` matches the parallel `Source.RootPending` formula (:1021). Fix: none needed.
+
+3. [Low] (c) Non-mirrored prefabs cannot change, and no null or wrong collider is produced. With `RootMirror == NoMirror`, `IsMirror` is false and `ModelThrough` returns the exact `Context.ModelFor( model, meshName )` value the original expression produced. The `meshName == null ? null : ...` guard (:1270), `renderers[0].Path` fallback and warning (:1271-1272) are untouched; `ModelThrough` falls back to `plain` on any mirror miss (:952, `UnityImport.cs:461`), so it cannot return null where the old code did not. The mirror VMDL is a byte-for-byte copy of the plain VMDL except one `mirror_<axis> = false` -> `true` line (independently diffed on disk: `floor_03_snaps014` differs only at :101, `flowerbeds_03_snaps014` only at :104), so hull, geometry and material slots are preserved; the wrapper's collider and renderer point at the same mirror model (floor_03 prefab :33/:58, restroom_floor_02 :33/:58, flowerbeds_03 :34/:59). Fix: none needed.
+
+4. [Low] (d) Wrapper-root guard and Converter invariants preserved. The diff changes only the two model-selection expressions plus a comment. `hasWrapperRootOverride` / `wrapperRoot` (:1589-1603, :1622-1625), `Key`-derived GUIDs (:877, :1176, :1183), `rendererOf` and renderer dedup (:1160-1173), the null-model warning (:1165-1169), material-slot remap (:1226-1249) and collider fallbacks/counts (:1271-1295) are all untouched. Fix: none needed.
+
+5. [Low] (e) No unhandled mirror axis, LOD or material-slot interaction. `Unmirror` (:739-762) owes no axis, exactly one axis, or one x-mirror plus a 180-degree rotation for three negatives; two negatives fold into the rotation (:749-753), so `MirrorAxis( int[] )` (:727) always returns a real 0..2 index whenever `IsMirror` holds, and `MirroredModelFor` maps it with `"yzx"[axis]` / `"xyz"[axis]` (`UnityImport.cs:465-466`). Verified on disk: x-axis variants carry `mirror_y = true`, z-axis variants `mirror_x = true`. LOD meshes are ordinary `RenderedMeshes`/`explicitMeshes` entries (:1151-1154) and each receives a mirror model on demand (the flowerbeds mirror_z VMDL exists). Material slots are index-based (:1233) and the mirror VMDL keeps slot order. The separate name-target mismatch (M1) and the visual placement symptom are outside these two hunks and remain for the Director's Q3 judgement; this verdict covers only the headless M7 objective defect. Fix: none needed.
+
+6. [Low] Objective symptom observed gone on disk (critic.md evidence rule): fresh mirror prefabs name `_mirror_<axis>.vmdl` files that did not exist at baseline; plain-vs-mirror diffs excluding `__guid` are non-empty (386/422/398 bytes) and contain only `__guid`/`Model` lines; 21 mirror VMDLs emitted (baseline 0); harness build `0 Warning(s) / 0 Error(s)`; `verify_output.py` `checked 862 files, 0 problems`; scoped generated-output diff 42 lines, all mirror-related, 0 non-mirror lines. Re-read directly from `EVID/m7-fix/out`, `*.log` and `*.txt`, not from the report.
+
+Tree: 0e30c439ab5872c5a536b48260e3f2bd0469d2c8  Editor/Core/UnityPrefabExport.cs
+`git hash-object --path=Editor/Core/UnityPrefabExport.cs Editor/Core/UnityPrefabExport.cs`
+
+Verdict: no further changes
 
 ## Notes
 
