@@ -118,9 +118,12 @@ public sealed class UnityModel
 		if ( !double.IsFinite( scale ) || scale <= 0 ) throw new InvalidDataException( "Model import scale must be finite and positive." );
 		return scale;
 	}
-	public string[] HighestDetailMeshes => Meshes.Where( n => Regex.IsMatch( n, @"(?i)(?:^|[_ .-])LOD0(?:$|[_ .-])" ) ).ToArray();
-	/// <summary>The meshes a generated model should import: LOD0 only when the FBX has LODs.</summary>
-	public string[] RenderedMeshes => HighestDetailMeshes is { Length: > 0 } lod0 ? lod0 : Meshes.ToArray();
+	public string[] HighestDetailMeshes => Meshes.Where( n => UnityLod.Level( n ) == 0 ).ToArray();
+	/// <summary>
+	/// The meshes a generated model imports: every mesh, as at HEAD. LOD levels are grouped into one model by
+	/// UnityImport.ModelSplit, not by filtering here - dropping non-LOD names from a mixed FBX would lose geometry.
+	/// </summary>
+	public string[] RenderedMeshes => Meshes.ToArray();
 	public string[] RenderedMaterials
 	{
 		get
@@ -147,7 +150,7 @@ public sealed class UnityModel
 	/// <summary>Exporter "N - Default" slots carry no author material; they are named residuals, not missing conversions.</summary>
 	public static bool IsDefaultSlot( string name ) => Regex.IsMatch( name ?? "", @"(?i)^\s*\d+\s*-\s*default\s*$" );
 	/// <summary>The mesh stem before an LOD suffix, so a LOD01 override can be paired with its imported LOD0 counterpart.</summary>
-	public static string LodBase( string mesh ) => Regex.Replace( mesh ?? "", @"(?i)_lod\d+$", "" );
+	public static string LodBase( string mesh ) => UnityLod.Base( mesh );
 
 	/// <summary>
 	/// Pre-2018 Unity identifies FBX sub-assets by recycle ID (4300000, 4300002, …) listed in the

@@ -406,7 +406,10 @@ public static class UnityImport
 								foreach ( var slot in GroupSlots( group ) )
 									group.Remaps.TryAdd( slot.ToLowerInvariant() + ".vmat", neutralReference );
 					if ( meshGroups.Count > 1 )
-						information.Add( $"{asset.Path}: meshes use different materials through the same FBX material slot; one model was written per mesh." );
+						information.Add( $"{asset.Path}: meshes use different materials through the same FBX material slot; one model was written per mesh, keeping that mesh's LOD levels together." );
+					var lodLevelCount = info.RenderedMeshes.Select( UnityLod.Level ).Where( l => l is not null ).Distinct().Count();
+					if ( lodLevelCount > 1 )
+						information.Add( $"{asset.Path}: {lodLevelCount} LOD levels were packed into one LOD-aware model; the switch distances are a NEW mapping from mesh names (the source has no Unity LODGroup thresholds), tunable via UnityLod." );
 					if ( options.Materials && options.Vmat && !defaultMaterialWasResolved && meshGroups.Count <= 1 )
 						foreach ( var slot in unassignedSlots )
 							Issue( asset.Path, "unassigned-material", $"No converted material was resolved for slot '{slot}'; using a neutral material." );
@@ -419,7 +422,7 @@ public static class UnityImport
 						var meshes = group.Meshes.Length > 0 ? group.Meshes : info.RenderedMeshes;
 						var name = meshGroups.Count > 1 ? group.Meshes[0] : Path.GetFileNameWithoutExtension( asset.Path );
 						var modelPath = GeneratedPath( (string.IsNullOrEmpty( modelDirectory ) ? "" : modelDirectory + "/") + name + ".vmdl" );
-						var collision = meshes.Where( info.CollisionMeshes.Contains ).ToArray();
+						var collision = meshes.Where( m => info.CollisionMeshes.Contains( m ) && (UnityLod.Level( m ) ?? 0) == 0 ).ToArray();
 						var modelText = ModelDocument( meshPath, group.Remaps ?? remaps, group.Remaps != null ? null : defaultMaterial,
 							meshes, collision, scale, collision.Length > 0 && collision.All( info.ConvexCollisionMeshes.Contains ), bodyGroups );
 						documents.Add( (Output( modelPath ), modelText) );
@@ -724,12 +727,20 @@ public static class UnityImport
 	/// </summary>
 	static List<ModelGroup> ModelSplit( UnityModel info, Dictionary<string, string> materialPaths, UnityAsset[] selected, Func<UnityAsset, string> materialFor )
 	{
-		var single = new List<ModelGroup> { new( Array.Empty<string>(), null ) };
+		var meshes = info.RenderedMeshes;
+		var single = new List<ModelGroup> { new( meshes, null ) };
 		// A skinned FBX stays one model: its meshes share a skeleton, and bodygroups switch between them.
 		if ( info.Skinned ) return single;
-		var meshes = info.RenderedMeshes;
 		if ( meshes.Length < 2 ) return single;
-		var assignments = meshes.Select( mesh => (Mesh: mesh, Slots: info.MeshSlotMaterials.GetValueOrDefault( mesh )) ).ToArray();
+		// Unity names the LOD levels of one logical object after a shared stem. Keep every level of a stem
+		// in one model: separate models draw every level at once, which is the reported z-fighting.
+		var families = meshes.GroupBy( UnityModel.LodBase, StringComparer.OrdinalIgnoreCase )
+			.Select( family => family.OrderBy( m => UnityLod.Level( m ) ?? int.MaxValue ).ToArray() )
+			.ToArray();
+		if ( families.Length < 2 ) return single;
+		// Conflicts are judged on each family's highest-detail mesh. Lower levels are approximations,
+		// folded into the same remap table rather than given a second model of their own.
+		var assignments = families.Select( family => (Mesh: family[0], Slots: info.MeshSlotMaterials.GetValueOrDefault( family[0] )) ).ToArray();
 		if ( assignments.Any( a => a.Slots == null || a.Slots.Count == 0 ) ) return single;
 		// A slot mapped to two different materials across meshes is what a single table cannot express.
 		var conflicting = assignments.SelectMany( a => a.Slots ).GroupBy( s => s.Key, s => s.Value, StringComparer.OrdinalIgnoreCase )
@@ -745,7 +756,8 @@ public static class UnityImport
 				if ( material == null ) return single;
 				remaps[slot.ToLowerInvariant() + ".vmat"] = materialFor( material );
 			}
-			groups.Add( new( new[] { mesh }, remaps ) );
+			var family = families.First( f => f[0].Equals( mesh, StringComparison.OrdinalIgnoreCase ) );
+			groups.Add( new( family, remaps ) );
 		}
 		return groups;
 	}
@@ -787,9 +799,34 @@ public static class UnityImport
 			$"{t}\timport_filter = \n{t}\t{{\n{t}\t\texclude_by_default = {(excludeByDefault ? "true" : "false")}\n{t}\t\texception_list = \n{t}\t\t[{items}\n{t}\t\t]\n{t}\t}}\n{t}}},";
 	}
 
+	/// <summary>
+	/// The LODGroupList node: one LODGroup per level, switch_threshold from UnityLod (a NEW mapping),
+	/// and meshes naming the RenderMeshFile nodes of that level. Serialized shape from
+	/// engine/Definitions/modeldoc/ModelDocApp.def:296-299 and the engine's citizen_lodgrouplist.vmdl_prefab:9-73.
+	/// </summary>
+	static string LodGroupList( IEnumerable<IGrouping<int, string>> levels )
+	{
+		const string t = "\t\t\t";
+		var text = new StringBuilder( $"{t}{{\n{t}	_class = \"LODGroupList\"\n{t}	children = \n{t}	[\n" );
+		foreach ( var level in levels.OrderBy( g => g.Key ) )
+		{
+			text.Append( $"{t}		{{\n{t}			_class = \"LODGroup\"\n" );
+			text.Append( $"{t}			switch_threshold = {UnityLod.SwitchDistance( level.Key ).ToString( "0.0########", System.Globalization.CultureInfo.InvariantCulture )}\n" );
+			text.Append( $"{t}			meshes = \n{t}			[\n" );
+			foreach ( var mesh in level ) text.Append( $"{t}				{UnityMaterial.Quote( mesh )},\n" );
+			text.Append( $"{t}			]\n{t}		}},\n" );
+		}
+		return text.Append( $"{t}	]\n{t}}}," ).ToString();
+	}
+
 	static string ModelDocument( string mesh, Dictionary<string, string> remaps, string defaultMaterial, string[] meshes, string[] collisionMeshes, double scale, bool convex, IReadOnlyList<UnityModel.BodyGroup> bodyGroups )
 	{
 		const string indent = "						";
+		// Unity has no LODGroup thresholds in this corpus, so every level needs one named mesh node and a
+		// LODGroupList to switch them. Ungrouped meshes keep the old single-node emission.
+		var levels = meshes.Where( m => UnityLod.Level( m ) is not null )
+			.GroupBy( m => UnityLod.Level( m ).Value ).OrderBy( g => g.Key ).ToArray();
+		var lodGroups = bodyGroups.Count == 0 && levels.Length > 1 ? LodGroupList( levels ) : "";
 		// Unity's convex MeshCollider is one convex hull of the mesh. A non-convex one collides
 		// with the exact triangles, which is s&box's mesh collision (static bodies only).
 		var shape = convex ? """
@@ -820,9 +857,9 @@ public static class UnityImport
 			""";
 		// A bodygroup choice names RenderMeshFile nodes, so a model with bodygroups imports each mesh through its own
 		// named node (the Citizen's layout); one unnamed node importing everything compiles to a single "unnamed_1" mesh.
-		var renderMeshes = bodyGroups.Count == 0
-			? RenderMeshFile( null, mesh, meshes, meshes.Length > 0, scale )
-			: string.Join( "\n", meshes.Select( m => RenderMeshFile( m, mesh, new[] { m }, true, scale ) ) );
+		var renderMeshes = lodGroups.Length > 0 || bodyGroups.Count > 0
+			? string.Join( "\n", meshes.Select( m => RenderMeshFile( m, mesh, new[] { m }, true, scale ) ) )
+			: RenderMeshFile( null, mesh, meshes, meshes.Length > 0, scale );
 		var remapEntries = string.Join( "", remaps.OrderBy( r => r.Key, StringComparer.Ordinal ).Select( r =>
 			$"\n{indent}	{{\n{indent}		from = {UnityMaterial.Quote( r.Key )}\n{indent}		to = {UnityMaterial.Quote( r.Value )}\n{indent}	}}," ) );
 		return $$"""
@@ -839,7 +876,7 @@ public static class UnityImport
 						[
 		{{renderMeshes}}
 						]
-					},
+					},{{lodGroups}}
 					{
 						_class = "MaterialGroupList"
 						children = 
