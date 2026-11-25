@@ -434,6 +434,21 @@ READ B (Phase 3 vs Phase 4 vs Unity Camera-1/2): Unity1 dim flat dusk, no sun; U
 CONCLUSION: the Director-authorised Phase 4 combination (default post-processing + 23-degree sky rotation) FAILED the Q3 gate and is measurably AND perceptually WORSE than Phase 3. No miracle. Per the Director's timebox instruction skybox will be marked `DONE? FAILED!` with the documented constraint unless the final sun-rotation sweep produces a miracle before 09:53.
 DISPATCHED one bounded final experiment (`deleg_607386ed`, `sa-0-dacce323`): a six-value sky-yaw sweep (0/60/120/180/240/300) in the LIVE play scene, capturing Camera-2 at each, with a bright-pixel/horizon-band measurement to see whether ANY rotation makes the EXR sun disc and golden horizon appear. NO code edit, NO re-import, NO scene save; hard stop by 09:30. Parent will ai-review the best frame. This is the "do our best" pass within the timebox; no FAILED header is set yet.
 
+### Sun-yaw sweep LANDED (`deleg_607386ed`, `sa-0-dacce323`, 12 api_calls, 173.72 s)
+Parent-verified on disk in `EVID/sun-rotation-sweep/`: six `yawN.png` frames with distinct md5s, `captures.md`, `measurements.json/.txt`, `report.md`. `main=Japanese School Camera (2); active=True` for all; each yaw script returned `yaw=N sky=2D Skybox`; final editor PID 32612 open, idle, not playing, no unsaved changes. No code edit, git, scene save, re-import or deletes.
+MEASUREMENTS (bright px = upper 60% luminance>200; largest connected cluster; horizon RGB rows 432-539):
+| yaw | bright px | largest cluster | bbox | horizon RGB | R-B |
+|---|---:|---:|---|---|---:|
+| 0 | 1,734 | 953 | 647,423-783,431 | 157.6/127.4/96.2 | 61.4 |
+| 60 | 1,686 | 929 | 647,423-781,431 | 156.9/126.5/95.3 | 61.6 |
+| 120 | 1,677 | 924 | 647,423-780,431 | 156.7/126.3/95.1 | 61.6 |
+| 180 | 68,251 | 67,152 | 894,139-1279,395 | 141.5/110.1/78.7 | 62.8 |
+| 240 | 26,260 | 25,837 | 342,231-707,357 | 133.3/101.6/70.4 | 62.9 |
+| 300 | 1,038 | 643 | 647,424-739,431 | 144.3/112.9/81.4 | 62.9 |
+Best bright cluster: **180** (secondary 240). Warmest horizon by R-B: 300 (62.894), essentially TIED with 240 (62.875) and 180 (62.849) - the R-B spread across all six is only ~1.5, so NO yaw produces a distinctly golden horizon.
+INTERPRETATION (numbers only, NOT a verdict): yaw 180 creates a LARGE bright region in the upper-right (385x256 px), consistent with either the EXR sun/bloom or a bright cloud; yaw 240 a smaller one on the left. But the horizon warmth is essentially unchanged across all yaws, so rotating the sky alone does NOT reproduce Unity's strong warm golden band. DISPATCHED one one-shot ai-reviewed read (`deleg_73e9629b`, `sa-0-3d6f68df`) of Unity Camera-2 + yaw 0/180/240/300 to decide whether any is a genuine sun match, a partial improvement, or still a failure. NO perceptual verdict from the sweep driver.
+Time 09:07, deadline 09:53. FAILED header not set yet.
+
 ### PUSH BLOCKER 2026-11-25 (GitHub 500, not a repo problem)
 Local commit c2d4b64 landed and is intact. Three bounded `git push origin main` attempts failed with `remote: Internal Server Error` (Request IDs 4837:155430:DCBD27:1491A2B:6B062C19, 4817:23746:D8DB84:14394E3:6B062C29, 4822:5B3C9:DB8DBF:146D034:6B062C3C) - the third used the gh-token credential helper from the goal-doc-taskmaster skill. `gh auth status` shows a valid CSEliot token with repo scope, and `git ls-remote origin refs/heads/main` returns 2e9207a, so the remote is exactly one commit behind local c2d4b64. This is a GitHub-side transient rejection, not bad objects, auth or a diverged branch. Keep working locally; retry the push on the next commit. CRITICAL GATE: master.md step 6 / goal-doc-taskmaster require `git ls-remote` to match local HEAD before any `DONE? YES!` - do NOT set DONE? YES! on any task while origin/main is behind. All prior commits through 2e9207a are on the remote.
 RESOLVED 2026-11-25: a fourth bounded `git push origin main` succeeded (`2e9207a..a842cd8`), and `git ls-remote origin refs/heads/main` now equals local HEAD a842cd8. Both queued local commits (c2d4b64, a842cd8) are on the remote; the no-DONE gate is lifted. No force push, no history rewrite, no unrelated files staged.
