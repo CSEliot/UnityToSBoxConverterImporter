@@ -1,0 +1,3 @@
+### PHASE2-SPEC written (2026-11-25, durable pin for the queued grants)
+C:/Users/Eliot/AppData/Local/hermes/profiles/hermes-sbox/cache/scratch/taskmaster-nov25/PHASE2-SPEC.md pins the absolute paths, owner files, exact hooks, verified facts, Q3 gates and parent gates for the three queued PERMISSION grants (skybox -> objects -> tree), so a compaction cannot lose them. It states explicitly that it does NOT authorise any edit and that every line number must be re-grepped after the LOD commit, which modifies UnityImport.cs. Both currently running children (sa-0-9d6908dd regeneration, sa-0-ce194181 critic) were checked at ~393 s and are still running; no transcript or artifact poll was done.
+

@@ -1,0 +1,4 @@
+### `deleg_6daf64c1` completion notice (2026-11-25 ~08:34) - ALREADY HANDLED
+The continuation worker's completion notice matches the parent's on-disk verification line for line: `Camera()` -> `List<JsonObject>` fix, emitted sky Rotation `0,0,0.19936794,0.9799247`, exact four effect values, harness 0/0, out6 `1281/938/2122` with `unresolved=63 warnings=79 info=3991`, `checked 842 files, 0 problems`, 2,660-line generated-output diff, 9/9 cameras with all five components, source hygiene, and the filled `### Worker Phase 4 - RESULTS` section. All of it was already recorded and committed at 213637f; NO re-run, NO correction. The refused steer was a control-plane race (child already closed), not a lost child.
+Q4 Phase 4 driver `sa-0-d1b95c00` (`deleg_f464eaa3`) was at 108.9 s with only the moved-aside `imported-before-loop` present - no play frames yet. Deadline 09:53.
+

@@ -1,0 +1,12 @@
+### NEW ORACLE DATA from the Director (2026-11-25 06:02, all four task files edited live)
+The Director added an identical block to all four task files: four Unity play screenshots from four cameras, "These screenshots were taken from 4 cameras in the scene, enable one each after importing into sbox to get validation from in-game sbox screenshots", plus the Unity project path C:/cseliot/1-Development/4-Unity/2-Projects/old_school_model. Master-verified on disk:
+- `Testing/Unity-Screenshot-Outside-Facing-School-Camera-1.png` 1520x855, mean grey 48.52. This IS the former `Testing/Unity-Screenshot-Outside.png` RENAMED - identical dimensions and mean grey to every prior measurement (48.5219, sky band 56.19/67.98/78.57). All prior reference numbers now belong to Camera-1.
+- `Testing/Unity-Screenshot-Outside-Facing-Sun-Camera-2.png` 1529x859, mean grey 75.22.
+- `Testing/Unity-Screenshot-Inside-Facing-Hallway-Camera-3.png` 1519x843, mean grey 28.06.
+- `Testing/Unity-Screenshot-Outside-Facing-Windows-Camera-4.png` 1519x850, mean grey 42.54.
+- `Testing/Unity-Screenshot-Outside.png` NO LONGER EXISTS; `git ls-files Testing/` is empty (all PNGs untracked).
+- `MergeV2.unity` mtime 2026-11-25 05:57, 12,259,969 B, now has four `m_Name: Japanese School Camera (N)` blocks at :92847 (2), :239464 (1), :247041 (4), :283535 (3) - three new cameras added, four total, confirmed.
+CONSEQUENCE FOR THE SKYBOX REASONING: Camera-2 (facing the SUN) is mean grey 75.22 against Camera-1's 48.52, so the Unity look is NOT uniformly dark across views. Every earlier conclusion - including my recommendation to drop the sunrise EXR because "the reference has no visible sun" - was drawn from Camera-1 ALONE. That recommendation may be undercut by the sun-facing view. HOLD all mechanism decisions until the four screenshots have been ai-reviewed.
+LIVE PROJECT STATE (do not clobber): `Assets/imported` currently holds only `_iup_primitives` (3 files); no `.scene` exists anywhere under PROJ. The generated `mergev2.scene` is gone. The unityimporterplus editor is OPEN (PID 44568, Dev install); the other editor PID 3464 is good_boy_come_home and untouched. The Director is mid-work, so no re-import, no write under `Assets/imported`, no task-file edit by the Master, and no mechanism change.
+DISPATCHED `sa-0-b7d503b7` (`deleg_0770cda0`): one ai-reviewed read of all four new Unity screenshots, asking per-image sky / sun / horizon / foliage / brightness and whether a visible sun appears in the sun-facing view. Result pending; Q3 gate evidence.
+

@@ -1,0 +1,10 @@
+### Phase 4 headless gates PASSED (Master-verified on disk, 2026-11-25 ~08:31)
+The continuation fixed the re-parenting defect: `UnitySceneExport.Camera()` now returns `List<JsonObject>` (unparented) and the caller's foreach is unchanged. Parent-verified artifacts in `EVID/skybox-phase4/`:
+- `harness-rebuild-final.log`: Build succeeded, 0 Warning(s), 0 Error(s). `parent-gate-phase4.log`: same.
+- Fresh `out6` run: `assets=1281 converted=938 files=2122`, `issues: unresolved=63 warnings=79 info=3991`. Import Error Outputs disposition: unresolved and warnings UNCHANGED from the 63/79 baseline with the same 44/16/3 category split; Information +6 vs the Phase 4 scratch baseline (3991 vs 3985), consistent with the added camera components, NOT an error regression. NO new or grown category.
+- `verify-output-out6.log`: `checked 842 files, 0 problems`.
+- `phase4-generated-output-diff.patch`: 2,660 lines (large because 4 effects x 9 cameras plus the 2 PostProcessVolume children).
+- Generated `out6/.../mergev2.scene` recursive type census: 9 `Sandbox.CameraComponent`, 11 each of `Sandbox.Bloom` / `Sandbox.ScreenSpaceReflections` / `Sandbox.AmbientOcclusion` / `Sandbox.Tonemapping`, 1 `Sandbox.SkyBox2D`. Sky parent `Rotation` at :128869 = `0,0,0.19936794,0.9799247` - the expected 23-degree yaw. `outdoorsscene.scene` keeps `materials/skybox/skybox_day_01.vmat` and white Tint `1,1,1,1`.
+- Source hygiene: `UnitySceneExport.cs` and `UnityPrefabExport.cs` BOM-less, 0 CRLF, 0 TODO/STUB/FIXME/HACK.
+The worker had already closed before the steer landed (control-plane race): it FILLED the `### Worker Phase 4` skeleton itself with these exact results (heading now `- RESULTS`), so no parent bookkeeping was needed. DISPATCHED the Q4 four-camera play-capture driver (`deleg_f464eaa3`, `sa-0-d1b95c00`) for the full clean re-import loop from the Phase 4 code, four genuine `screenshot_highres` frames via the existing `enable_camN.cs` scripts, measurements against the four Unity PNGs, and the Import Error Outputs gate. Parent will do the ai-reviewed LOOK read afterwards. Deadline 09:53.
+

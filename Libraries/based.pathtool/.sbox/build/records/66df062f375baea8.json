@@ -1,36 +1,36 @@
 {
   "Source": "Materials/library_material.vmat",
-  "Job": "8a0782f6ffdc4cca955036fd3d55448c",
+  "Job": "19daca5101304a06a37b3b31565f23d0",
   "Outputs": {
     "materials/default/default_ao_tga_7449568e.generated.vtex_c": {
       "Size": 1948,
-      "Time": 639307712645734245,
-      "Hash": "0b1ec3d1aebe6d79"
+      "Time": 639312242745794348,
+      "Hash": "8dbdfa69c285f1cc"
     },
     "materials/default/default_bentnormal_tga_8334dba4.generated.vtex_c": {
       "Size": 1972,
-      "Time": 639307712646078866,
-      "Hash": "8c236464b1a6ebf6"
+      "Time": 639312242746425165,
+      "Hash": "6d0978e3f441de57"
     },
     "materials/default/default_color_tga_380558b.generated.vtex_c": {
-      "Size": 1772,
-      "Time": 639307712646446894,
-      "Hash": "56513db200c9de90"
+      "Size": 1788,
+      "Time": 639312242747022042,
+      "Hash": "d3e3366bae7ec4ad"
     },
     "materials/default/default_normal_tga_5c878876.generated.vtex_c": {
       "Size": 2228,
-      "Time": 639307712646804845,
-      "Hash": "41d4eb8ad502b1af"
+      "Time": 639312242747676528,
+      "Hash": "df58e72d078c07ab"
     },
     "materials/default/default_color_tga_29ae19a3.generated.vtex_c": {
       "Size": 1780,
-      "Time": 639307712647129823,
-      "Hash": "eae590de474047fc"
+      "Time": 639312242748235236,
+      "Hash": "6e01ad64cd494272"
     },
     "materials/library_material.vmat_c": {
       "Size": 5810,
-      "Time": 639307712647180783,
-      "Hash": "32dc7bae44be0324"
+      "Time": 639312242748421686,
+      "Hash": "f56f79ad4300b004"
     }
   },
   "Inputs": [
@@ -117,7 +117,7 @@
       "Compiler": "CompileTexture",
       "Data": 0,
       "Name": "Texture Compiler Version",
-      "Fingerprint": 12
+      "Fingerprint": 19
     },
     {
       "Compiler": "CompileTexture",
@@ -183,5 +183,5 @@
   },
   "Prerequisites": [],
   "ChangedWhileCompiling": false,
-  "Seconds": 0.26
+  "Seconds": 0.45
 }

@@ -1,0 +1,8 @@
+Standing constraints (Director 2026-11-25, recorded by Task Master; copy into every child brief):
+- Baseline HEAD is c91e87b (the 2026-11-24 importer WIP adopted by ONE explicit-path baseline commit, Q1=1A). Pushed to origin/main.
+- Parent decisions (change if wrong): the 2026-11-24 standing constraints that used to live here (HDRP abandonment, "no fog", work order trees -> skybox -> lighting, BEST EFFORT, Restroom_Wall_01 note) were deliberately removed by the Director (HEAD 2c17e22 "cleanup") and are NOT in force. Q2 answer "ignore the git diff" / "Ignore what you learned from the git diff of session.md" means no ban is invented from them. Scope is set by the four live task files and the Director's fresh instruction only.
+- Q4=4B: the full clean re-import loop is AUTHORIZED and REQUIRED (launch editor, open scene, play, capture two play frames against Testing/Unity-Screenshot-Outside.png). Not out-of-scope extra testing.
+- Q3: skybox and tree colour are agent-runnable from a rendered frame compared to the Unity screenshot; LOD/z-fighting and objects-misplaced may close DONE? YES! with a self-contained `Open:` line for the Director's own final judgement. Objective data defects and unchanged reported symptoms never close with an Open: line.
+- Oracle: Testing/Unity-Screenshot-Outside.png; Unity source C:/cseliot/1-Development/4-Unity/2-Projects/old_school_model (HDRP GraphicsSettings).
+- Session-start harness gate on the adopted baseline: 0 warnings / 0 errors, log C:/Users/Eliot/AppData/Local/hermes/profiles/hermes-sbox/cache/scratch/taskmaster-nov25/session-start-harness-build.log.
+

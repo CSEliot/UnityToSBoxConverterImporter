@@ -1,0 +1,5 @@
+### Re-ground while the Q4 four-camera driver runs (2026-11-25)
+HEAD = remote = 0a5171e. Role files unchanged (`common.md` still the Director's 02:16 edit); the four task files are his 06:02 edits plus the skybox worker's 06:46 Phase 3 append - do not clobber. Parent gate and source hygiene already recorded above.
+EDITOR STATE CHANGED: no `sbox-dev.exe` is open on `unityimporterplus.sbproj` now (the PID 56516 named in the spec is gone). The only running editor is PID 25556 on `2-Projects/unityimporterplus_branch_2/unityimporterplus_branch_2.sbproj` - a DIFFERENT project, likely a parallel branch workspace; do NOT connect to, close, or launch against it. Steered `sa-0-c75a3ff7` with this.
+CONFIRMED in scratch `D/out4/Assets/imported/school/scenes/mergev2.scene` (generated from the current code): all four new cameras ARE emitted - `Japanese School Camera (1)` at :127797, `(2)` at :127856, `(3)` at :127915, `(4)` at :127974 - and there are 9 `Sandbox.CameraComponent` blocks total, so the driver must select ONLY the four named ones. Steered the driver with both facts to save its call budget. Driver was still running (65 s) at this re-ground; no result yet.
+

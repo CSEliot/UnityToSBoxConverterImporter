@@ -2,6 +2,7 @@
   "Title": "UnityImporterPlus",
   "Type": "game",
   "Org": "local",
+  "OrgTitle": null,
   "Ident": "unityimporterplus",
   "Schema": 1,
   "IncludeSourceFiles": false,

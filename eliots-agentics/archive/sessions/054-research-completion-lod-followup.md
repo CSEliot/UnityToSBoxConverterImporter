@@ -1,0 +1,8 @@
+### `deleg_edb155d2` completion notice (2026-11-25 ~08:12)
+Tasks 1/3 and 2/3 (camera post-processing, sun direction) were ALREADY HANDLED - their files were read, verified against primary source and recorded above; no re-run.
+Task 3/3 (LOD follow-up diagnosis) was TRUNCATED at 40 calls / 683.32 s with findings only in its completion summary and NO `EVID/LOD-FOLLOWUP-DIAGNOSIS.md`; the async verifier confirmed 1 failed scratch write (`lod_followup_fbx_probe.py`, stale-write guard). Per subagent-management the Task Master transcribed the findings into `EVID/LOD-FOLLOWUP-DIAGNOSIS.md` with fixed IDs and RE-VERIFIED every load-bearing claim with an independent Python probe:
+- F-1: `floor_stairs_{top,bottom,middle}_snaps014.vmdl` each has 6 RenderMeshFile, 1 LODGroupList, 2 LODGroup children, thresholds 0.0/50.0 - IDENTICAL. A1 and A2 FALSIFIED; no generated-data difference explains the missing visible LOD swap. Unrun falsifier U-1: compare LOD00 vs LOD01 geometry in the source FBX (or a close/far frame pair).
+- F-2: current `windows_05_frame_snaps014.vmdl` has 2 remaps (`windows.vmat`, `windows_02.vmat`), both `to` paths EXIST on disk; the HEAD baseline under `reimport-lod-fixed/imported-before-loop/` has 3, the extra being `material #221.vmat` - a real FBX material (offset 165548) now unmapped. B2 SUPPORTED; B1's literal dangling-path claim NOT OBSERVED. This is an objective data defect.
+Parent decisions: do NOT patch the LOD emitter for A; run U-1 first. B is a real defect candidate but HELD until the Phase 4 skybox implementer lands (strict serialisation). No code edit, no editor, no git, no DONE?. Recorded in `LOD Support.md` as `### Worker Phase 3 diagnosis`.
+Phase 4 implementer `sa-0-d3974cdb` was still running at 75 s. Deadline 09:53.
+
