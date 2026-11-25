@@ -28,6 +28,18 @@ At SBOX World Transform: {
 }
 NOTE: The collider is much more correct.
 
+While work is being done, the following oracle data is available:
+Unity play screenshots to compare:
+GameObject Name: Japanese School Camera (1), Screenshot Location: /Testing/Unity-Screenshot-Outside-Facing-School-Camera-1.png.
+GameObject Name: Japanese School Camera (2), Screenshot Location: /Testing/Unity-Screenshot-Outside-Facing-Sun-Camera-2.png.
+GameObject Name: Japanese School Camera (3), Screenshot Location: /Testing/Unity-Screenshot-Inside-Facing-Hallway-Camera-3.png.
+GameObject Name: Japanese School Camera (4), Screenshot Location: /Testing/Unity-Screenshot-Outside-Facing-Windows-Camera-4.png.
+These screenshots were taken from 4 cameras in the scene, enable one each after importing into sbox to get validation from in-game sbox screenshots.
+Unity project we're importing: C:\cseliot\1-Development\4-Unity\2-Projects\old_school_model
+
+### Master label (2026-11-25 19:12): Director-supplied oracle data above is now COMMITTED and gates this task (common.md:7 - uncommitted prose is a hypothesis, not a gate). The four Unity play screenshots are the reference. The matching sbox four-camera play capture already exists at EVID/reimport-skybox-tint-play/play-camera1.png .. play-camera4.png (controlled play capture, one Japanese School Camera enabled at a time with IsMainCamera=true, genuine screenshot_highres frames); a second set is at EVID/reimport-skybox-phase4/. Those are Phase 3 / Phase 4 builds, not a fresh import; placement geometry is unaffected by sky or camera post-processing, but that provenance is recorded. No DONE? change - this only makes the oracle usable by a worker.
+
+
 ### Master note (2026-11-25, worker recon - diagnosis record, NOT a verdict)
 Headless derivation in `### Worker Phase 1` (## Notes) shows the generated world transforms for Restroom_Floor_02 and Outdoor_Floor_01 match independently derived Unity world transforms to within 8.0e-7 / 6.1e-6; Flowerbeds_03_LOD00 DOES exist in the generated scene; and no inactive ancestor explains an absence. The literal "wrong/missing in transform" premise is therefore not supported by the current generated data. The reported symptom is still OPEN: common.md says a symptom task is finished when the symptom is GONE, not when a spec is satisfied, and the Director still reports it. Live candidates are the name-target mismatch (from M1), mirror-variant handling (new M7) and the perceptual comparison artefact (M6). This note does not set DONE?.
 
