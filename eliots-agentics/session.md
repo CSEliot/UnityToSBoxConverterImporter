@@ -127,6 +127,9 @@ Parent decisions: (1) the code REMAINS unstaged for the Review Critic (`git diff
 - NTFY status ping fired (HTTP 200) announcing the critic and the regeneration loop.
 - Docs committed as ca9d63a; the three Core files remain deliberately unstaged. If the critic returns `changes required`, the parent will fix, re-run the gates and redo the regeneration from the final code before any commit.
 
+### PHASE2-SPEC written (2026-11-25, durable pin for the queued grants)
+C:/Users/Eliot/AppData/Local/hermes/profiles/hermes-sbox/cache/scratch/taskmaster-nov25/PHASE2-SPEC.md pins the absolute paths, owner files, exact hooks, verified facts, Q3 gates and parent gates for the three queued PERMISSION grants (skybox -> objects -> tree), so a compaction cannot lose them. It states explicitly that it does NOT authorise any edit and that every line number must be re-grepped after the LOD commit, which modifies UnityImport.cs. Both currently running children (sa-0-9d6908dd regeneration, sa-0-ce194181 critic) were checked at ~393 s and are still running; no transcript or artifact poll was done.
+
 ## Clarification Q&A
 
 ### Kickoff batch 01 / 02 / 03 (Director, 2026-11-25, chat)
