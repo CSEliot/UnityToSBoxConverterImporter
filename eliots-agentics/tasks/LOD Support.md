@@ -1,4 +1,4 @@
-## Status: STARTED? YES! CLARIFIED? YES! HISTORY? YES! REVIEWED? NO! DONE? NO! WORKER: sa-0-342296e6 OTHER: Phase 1 read-only worker dispatched 2026-11-25; baseline c91e87b
+## Status: STARTED? YES! CLARIFIED? YES! HISTORY? YES! REVIEWED? YES! DONE? NO! WORKER: sa-0-342296e6 OTHER: Phase 1 read-only worker dispatched 2026-11-25; baseline c91e87b
 
 ## Task
 We got z-fighting which I believe is due to no implementation of LODs?
@@ -21,6 +21,28 @@ Unity play screenshot to compare: /Testing/Unity-Screenshot-Outside.png.
 Unity project we're importing: C:\cseliot\1-Development\4-Unity\2-Projects\old_school_model
 
 ### Work Review
+
+2026-11-25 02:57 - Verdict: changes required
+
+Tree: Editor/Core/UnityImport.cs = c37c6ddacfdd4397bef3bddcfb49e8aa17081097
+Tree: Editor/Core/UnityModel.cs = 957379ac9bcfb03de94caf70f4752e16522935b0
+Tree: Editor/Core/UnityLod.cs   = c385ce2189e1077aa37f93b608efeef239f683a2 (NEW/untracked; plain hash identical)
+
+Scope reviewed: `git status --short` showed M Editor/Core/UnityImport.cs, M Editor/Core/UnityModel.cs, ?? Editor/Core/UnityLod.cs, plus M eliots-agentics/common.md. The common.md edit is the Director's separate live edit and is excluded, per instruction. `git diff HEAD` was the input for the two modified files; UnityLod.cs was read directly. No code was edited, no build/import/verify gate run, no editor launched, no Assets/imported touched, nothing staged.
+
+1. [High] Symptom has no visual observation on disk - the z-fighting is a visual symptom, but the only frames named in the task file (frameA.png / frameB.png, captured 02:11 2026-11-25) are explicitly the current-HEAD BASELINE, and the task file states "the z-fighting verdict still needs a before/after play-frame pair on the same camera, which the parent will capture after the fix". The Director still reports the symptom. No after-fix rendered frame exists on disk. critic.md: a `no further changes` verdict is invalid unless it cites an observation of the symptom itself; where no visual evidence is supplied for a visual symptom the verdict is `changes required`. Fix: capture the Q4-authorised before/after play-frame pair on the same camera for the Floor_stairs_middle (1) instance and review it before closing. Evidence: task file "Re-import frame evidence" and "Worker Phase 2 verification" (no editor launched, "no perceptual z-fighting verdict"); critic.md:11.
+
+2. [Medium] Mixed-LOD falsification is a probe-convention artifact (`.../lod-phase2/mixed-lod-check.txt`). The 343-FBX count was derived from HEAD-baseline generated VMDL mesh names; at HEAD `RenderedMeshes` returned LOD0-only, so non-LOD meshes in a mixed FBX could never appear. `0 mixed` is true by construction, not evidence. New `UnityModel.cs:120-129` drops every non-LOD mesh whenever any LOD-suffixed mesh exists, so a mixed FBX would silently lose geometry. Fix: re-count from source FBX mesh records, not generated VMDLs. The critic's own independent binary-FBX probes failed on this exporter's conventions - no independent count obtained.
+
+3. [Medium] Sampled audit over 261 changed assets (`.../same-options-changed-common.txt`). 15 `.prefab` + 2 `.scene` un-audited; `scene-semantic-diff.py` exists and was not run. Residual risk: scene `PropertyOverrides` / `RemovedObjects` referencing renderer GUIDs removed by the 6->1 consolidation. Fix: run semantic JSON diff over all 17 non-VMDL files.
+
+4. [Low] 3 lost neutral `.vmat` files - no dangling reference found. Fixed output: 0 references to the three names in any `.vmdl`/`.prefab`/`.scene`/`.vmat`; the three consolidated models remap every slot to real material files. Not a regression on available evidence; no HEAD slot-by-slot comparison was available.
+
+5. [Low] `SwitchDistanceStep = 50` is engine-backed (`ModelDocApp.def:298` = `SetSwitchThreshold(nLod * 50.0f)`; level 0 -> 0.0 matches). The invented mapping is disclosed and exposed as properties, acceptable under "try first"; distances remain arbitrary and need a visual LOD-pop check.
+
+6. [Low] `},{` junction is real tabs, tokens match engine form. Engine-authored `cardboard_carton_01.vmdl:147-149` writes `},` / `{` with a newline; generated line 133 uses tabs - same tokens. No engine same-line example and parser source absent; fixed output has not been through ModelDoc compile/verify_output. Fix: confirm with a compile of the fixed output.
+
+Master transcription note (2026-11-25): findings 2-6 were returned in the capped critic's completion summary (40 api_calls) and transcribed by the Task Master at column 0; the critic wrote finding 1, the `Verdict:`, the `Tree:` lines and the scope note into this file before the cap. The async file-mutation verifier reported one FAILED scratch-probe write (`critic_fbx_mesh_census.py`, refill guard); the critic worked around it with `_v2` / `names_v3` / `names_v4` probes, and no deliverable was affected. `REVIEWED? YES!` describes the CURRENT reviewed bytes; any code fix sets it back to NO! and requires a scoped re-review by the SAME critic (master.md step 5 / unityimporterplus skill). No code was edited, no build/import/editor/git operation was performed by the critic.
 
 
 ## Notes
