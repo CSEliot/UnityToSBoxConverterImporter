@@ -1,4 +1,4 @@
-## Status: STARTED? YES! CLARIFIED? YES! HISTORY? YES! REVIEWED? NO! DONE? NO! WORKER: sa-0-81311e05 OTHER: Phase 1 read-only worker dispatched 2026-11-25; baseline c91e87b; oracle decision pending
+## Status: STARTED? YES! CLARIFIED? YES! HISTORY? YES! REVIEWED? NO! DONE? FAILED! WORKER: MASTER OTHER: Q3 foliage read 2026-11-25 09:20 confirms symptom UNCHANGED; all tree-specific asset defects falsified; shared S3/T6 light-rig fix FAILED on skybox; no agent-runnable fix remains; code UNSHIPPED; baseline c91e87b
 
 ## Task
 Imported trees are wrong color. 
@@ -8,7 +8,12 @@ Imported trees are greenish, unity trees are a kind of red-ish. Imported trees s
 
 
 While work is being done, the following oracle data is available:
-Unity play screenshot to compare: /Testing/Unity-Screenshot-Outside.png.
+Unity play screenshots to compare:
+GameObject Name: Japanese School Camera (1), Screenshot Location: /Testing/Unity-Screenshot-Outside-Facing-School-Camera-1.png.
+GameObject Name: Japanese School Camera (2), Screenshot Location: /Testing/Unity-Screenshot-Outside-Facing-Sun-Camera-2.png.
+GameObject Name: Japanese School Camera (3), Screenshot Location: /Testing/Unity-Screenshot-Inside-Facing-Hallway-Camera-3.png.
+GameObject Name: Japanese School Camera (4), Screenshot Location: /Testing/Unity-Screenshot-Outside-Facing-Windows-Camera-4.png.
+These screenshots were taken from 4 cameras in the scene, enable one each after importing into sbox to get validation from in-game sbox screenshots.
 Unity project we're importing: C:\cseliot\1-Development\4-Unity\2-Projects\old_school_model
 
 ### Work Review
@@ -64,6 +69,10 @@ For THIS task: Q3 requires a rendered-frame comparison; the shared S3/T6 light-r
 2. T5 smoothness FALSIFIED; Master-verified on disk at C:/Users/Eliot/AppData/Local/hermes/profiles/hermes-sbox/cache/scratch/taskmaster-nov25/worker-phase1/obs_t5_roughness_check.out.txt (303 bytes). Source leaf mask-map alpha extrema 28-71; generated `_iup_roughness.png` extrema 184-227; direct mismatch 2,097,152 / 2,097,152, inverted (255-alpha) mismatch 0 / 2,097,152. Roughness is exactly the documented inverted smoothness channel (`UnityMaterial.cs:193`). This closes the last tree-specific data-defect candidate. CAVEAT: the script's AO line compares AO to alpha, but AO is extracted from mask channel G (:190), so those AO numbers are NOT a defect check and no claim is made from them.
 3. Q3 confirmation check: use IDENTICAL crown crops in frameA.png, frameB.png, Testing/Unity-Screenshot-Outside.png and the two post-fix play frames; measure and record the courtyard crown pixel bbox per image ON DISK, take the central ~50% of each bbox (excludes sky, trunk, ground), compute per-crop mean RGB and delta = meanR - meanG. Required numbers: reference (R,G,B,delta); baseline frameA/frameB (R,G,B,delta); post-fix frame1/frame2 (R,G,B,delta). PASS only if both post-fix frames have delta of the reference's SIGN and |delta_after - delta_ref| <= 15 on 0-255, with hue within about 20 degrees of the reference's red/magenta sector. Report the sky-band top-12% means as SUPPORTING evidence, not the tree gate (prior baseline Unity (56.2,68.1,78.7) vs s&box (125.5,146.8,165.2)). Exact pixel bboxes must be measured, never invented.
 Parent decisions: the worker argues Phase 2 can proceed WITHOUT the pending baked-GI-oracle decision - that decision governs interpretation of a FAILING comparison, not the ability to apply the shared fix and capture frames; the LOOK-match principle is already authorised for the sky, and applying it to tree colour is the SAME fix, not a second mapping. The Master accepts that for proceeding, while keeping oracle validity a Director-level item if the post-fix comparison fails. No DONE?, no perceptual verdict, symptom OPEN until the post-fix frames actually show the crowns matching. The next parent-owned play capture must also record the camera pose beside the frames (M6 gap).
+
+## Q3 foliage gate (2026-11-25 09:20) - UNCHANGED, DONE? FAILED!
+An ai-reviewed read of the four Unity play screenshots against the four Phase 4 `screenshot_highres` play frames (foliage only, eight attached images, no vision error). Unity courtyard trees/shrubs are consistently burgundy/wine-red with magenta highlights (pairs 1, 2, 4); sbox shows olive/dark green with yellow-green mottling in the same positions. NO sbox frame shows burgundy/red foliage; pair 3 is interior with almost no visible foliage. Verdict: symptom UNCHANGED in the Phase 4 build.
+All tree-specific asset mechanisms were already FALSIFIED (T1/T4 albedo byte-identical incl. alpha, T2 no nonzero FBX vertex RGB, T3 no material overrides, T8 no red foliage asset, T5 roughness correct). The only remaining candidate was the shared S3/T6 light-rig/exposure mechanism, which was driven to `DONE? FAILED!` on the skybox task. `unityimporterplus-reimport` forbids tinting the authored albedo / `g_vColorTint` to fake the canopy. No agent-runnable tree-specific fix remains, so this task is marked `DONE? FAILED!` ("Task could not be complete by ai"). Parent decision on definitive evidence; the Director can reopen it with one word and name a different mechanism. No code was committed. Full record in `eliots-agentics/session.md`.
 
 ## Clarification Q&A
 
