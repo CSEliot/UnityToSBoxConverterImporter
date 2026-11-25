@@ -1,4 +1,4 @@
-## Status: STARTED? YES! CLARIFIED? YES! HISTORY? YES! REVIEWED? YES! DONE? YES! WORKER: sa-0-342296e6 OTHER: no further changes 03:42; committed reviewed tree; Q3 Open: line for the Director; baseline c91e87b
+## Status: STARTED? YES! CLARIFIED? YES! HISTORY? YES! REVIEWED? NO! DONE? NO! WORKER: MASTER OTHER: reopened 2026-11-25 07:53 from Director Post-Task follow-ups; Q3 Open line answered (no z-fighting, LOD swap visible); two new symptoms pending diagnosis; baseline c91e87b
 
 ## Task
 We got z-fighting which I believe is due to no implementation of LODs?
@@ -17,8 +17,14 @@ If you need an "oracle" for correctly writing LODs in S&Box say so. But try firs
 
 
 While work is being done, the following oracle data is available:
-Unity play screenshot to compare: /Testing/Unity-Screenshot-Outside.png.
+Unity play screenshots to compare:
+GameObject Name: Japanese School Camera (1), Screenshot Location: /Testing/Unity-Screenshot-Outside-Facing-School-Camera-1.png.
+GameObject Name: Japanese School Camera (2), Screenshot Location: /Testing/Unity-Screenshot-Outside-Facing-Sun-Camera-2.png.
+GameObject Name: Japanese School Camera (3), Screenshot Location: /Testing/Unity-Screenshot-Inside-Facing-Hallway-Camera-3.png.
+GameObject Name: Japanese School Camera (4), Screenshot Location: /Testing/Unity-Screenshot-Outside-Facing-Windows-Camera-4.png.
+These screenshots were taken from 4 cameras in the scene, enable one each after importing into sbox to get validation from in-game sbox screenshots.
 Unity project we're importing: C:\cseliot\1-Development\4-Unity\2-Projects\old_school_model
+
 
 ### Work Review
 
@@ -189,3 +195,26 @@ References to variables like X and Y automatically imply that these are to be ex
 When programming, portability and DRY are a priority.
 
 ## Post-Task Follow Ups 
+
+Director:
+Ok, I took a look.
+
+I see Floor_stairs_middle (1) popping in and out of its 2 LODs, good job! Don't see any more z-fighting. Good job!
+Problems:
+Floor_stairs_top (1) and Floor_stairs_bottom (1) are essentially the same thing, yet they don't swap LOD's when I move back and forth w the camera like the middle one does. Why? They're essentially the same.
+It appears some far-away LODs are reporting errors from sbox. Perhaps missing materials? An example is Windows_05_Frame_Snaps014. When i get close it looks fine but far away it shows the typical sbox texture/material error.
+
+### Master disposition (2026-11-25 07:53) - task REOPENED
+The Director's Q3 `Open:` line is ANSWERED: "I see Floor_stairs_middle (1) popping in and out of its 2 LODs, good job! Don't see any more z-fighting. Good job!" The original symptom (z-fighting from all Unity LODs emitted together as components) is RESOLVED and reviewed commit `1f1c92d` stands for that symptom.
+
+Per master.md step 8 the two NEW `## Post-Task Follow Ups` are non-addressed issues and must be driven before this task can close again. Header set to `REVIEWED? NO!`, `DONE? NO!`, `WORKER: MASTER`. This is a FRESH SYMPTOM TASK, not a continuation of the z-fighting fix.
+
+Symptom A (verbatim): "Floor_stairs_top (1) and Floor_stairs_bottom (1) are essentially the same thing, yet they don't swap LOD's when I move back and forth w the camera like the middle one does. Why? They're essentially the same."
+- A1 HYPOTHESIS: the top/bottom families have only ONE LOD level in the source FBX / generated VMDL, so no `LODGroupList` with a second `LODGroup` is emitted - "essentially the same thing" describes the visible mesh, not the LOD data. FALSIFIER: a generated `floor_stairs_top*.vmdl` or `floor_stairs_bottom*.vmdl` containing an LODGroupList with two or more LODGroups with distinct switch thresholds, comparable to `floor_stairs_middle_snaps014.vmdl`.
+- A2 HYPOTHESIS: `ModelSplit`'s family grouping keyed on the LOD stem merged top/bottom with a different family and collapsed the switch thresholds. FALSIFIER: count `LODGroup` children per generated VMDL for all three families and compare them.
+
+Symptom B (verbatim): "It appears some far-away LODs are reporting errors from sbox. Perhaps missing materials? An example is Windows_05_Frame_Snaps014. When i get close it looks fine but far away it shows the typical sbox texture/material error."
+- B1 HYPOTHESIS: the family-based `needsNeutral` evaluation that dropped the three neutral `.vmat` files also left LOD1+ mesh slots in consolidated VMDLs pointing at a material path that does not exist, so the far LOD renders the error material while LOD0 (up close) resolves correctly. FALSIFIER: grep the generated `windows_05_frame*` VMDL for every LOD mesh's material exception and confirm ALL referenced `.vmat` paths exist on disk; any missing path corroborates, all-present falsifies.
+- B2 HYPOTHESIS: the LOD1 mesh uses a different embedded material slot name than LOD0 and the importer's slot map covers only the LOD0 name. FALSIFIER: compare the slot keys of the two LOD levels' `RenderMeshFile` nodes against the VMDL `exception_list` / `from` mappings.
+
+Read-only diagnosis dispatched (findings recorded in `EVID/LOD-FOLLOWUP-DIAGNOSIS.md`). NO code edit, no editor, no `Assets/imported` writes, no commit, no DONE?.

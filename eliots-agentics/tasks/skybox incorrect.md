@@ -121,6 +121,14 @@ ENGINE PRIMARY SOURCE: `engine/Sandbox.Engine/Scene/Components/Render/SkyBox2D.c
 ## Q3 LOOK gate (2026-11-25) - FAILED
 Four genuine `screenshot_highres` play frames from the four Director cameras (each enabled and made `Scene.Camera` via `run_csharp`) plus a Tint ablation were ai-reviewed against the four Unity play screenshots. Verdict: STILL FAILING on all four pairs. Unity's defining look - hazy dark dusk, a visible sun disc and a strong warm golden horizon in sun-facing Camera-2 - is absent or inverted in s&box: the sbox skies are clear blue daylight, the sun disc and golden glow are MISSING in play-camera2, and the whole scene stays brightly lit with crisp shadows. Best pair 4, worst pair 2. The Tint ablation shows the Tint does darken the sky (121.52/133.13/133.03 tinted vs 167.67/172.37/163.74 untinted) but the perceptual difference is subtle and neither frame matches Unity dusk. Numbers in `reimport-skybox-tint-play/measurements.txt`; full record in `eliots-agentics/session.md`. The Director-authorised Tint calibration is FALSIFIED as a LOOK fix; HELD for a fresh Director decision. No DONE?.
 
+### Director answers (2026-11-25 07:53, verbatim) - FRESH DECISION
+Answered (option 1): "Pursue the exposure / light-rig mechanism - the whole frame is bright daylight even with a darker sky, which is the shared S3/T6 hypothesis; this also bears on the tree-colour task. Recommend combining it with sun alignment."
+Answered (option 1 addendum): "WHen spawning a default sbox camera, it comes w components: Bloom, Screen-Space Reflections, Ambient Occlusins (SSAO), and TOne Mapping. These will certainly help you get closer to the goal."
+Answered (option 2): "Rotate or otherwise align the EXR sun so Camera-2 shows the sun disc and golden horizon."
+Answered (option 2 addendum): "Yeah the skybox image is definitely not getting correctly rotated to match how it is in Unity. It's probably a full 180 horizontal rotation off. But don't take that suggestion literally. But makiing the sun inside skybox's image match the directional light in the scene is definitely necessary lol."
+Answered (timebox): "Work on this for 2 more hours, we do our best, get as close as we can and just mark it \"FAILED\" unless we hit a miracle in the next 2 hours."
+Master decision: options 1 AND 2 are both authorised and COMBINED. The 180-degree guess is explicitly NOT literal; the sky rotation must be DERIVED from source (HDRP HDRISky rotation / directional light direction / EXR sun azimuth), not guessed. Deadline 2026-11-25 09:53 +0300; at that point mark `DONE? FAILED!` unless a Q3 rendered-frame comparison passes. Contract: `EVID/SKYBOX-PHASE4-SPEC.md`. The Q3 bar is unchanged: a rendered-frame comparison someone looked at.
+
 ## Clarification Q&A
 
 Kickoff batch 02 / 03 (Director, 2026-11-25, chat; full record in eliots-agentics/session.md):
