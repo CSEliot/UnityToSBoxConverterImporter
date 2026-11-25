@@ -323,6 +323,18 @@ internal static class UnityVolume
 
 		merged.TryGetValue( "VisualEnvironment", out var visual );
 		var skyType = (int)Number( visual, "skyType", SkyNone );
+		// CASE (b): the winning Volume can be PhysicallyBased with no texture s&box can display, while a
+		// different global profile in the same scene authors an HDRI texture. Using that texture is a NEW
+		// LOOK-MATCH APPROXIMATION from a non-active profile, explicitly allowed by the Director's dated
+		// "just get the skybox LOOKING like the other" instruction. It is not a recovered active sky value
+		// and it fabricates no illumination; atmosphere, clouds and time of day stay unreproduced.
+		string authoredHdri = null;
+		foreach ( var appliedVolume in applied )
+		{
+			if ( (int)Number( appliedVolume.Profile.Get( "VisualEnvironment" ), "skyType", SkyNone ) != SkyHdri ) continue;
+			var guid = GuidOf( Value( appliedVolume.Profile.Get( "HDRISky" ), "hdriSky" ) ?? "" );
+			if ( guid.Length > 0 && byGuid.TryGetValue( guid, out var texture ) ) authoredHdri = texture.Path;
+		}
 		var skyOverride = skyType switch
 		{
 			SkyPhysicallyBased => merged.GetValueOrDefault( "PhysicallyBasedSky" ),
@@ -334,6 +346,12 @@ internal static class UnityVolume
 		{
 			case SkyPhysicallyBased:
 			{
+				if ( authoredHdri != null )
+				{
+					motion.Sky = new( "HDRI look-match approximation", new double[] { 1, 1, 1 }, authoredHdri,
+						$"NEW LOOK-MATCH MAPPING: the active merged sky is HDRP PhysicallyBased with no s&box counterpart; authored HDRI texture {authoredHdri} from a non-winning global Volume profile is displayed by a generated s&box sky material. This is a new approximation, not the recovered active sky value; atmosphere, clouds, time of day and illumination are not reproduced." );
+					break;
+				}
 				// The atmosphere itself cannot be reproduced; its horizon and zenith filters are the
 				// only authored colours that survive as a tint on the default sky.
 				var tint = Average( Colour( skyOverride, "horizonTint", 1, 1, 1 ), Colour( skyOverride, "zenithTint", 1, 1, 1 ) );
@@ -358,7 +376,7 @@ internal static class UnityVolume
 				motion.Sky = new( "HDRI", new double[] { 1, 1, 1 }, textureName,
 					textureName == null
 						? "HDRP's HDRI sky has no resolved sky texture; the default s&box sky is used and the HDRI is not reproduced."
-						: $"HDRP's HDRI sky texture {textureName} is not converted (no verified s&box sky texture parameter); the default s&box sky is used instead." );
+						: $"HDRP's HDRI sky texture {textureName} is displayed by a generated s&box sky material referencing that texture; the atmosphere, clouds and time of day are not reproduced." );
 				break;
 			}
 			case SkyProcedural:

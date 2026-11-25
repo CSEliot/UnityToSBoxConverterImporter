@@ -32,6 +32,52 @@ internal static class UnitySceneExport
 	static readonly bool NestAddedObjects = true;
 
 	const string DefaultSky = "materials/skybox/skybox_day_01.vmat";
+
+	/// <summary>
+	/// Exposure biases carried for SCHEMA PARITY with engine sky materials (engine skybox_dark_01.vmat
+	/// uses -1.500 / -0.500). TWO full Q4 render rounds with freshly recompiled .vmat_c and identical
+	/// camera pose produced byte-identical sky bands at -1.500 and -2.800, proving these fields do NOT
+	/// affect the visible sky. SkyBox2D.Tint is the render lever; no calibration of these biases worked.
+	/// </summary>
+	internal static string SkyBrightnessExposureBias { get; set; } = "-1.500";
+	internal static string SkyRenderOnlyExposureBias { get; set; } = "-0.500";
+
+	/// <summary>
+	/// Developer-tweakable SkyBox2D.Tint channels for the generated EXR sky. Derived channel-wise from
+	/// the measured s&box EXR top-12% sky band 164.75/171.20/165.02 into the Unity Camera-1 (away-from-sun)
+	/// band 56.21/68.06/78.72: 56.21/164.75 = 0.3412, 68.06/171.20 = 0.3975, 78.72/165.02 = 0.4770.
+	/// Calibrated to Camera-1 ONLY and MUST be validated across all four cameras before any LOOK claim.
+	/// This is a NEW mapping, not a recovered source value; it does not claim the LOOK is matched.
+	/// </summary>
+	internal static double SkyTintR { get; set; } = 0.3412;
+	internal static double SkyTintG { get; set; } = 0.3975;
+	internal static double SkyTintB { get; set; } = 0.4770;
+
+	/// <summary>
+	/// Source-authored HDRP HDRISky rotation, in degrees. Scene Settings Profile MergeV2.asset:1829-1831
+	/// authors `rotation: m_OverrideState: 1, m_Value: 23` (the baking profile agrees at :1765-1767).
+	/// This is a HARDCODED TRANSCRIPTION of that authored value, NOT a dynamic read of the Volume:
+	/// the importer's Volume reader currently carries no sky rotation field. It rotates the SkyBox2D
+	/// parent's transform, because SkyBox2D has no rotation property of its own: it consumes
+	/// Component.WorldRotation (engine Scene/Components/Render/SkyBox2D.cs:100-107). s&box yaw is Z-up:
+	/// Rotation.FromYaw(yaw) = Rotation.From(0, yaw, 0) (engine Sandbox.System/Math/Rotation.cs:202-205)
+	/// and Rotation.From with pitch=roll=0 writes z=sin(yaw/2), w=cos(yaw/2) (:170-186).
+	/// </summary>
+	internal static double SkyRotationDegrees { get; set; } = 23.0;
+	/// <summary>Developer calibration offset added to <see cref="SkyRotationDegrees"/> before emitting yaw.</summary>
+	internal static double SkyRotationOffsetDegrees { get; set; } = 0.0;
+
+	/// <summary>
+	/// Post-processing values transcribed from the engine's default camera template
+	/// `game/core/templates/gameobject/Camera.prefab:15-66`. The four effects live on the camera's own
+	/// GameObject: PostProcessSystem collects effects from that object and its descendants.
+	/// Sandbox.ScreenSpaceReflections is [Obsolete]/[Hide] and a no-op in this engine checkout; it is
+	/// emitted for template parity only. The PostProcessVolume children carry the same values so they
+	/// cannot override the camera stack with disabled effects.
+	/// </summary>
+	internal static double TonemappingExposureCompensation { get; set; } = 0.0;
+	internal static string TonemappingMode { get; set; } = "AgX";
+
 	/// <summary>Unity's built-in resources (Default-Skybox among them) share this guid.</summary>
 	const string BuiltInGuid = "0000000000000000f000000000000000";
 
@@ -52,6 +98,38 @@ internal static class UnitySceneExport
 		public HdrpCounts Hdrp;
 		public List<string> Information;
 		public List<string> Warnings;
+		/// <summary>Generated sky material document for the scene's authored HDRI sky, or null.</summary>
+		public string SkyMaterialPath;
+		public string SkyMaterialText;
+	}
+
+	/// <summary>
+	/// Builds the sky .vmat that displays a source-authored HDRI texture. The exposure biases are the
+	/// developer-tweakable properties above; the texture reference is content-relative like every other
+	/// generated document reference. The staged EXR (and its .vtex) is copied by UnityImport.PrepareFiles.
+	/// </summary>
+	internal static string SkyVmat( string texturePath, out string documentPath, out string reference )
+	{
+		var relative = UnityImport.GeneratedPath( Path.ChangeExtension( texturePath, null ) + "_iup_sky.vmat" );
+		documentPath = relative;
+		reference = UnityImport.DocumentPath( "Imported/" + relative );
+		var texture = UnityImport.DocumentPath( "Imported/" + texturePath );
+		return $$"""
+			// THIS FILE IS AUTO-GENERATED
+
+			Layer0
+			{
+				shader "shaders/sky.shader"
+
+				//---- Format ----
+				F_TEXTURE_FORMAT2 6 // BC6H (HDR compressed - recommended)
+
+				//---- Texture ----
+				g_flBrightnessExposureBias "{{SkyBrightnessExposureBias}}"
+				g_flRenderOnlyExposureBias "{{SkyRenderOnlyExposureBias}}"
+				SkyTexture "{{texture}}"
+			}
+			""";
 	}
 
 	/// <summary>The guid of the scene's skybox material, or an empty string.</summary>
@@ -72,6 +150,7 @@ internal static class UnitySceneExport
 		var objects = new JsonArray();
 		var additions = new List<(long Owner, JsonObject Entry, string Name)>();
 		int roots = 0, nested = 0, addedComponents = 0, removed = 0, skipped = 0;
+		string skyMaterialPath = null, skyMaterialText = null;
 
 		// 1. Roots, in Unity's order. Instances under plain objects come out of Node through their stripped transforms.
 		foreach ( var id in RootOrder( c ) )
@@ -284,12 +363,21 @@ internal static class UnitySceneExport
 		if ( environment.Sky is UnityVolume.Sky volumeSky )
 		{
 			result.Information.Add( volumeSky.Note );
+			var skyMaterial = DefaultSky;
+			var skyTint = volumeSky.Tint;
+			if ( !string.IsNullOrEmpty( volumeSky.Texture ) )
+			{
+				skyMaterialText = SkyVmat( volumeSky.Texture, out skyMaterialPath, out var skyReference );
+				skyMaterial = skyReference;
+				skyTint = new[] { SkyTintR, SkyTintG, SkyTintB };
+				result.Information.Add( $"Authored HDRP HDRI sky {volumeSky.Texture} is displayed by generated sky material {skyReference}; exposure biases are developer-tweakable." );
+			}
 			objects.Add( SceneObject( $"{c.Key}:skybox", "2D Skybox", "skybox", Component( "Sandbox.SkyBox2D", StableGuid( $"{c.Key}:skybox:component" ), true, new()
 			{
 				["SkyIndirectLighting"] = true,
-				["SkyMaterial"] = DefaultSky,
-				["Tint"] = Colour( volumeSky.Tint )
-			} ) ) );
+				["SkyMaterial"] = skyMaterial,
+				["Tint"] = Colour( skyTint )
+			} ), SkyTransform() ) );
 		}
 		if ( environment.Ambient != null )
 			objects.Add( SceneObject( $"{c.Key}:ambient", "Ambient Light", "", Component( "Sandbox.AmbientLight", StableGuid( $"{c.Key}:ambient:component" ), true, new()
@@ -314,7 +402,7 @@ internal static class UnitySceneExport
 					["SkyIndirectLighting"] = true,
 					["SkyMaterial"] = DefaultSky,
 					["Tint"] = "1,1,1,1"
-				} ) ) );
+				} ), SkyTransform() ) );
 			}
 			var intensity = Scalar( render.Body, "m_AmbientIntensity" ).Length == 0 ? 1 : Number( render.Body, "m_AmbientIntensity" );
 			var ambientMode = Scalar( render.Body, "m_AmbientMode" );
@@ -389,19 +477,28 @@ internal static class UnitySceneExport
 			var children = (JsonArray)node["Children"];
 			void Effect( string name, string type, Dictionary<string, JsonNode> properties ) =>
 				children.Add( SceneObject( $"{key}:{type}", name, "", Component( type, StableGuid( $"{key}:{type}:component" ), true, properties ) ) );
-			if ( post.TonemapMode >= 0 ) Effect( "Tonemapping", "Sandbox.Tonemapping", new() { ["Mode"] = UnityVolume.TonemapMode( post.TonemapMode ) } );
-			if ( post.Bloom )
+			// The camera GameObject now carries the engine template's four enabled effects. The volume's
+			// children use the SAME values: PostProcessSystem collects effects from the camera and its
+			// descendants as well as from volumes, so a disabled Hable/Bloom/SSAO child would fight the
+			// enabled camera stack. The source's post values are still reported by AddPostNotes below.
+			var effectNames = new Dictionary<string, string>( StringComparer.Ordinal )
 			{
-				var bloom = new Dictionary<string, JsonNode> { ["Strength"] = Single( post.BloomStrength ), ["Tint"] = Colour( new[] { post.BloomTintR, post.BloomTintG, post.BloomTintB } ) };
-				if ( post.BloomThreshold ) bloom["Threshold"] = Single( post.BloomThresholdValue );
-				Effect( "Bloom", "Sandbox.Bloom", bloom );
+				["Sandbox.Bloom"] = "Bloom",
+				["Sandbox.ScreenSpaceReflections"] = "Screen Space Reflections",
+				["Sandbox.AmbientOcclusion"] = "Ambient Occlusion",
+				["Sandbox.Tonemapping"] = "Tonemapping"
+			};
+			foreach ( var effect in CameraPostEffects( $"{key}:volume" ) )
+			{
+				var type = effect["__type"]?.GetValue<string>();
+				children.Add( SceneObject( $"{key}:volume:{type}", effectNames[type], "", (JsonObject)effect ) );
 			}
 			if ( post.Dof ) Effect( "Depth of Field", "Sandbox.DepthOfField", new()
 			{
 				["FocalDistance"] = Single( post.FocalDistance * UnitsPerMetre ),
 				["FocusRange"] = Single( post.FocusRange * UnitsPerMetre )
 			} );
-			if ( post.Ao ) Effect( "Ambient Occlusion", "Sandbox.AmbientOcclusion", new() { ["Intensity"] = Single( post.AoIntensity ) } );
+			result.Information.Add( $"Post-process volume {post.Name} emits the engine Camera.prefab template effect values (Bloom Strength/Threshold 1, SSAO Intensity 1, Tonemapping {TonemappingMode} with ExposureCompensation {TonemappingExposureCompensation}); the source's authored post values are reported below, not applied." );
 			// Reported per emitted volume, so two Unity Volumes sharing a profile (one PostProcessVolume) are one line.
 			UnityVolume.AddPostNotes( post, result.Information );
 		}
@@ -460,7 +557,9 @@ internal static class UnitySceneExport
 			Statistics = new( roots, c.Stubs.Count, nested, addedComponents, removed, skipped, placements.Count, skips.Count, skips ),
 			Hdrp = hdrp,
 			Information = result.Information,
-			Warnings = result.Warnings
+			Warnings = result.Warnings,
+			SkyMaterialPath = skyMaterialPath,
+			SkyMaterialText = skyMaterialText
 		};
 	}
 
@@ -523,6 +622,48 @@ internal static class UnitySceneExport
 		node["Tags"] = tags;
 		((JsonArray)node["Components"]).Add( component );
 		return node;
+	}
+
+	/// <summary>A fresh identity-space transform whose yaw is the source-authored sky rotation.
+	/// Never mutates the shared NoTransform record's arrays.</summary>
+	static UnityTransform SkyTransform()
+	{
+		var halfTurn = ( SkyRotationDegrees + SkyRotationOffsetDegrees ) * Math.PI / 360.0;
+		return new UnityTransform( new double[3],
+			new[] { 0d, 0d, Math.Sin( halfTurn ), Math.Cos( halfTurn ) }, new[] { 1d, 1d, 1d } );
+	}
+
+	/// <summary>The engine Camera.prefab's four post effects, with identical values on the camera and on
+	/// PostProcessVolume children. `key` makes each instance's GUID deterministic and unique.</summary>
+	static List<JsonObject> CameraPostEffects( string key )
+	{
+		var effects = new List<JsonObject>();
+		effects.Add( Component( "Sandbox.Bloom", StableGuid( $"{key}:bloom" ), true, new()
+		{
+			["Mode"] = "Additive",
+			["Strength"] = Single( 1 ),
+			["Threshold"] = Single( 1 ),
+			["Tint"] = "1,1,1,1"
+		} ) );
+		effects.Add( Component( "Sandbox.ScreenSpaceReflections", StableGuid( $"{key}:ssr" ), true, new() ) );
+		effects.Add( Component( "Sandbox.AmbientOcclusion", StableGuid( $"{key}:ao" ), true, new()
+		{
+			["FalloffRange"] = Single( 1 ),
+			["Intensity"] = Single( 1 ),
+			["Radius"] = Single( 128 ),
+			["ThinCompensation"] = Single( 5 )
+		} ) );
+		effects.Add( Component( "Sandbox.Tonemapping", StableGuid( $"{key}:tonemapping" ), true, new()
+		{
+			["AutoExposureEnabled"] = true,
+			["ExposureCompensation"] = Single( TonemappingExposureCompensation ),
+			["ExposureMethod"] = "RGB",
+			["MaximumExposure"] = Single( 3 ),
+			["MinimumExposure"] = Single( 1 ),
+			["Mode"] = TonemappingMode,
+			["Rate"] = Single( 1 )
+		} ) );
+		return effects;
 	}
 
 	static bool Convertible( string type ) => type is "33" or "23" or "64" or "65" or "135" or "136" or "137" or "95" or "20" or "81" or "108" or "215";
@@ -634,8 +775,9 @@ internal static class UnitySceneExport
 	/// An HDRP camera carries HDAdditionalCameraData (<paramref name="hd"/>, null for a non-HDRP camera): its
 	/// clear-colour mode picks between the sky and backgroundColorHDR, clearDepth drops the depth clear, and
 	/// the antialiasing mode maps to s&amp;box's single on/off flag. The volume mask and physical camera
-	/// settings have no CameraComponent counterpart and are reported by <see cref="UnityHdrpLighting.Report"/>.</summary>
-	internal static JsonObject Camera( Guid id, string body, string hd, bool enabled, bool main )
+	/// settings have no CameraComponent counterpart and are reported by <see cref="UnityHdrpLighting.Report"/>.
+	/// The returned list holds the camera and the four engine-template post effects, all on this GameObject.</summary>
+	internal static List<JsonObject> Camera( Guid id, string body, string hd, bool enabled, bool main )
 	{
 		var orthographic = Scalar( body, "orthographic" ) == "1";
 		// ClearColorMode: 0 Sky, 1 Color, 2 None. Only Color carries an authored background; HDRP stores it linear.
@@ -648,6 +790,7 @@ internal static class UnitySceneExport
 			["BackgroundColor"] = Colour( background ),
 			// HDRP's clearDepth 0 leaves the depth buffer alone; s&amp;box clears the color buffer only then.
 			["ClearFlags"] = hd != null && Scalar( hd, "clearDepth" ) == "0" ? "Color" : "All",
+			["EnablePostProcessing"] = true,
 			["FieldOfView"] = Single( Math.Clamp( Scalar( body, "field of view" ).Length == 0 ? 60 : Number( body, "field of view" ), 1, 179 ) ),
 			["FovAxis"] = Scalar( body, "m_FOVAxisMode" ) == "1" ? "Horizontal" : "Vertical",
 			["IsMainCamera"] = main,
@@ -664,7 +807,9 @@ internal static class UnitySceneExport
 		// AntialiasingMode: 0 None, 1 FXAA, 2 TAA, 3 SMAA. s&amp;box has one flag, so any non-zero mode enables it.
 		// Only an HDRP camera writes the key; a Unity camera keeps the editor's own property set byte for byte.
 		if ( hd != null ) properties["DisableAntiAliasing"] = Number( hd, "antialiasing" ) == 0;
-		return Component( "Sandbox.CameraComponent", id, enabled, properties );
+		var components = new List<JsonObject> { Component( "Sandbox.CameraComponent", id, enabled, properties ) };
+		components.AddRange( CameraPostEffects( id.ToString() ) );
+		return components;
 	}
 
 	/// <summary>Unity AudioListener (class 81).</summary>

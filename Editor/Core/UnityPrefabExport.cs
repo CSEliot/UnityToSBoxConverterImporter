@@ -1154,7 +1154,9 @@ internal static class UnityPrefabExport
 			if ( explicitMeshes.Length > 0 ) meshes = meshes.Where( m => explicitMeshes.Contains( m, StringComparer.OrdinalIgnoreCase ) ).ToArray();
 			// One renderer per generated model. A model written per mesh (meshes whose Unity materials differ
 			// inside one FBX slot) brings its own renderer each; otherwise one model shows every mesh it holds.
-			var models = meshes.Select( m => Context.ModelFor( model, m ) ).ToArray();
+			// A mirrored variant of a wrapper prefab renders its own root, so its models must carry the
+			// variant's mirror modifier too; the same intent drives the transform split in Unmirror.
+			var models = meshes.Select( m => ModelThrough( RootMirror, model, m, Context.ModelFor( model, m ) ) ).ToArray();
 			var renderers = new List<(string Path, string Mesh)>();
 			var rendererOf = new int[meshes.Length];
 			for ( var i = 0; i < meshes.Length; i++ )
@@ -1265,7 +1267,7 @@ internal static class UnityPrefabExport
 					// Several Unity colliders (e.g. one convex piece each) map to the model's one hull.
 					if ( meshColliders > 1 ) continue;
 					var meshName = MeshName( model, IdOf( Field( component.Body, "m_Mesh" ) ) );
-					var collider = meshName == null ? null : Context.ModelFor( model, meshName );
+					var collider = meshName == null ? null : ModelThrough( RootMirror, model, meshName, Context.ModelFor( model, meshName ) );
 					if ( collider == null && renderers.Count > 0 ) { collider = renderers[0].Path; colliderFallbacks++; }
 					if ( collider == null ) { Result.Warnings.Add( $"{root.Name}: a MeshCollider's mesh is not a converted model; the collider was skipped." ); continue; }
 					components.Add( ModelCollider( id, collider, enabled ) );
@@ -1502,7 +1504,7 @@ internal static class UnityPrefabExport
 				{
 					var hdCamera = Hd( HdCameras, objectId );
 					Hdrp.AddCamera( hdCamera );
-					list.Add( UnitySceneExport.Camera( id, component.Body, hdCamera, enabled, component.Id == mainCamera ) );
+					foreach ( var cameraComponent in UnitySceneExport.Camera( id, component.Body, hdCamera, enabled, component.Id == mainCamera ) ) list.Add( cameraComponent );
 				}
 				if ( component.Type == "81" ) list.Add( UnitySceneExport.AudioListener( id, enabled ) );
 				// A reflection probe is a rendered object, not a light: its Unity box/resolution/importance and

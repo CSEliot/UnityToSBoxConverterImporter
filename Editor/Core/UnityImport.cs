@@ -145,6 +145,8 @@ public static class UnityImport
 		var textureSources = selected.Where( a => a.Kind == UnityAssetKind.Texture ).ToDictionary( a => a.Guid, StringComparer.OrdinalIgnoreCase );
 		var generatedFiles = new GeneratedAssetFiles( plan, stage, destination );
 		var documents = new List<(string File, string Text)>();
+		// Several scenes can resolve the same HDRI sky profile; its generated sky .vmat goes out once.
+		var skyMaterials = new HashSet<string>( StringComparer.OrdinalIgnoreCase );
 		var generatedChannels = new Dictionary<string, string>();
 		var channelRequests = new List<TextureChannelRequest>();
 		var channelTimer = new System.Diagnostics.Stopwatch();
@@ -346,9 +348,41 @@ public static class UnityImport
 						for ( var lod = 0; lod <= 8; lod++ ) remaps.TryAdd( $"{Path.GetFileNameWithoutExtension( slot )}_lod{lod}.vmat", material );
 					// Only slots this FBX actually declares mean anything to ModelDoc; name-matched
 					// guesses for every other material in the package would just be dead entries.
-					var declaredSlots = info.Materials.Concat( info.RenderedMaterials )
+					// RenderedMaterials is LOD0-only, so a slot bound solely to LOD01 would be pruned
+					// here: the consolidated VMDL carries one model-global MaterialGroupList, and the
+					// far LOD would fall back to ModelDoc's error material. Every mesh at every LOD
+					// level declares its own slots, and all of them render from that same table.
+					var declaredSlots = info.Materials
+						.Concat( info.RendererSlots.Values.SelectMany( b => b.EffectiveSlots ) )
+						.Concat( info.MeshSlotMaterials.Values.SelectMany( slots => slots.Keys ) )
+						.Concat( info.RenderedMaterials )
 						.Select( s => s.ToLowerInvariant() + ".vmat" ).ToHashSet( StringComparer.OrdinalIgnoreCase );
 					foreach ( var slot in remaps.Keys.Where( s => !declaredSlots.Contains( s ) ).ToArray() ) remaps.Remove( slot );
+					// A slot declared only by a lower LOD still renders through the consolidated model's one
+					// global MaterialGroupList. FBX OO links put the slot in RendererSlots even when Unity
+					// never assigned it a material, so no remap value was created for it. Inherit the
+					// highest-detail mesh's own slot target from the same LOD family: a coarser LOD
+					// approximates that mesh, not a different part of the model.
+					var renderersByMesh = info.RendererSlots.Values.ToArray();
+					foreach ( var slot in declaredSlots.Select( s => Path.GetFileNameWithoutExtension( s ) )
+						.Distinct( StringComparer.OrdinalIgnoreCase ) )
+					{
+						var key = slot.ToLowerInvariant() + ".vmat";
+						if ( remaps.ContainsKey( key ) ) continue;
+						var owners = renderersByMesh.Where( b => b.EffectiveSlots.Contains( slot, StringComparer.OrdinalIgnoreCase ) ).ToArray();
+						if ( !owners.Any( b => (UnityLod.Level( b.Mesh ) ?? 0) > 0 ) ) continue;
+						var family = UnityModel.LodBase( owners[0].Mesh );
+						var lowerSlots = renderersByMesh
+							.Where( b => (UnityLod.Level( b.Mesh ) ?? 0) > 0 && UnityModel.LodBase( b.Mesh ).Equals( family, StringComparison.OrdinalIgnoreCase ) )
+							.SelectMany( b => b.EffectiveSlots ).ToHashSet( StringComparer.OrdinalIgnoreCase );
+						var peer = renderersByMesh
+							.Where( b => (UnityLod.Level( b.Mesh ) ?? 0) == 0 && UnityModel.LodBase( b.Mesh ).Equals( family, StringComparison.OrdinalIgnoreCase ) )
+							.SelectMany( b => b.EffectiveSlots )
+							.Where( s => !lowerSlots.Contains( s ) && remaps.ContainsKey( s.ToLowerInvariant() + ".vmat" ) )
+							.OrderBy( s => s, StringComparer.OrdinalIgnoreCase )
+							.Select( s => s.ToLowerInvariant() + ".vmat" ).FirstOrDefault();
+						if ( peer != null ) remaps[key] = remaps[peer];
+					}
 					var defaultMaterial = prefabMaterials.Length == 1 && info.PrefabSlotMaterials.Count == 0 && info.AssignmentWarnings.Count == 0 ? MaterialFor( prefabMaterials[0] ) : null;
 					// Remember the pre-fallback state: the warning loop below must report what the source failed
 					// to resolve, not the neutral remap we synthesize for it.
@@ -562,6 +596,8 @@ public static class UnityImport
 				{
 					var scene = UnitySceneExport.Convert( asset, context );
 					documents.Add( (Output( GeneratedPath( Path.ChangeExtension( asset.Path, ".scene" ) ) ), scene.Json) );
+					if ( scene.SkyMaterialPath is { Length: > 0 } skyPath && skyMaterials.Add( skyPath ) )
+						documents.Add( (Output( skyPath ), scene.SkyMaterialText) );
 					conversions++;
 					var s = scene.Statistics;
 					sceneConversions.Add( new
