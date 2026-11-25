@@ -156,6 +156,7 @@ sa-0-342296e6 CONTINUED (deleg_15476771) with a single authorised change: make `
 
 ### PUSH BLOCKER 2026-11-25 (GitHub 500, not a repo problem)
 Local commit c2d4b64 landed and is intact. Three bounded `git push origin main` attempts failed with `remote: Internal Server Error` (Request IDs 4837:155430:DCBD27:1491A2B:6B062C19, 4817:23746:D8DB84:14394E3:6B062C29, 4822:5B3C9:DB8DBF:146D034:6B062C3C) - the third used the gh-token credential helper from the goal-doc-taskmaster skill. `gh auth status` shows a valid CSEliot token with repo scope, and `git ls-remote origin refs/heads/main` returns 2e9207a, so the remote is exactly one commit behind local c2d4b64. This is a GitHub-side transient rejection, not bad objects, auth or a diverged branch. Keep working locally; retry the push on the next commit. CRITICAL GATE: master.md step 6 / goal-doc-taskmaster require `git ls-remote` to match local HEAD before any `DONE? YES!` - do NOT set DONE? YES! on any task while origin/main is behind. All prior commits through 2e9207a are on the remote.
+RESOLVED 2026-11-25: a fourth bounded `git push origin main` succeeded (`2e9207a..a842cd8`), and `git ls-remote origin refs/heads/main` now equals local HEAD a842cd8. Both queued local commits (c2d4b64, a842cd8) are on the remote; the no-DONE gate is lifted. No force push, no history rewrite, no unrelated files staged.
 
 ## Clarification Q&A
 
