@@ -129,6 +129,9 @@ Answered (option 2 addendum): "Yeah the skybox image is definitely not getting c
 Answered (timebox): "Work on this for 2 more hours, we do our best, get as close as we can and just mark it \"FAILED\" unless we hit a miracle in the next 2 hours."
 Master decision: options 1 AND 2 are both authorised and COMBINED. The 180-degree guess is explicitly NOT literal; the sky rotation must be DERIVED from source (HDRP HDRISky rotation / directional light direction / EXR sun azimuth), not guessed. Deadline 2026-11-25 09:53 +0300; at that point mark `DONE? FAILED!` unless a Q3 rendered-frame comparison passes. Contract: `EVID/SKYBOX-PHASE4-SPEC.md`. The Q3 bar is unchanged: a rendered-frame comparison someone looked at.
 
+## Q3 LOOK gate - Phase 4 (2026-11-25 09:02) - FAILED
+Two ai-reviewed reads of the four genuine Phase 4 `screenshot_highres` play frames against the four Unity screenshots, plus Phase 3 vs Phase 4. Verdict: STILL FAILING on all four pairs. Unity's defining look - a low sun disc with a strong warm golden horizon in Camera-2 and a dim hazy dark-navy dusk zenith - is absent in every sbox frame: sbox renders bright clear daylight, Camera-2 shows neither a sun disc nor a golden horizon, and Camera-4 replaces navy dusk with bright day. Best pair 3 (both dark corridors), worst pair 2. Phase 3 was CLOSER for Camera-1; Phase 4's post-processing (AgX auto exposure) and 23-degree sky rotation moved the look AWAY from Unity. Numbers in `reimport-skybox-phase4/measurements.txt`; full record in `eliots-agentics/session.md`. The Director-authorised Phase 4 combination FAILED the Q3 gate. A final bounded sun-yaw sweep (`deleg_607386ed`) is the last "do our best" pass before the 09:53 deadline; without a miracle this task is marked `DONE? FAILED!` with the documented constraint.
+
 ## Clarification Q&A
 
 Kickoff batch 02 / 03 (Director, 2026-11-25, chat; full record in eliots-agentics/session.md):
