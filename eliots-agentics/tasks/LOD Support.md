@@ -1,4 +1,4 @@
-## Status: STARTED? YES! CLARIFIED? YES! HISTORY? YES! REVIEWED? NO! DONE? NO! WORKER: MASTER OTHER: reopened 2026-11-25 07:53 from Director Post-Task follow-ups; Q3 Open line answered (no z-fighting, LOD swap visible); two new symptoms pending diagnosis; baseline c91e87b
+## Status: STARTED? YES! CLARIFIED? YES! HISTORY? YES! REVIEWED? YES! DONE? NO! WORKER: MASTER OTHER: reopened 2026-11-25 07:53 from Director Post-Task follow-ups; Q3 Open line answered (no z-fighting, LOD swap visible); two new symptoms pending diagnosis; baseline c91e87b
 
 ## Task
 We got z-fighting which I believe is due to no implementation of LODs?
@@ -74,6 +74,27 @@ Scope: scoped re-check, not a new full review. `git status --short` and `git dif
 6. [Low] `},{` junction may be a schema defect - ADDRESSED. The real-tab junction compiled: content build "937 compiles, 0 failed", 253/253 regenerated LOD-aware `.vmdl` sources have compiled `.vmdl_c` siblings, and `sbox-dev.log` has no ModelDoc / `.vmdl` / LODGroup compile errors. The three `ERROR_FILEOPEN` lines are runtime loads of unrelated missing materials (`material #221`, lambert1, reward-unbox), not LOD compilation. No normalization needed.
 
 No objective data defect remains open. DONE? unchanged.
+
+
+### Work Review (LOD B scoped, 2026-11-25)
+
+2026-11-25 20:32 - Verdict: no further changes
+
+Tree: Editor/Core/UnityImport.cs = 004f31a0fc43c8257cb82ca153d0b802e7c2d9de
+
+Scope: ONLY the two LOD B hunks in the committed `Editor/Core/UnityImport.cs` (`74a4f38`) - the `declaredSlots` expansion at `:349-360` and the declared-slot inheritance fallback at `:361-385`. EXCLUDED: the Phase 4 skybox hunks in the same file (`:145-146`, `:596-598`) and all Phase 4 skybox changes in `UnitySceneExport.cs` / `UnityVolume.cs` / `UnityPrefabExport.cs`, plus the M7 fix; those shipped in `74a4f38` but are outside this task's scope. Inputs: `git show 74a4f38 -- Editor/Core/UnityImport.cs`, `git status --short` (UnityImport.cs clean, no staged Core edit), the committed working-tree bytes, `git hash-object --path=Editor/Core/UnityImport.cs Editor/Core/UnityImport.cs`, `Editor/Core/UnityModel.cs:83-135`, `Editor/Core/UnityLod.cs:12-39`, and on-disk scratch evidence under `EVID/lod-b-fix/`. The header still says `WORKER: MASTER`, but per the task file's Phase 4 record the diff producer was Task Worker `sa-0-e48e4bd2`; this review judges the committed bytes, not a worker trail. No code, build, import, editor, stage or commit operation was performed.
+
+1. [Low] (a) `declaredSlots` includes all distinct FBX-declared slot names and admits no unrelated package-material guesses. `UnityImport.cs:355-359` unions `info.Materials`, every `RendererSlots.Values.EffectiveSlots`, every `MeshSlotMaterials` key and `RenderedMaterials`, lowercased with `.vmat`; `:360` then removes any remap key outside that set. The package-wide name-matched guesses created at `:318-320` and the LOD-suffix variants at `:347-348` still die at `:360` unless the FBX itself declares the slot. Fix: none.
+
+2. [Low] (b) The LOD>0 inheritance fallback is bounded and fails safe. `UnityImport.cs:370-384` runs only for a declared slot with no remap (`:371`), only when some owner renders at LOD>0 (`:373`), and only inherits a LOD0-exclusive slot of the same `UnityModel.LodBase` family that already has a remap (`:375-383`). With no peer, `peer == null` and no remap is written (`:384`); the slot stays unresolved and is handled by the pre-existing `missingSlots` / `needsNeutral` path (`:390`, `:416-429`), so no material is invented. Remaining theoretical edge: the donor is picked alphabetically (`:382`) and the family comes from `owners[0]` (`:374`), so a slot name shared across two LOD families, or several LOD0-exclusive remapped slots in one family, gives a deterministic but arbitrary target. Not realized on this corpus (only the windows pair changed, with a single donor `windows.vmat`), and a model-global remap table already forces one answer for a shared slot name. Fix: none required on the evidence; if such an FBX ever regresses, derive `family` from the LOD>0 owner rather than `owners[0]`.
+
+3. [Low] (c) No behaviour change for non-LOD FBXs or models whose slots all resolve directly. `:371` skips every slot already in `remaps`; `:373` skips every slot without a LOD>0 owner. The `declaredSlots` superset can only retain remaps for slots the FBX actually declares (material objects, renderer bindings, per-mesh assignments), never bare package-material guesses. Independent check: `diff -rq` of `EVID/lod-b-fix/out2/Assets` (pre-final-fix, same options) against `EVID/lod-b-fix/final2/Assets` differs in exactly 2 files, both `windows_05_frame*` VMDLs. Fix: none.
+
+4. [Low] (d) No null/NRE risk from `UnityModel.LodBase` or `UnityLod.Level` on mesh names without LOD digits. `UnityLod.cs:27-32` matches against `mesh ?? ""` and returns `null` without a suffix; callers at `UnityImport.cs:373,376,379` coalesce with `?? 0`. `UnityLod.cs:35` returns `BasePattern.Replace(mesh ?? "", "")`, never null, so `.Equals(family, ...)` at `:376,379` is safe; `owners[0]` at `:374` is read only after the `Any(...)` guard at `:373` proves the array non-empty. `RendererBinding.EffectiveSlots` falling back to `Mesh` (`UnityModel.cs:83-87`) predates this change. Fix: none.
+
+5. [Low] (e) Generated-output evidence supports "only 2 VMDLs changed". I ran `diff -rq` on `EVID/lod-b-fix/out2/Assets` vs `EVID/lod-b-fix/final2/Assets`: exactly 2 differing files, `windows_05_frame_snaps014.vmdl` and `windows_05_frame_snaps014_mirror_x.vmdl`; `diff -u` shows only the added 4-line block `from = "material #221.vmat" / to = "imported/school/art/material/tiling/metallic_01_albedo_snaps014.vmat"` at `:84-85`, matching the HEAD-baseline value in `reimport-evidence/imported-before-loop/.../windows_05_frame_snaps014.vmdl:55-56`, and the `.vmat` target exists on disk (1281 B). 0 prefab/scene/vmat churn in that same-options comparison. Caveat confirmed on disk: `gates.py`'s older `obs-m7` baseline (`gates.out:7-54`) shows 21 changed mirror prefabs + 21 gained mirror VMDLs from M7 landing after that baseline - baseline drift, not this fix, and out of scope here. I re-read `final2/import-report.json`: `1280/958/2141`, issues `63/79/3016`. Fix: none.
+
+No objective defect remains open in the scoped hunks. `DONE?`, `WORKER` and `OTHER` unchanged.
 
 
 ## Notes
