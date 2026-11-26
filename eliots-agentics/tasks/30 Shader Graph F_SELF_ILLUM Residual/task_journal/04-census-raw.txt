@@ -1,0 +1,24 @@
+URP table guids: 5; HDRP table guids: 12; ShaderGraph guids in Assets: 24
+fire shader guids in URP table? False ; in HDRP table? False ; in ShaderGraph set? True
+
+TOTAL .mat scanned: 217 ; ShaderGraph-sourced: 186 ; emission texture assigned: 4
+
+=== ALL generated .vmat with F_SELF_ILLUM (whole AFTER tree) ===
+  C:/Users/Eliot/AppData/Local/hermes/profiles/hermes-sbox/cache/scratch/urp23/after/imported\synty\polygongeneric\materials\fx\fire\gen_fireframes_grey_01.vmat
+  C:/Users/Eliot/AppData/Local/hermes/profiles/hermes-sbox/cache/scratch/urp23/after/imported\synty\polygongeneric\materials\fx\fire\gen_fireframes_large_grey_01.vmat
+COUNT = 2
+
+=== ShaderGraph sources with an assigned _EmissionMap texture, keyword state, generated vmat ===
+  C:/cseliot/1-Development/4-Unity/2-Projects/SyntyForest/Assets\Synty\PolygonGeneric\Materials\FX\Fire\Gen_FireFrames_01.mat | pipe=Unknown | valid=False invalid=True shaderkw=False | vmat=synty/polygongeneric/materials/fx/fire/gen_fireframes_grey_01.vmat | F_SELF_ILLUM=True
+  C:/cseliot/1-Development/4-Unity/2-Projects/SyntyForest/Assets\Synty\PolygonGeneric\Materials\FX\Fire\Gen_FireFrames_Large_01.mat | pipe=Unknown | valid=False invalid=True shaderkw=False | vmat=synty/polygongeneric/materials/fx/fire/gen_fireframes_large_grey_01.vmat | F_SELF_ILLUM=True
+
+=== All sources with emission texture AND _EMISSION not valid, split by pipeline ===
+  Urp: 2
+    C:/cseliot/1-Development/4-Unity/2-Projects/SyntyForest/Assets\Synty\PolygonNatureBiomes\PNB_Meadow_Forest\Terrain\Mat_Rock_01.mat sg=False F_SELF_ILLUM=False
+    C:/cseliot/1-Development/4-Unity/2-Projects/SyntyForest/Assets\Synty\PolygonNatureBiomes\PNB_Meadow_Forest\Terrain\Mat_Rock_Moss_01.mat sg=False F_SELF_ILLUM=False
+  Hdrp: 0
+  Unknown: 2
+    C:/cseliot/1-Development/4-Unity/2-Projects/SyntyForest/Assets\Synty\PolygonGeneric\Materials\FX\Fire\Gen_FireFrames_01.mat sg=True F_SELF_ILLUM=True
+    C:/cseliot/1-Development/4-Unity/2-Projects/SyntyForest/Assets\Synty\PolygonGeneric\Materials\FX\Fire\Gen_FireFrames_Large_01.mat sg=True F_SELF_ILLUM=True
+
+=== building / city--1 generated vmat F_SELF_ILLUM check ===
