@@ -1,0 +1,1 @@
+## Status: STARTED? NO! CLARIFIED? YES! HISTORY? YES! REVIEWED? NO! DONE? NO! WORKER: MASTER OTHER: half working step 1/2, requirements by Director not done; blocked on P0-P5 in Description; no worker dispatched; step 2 is the terrain implementation task, not yet specified
