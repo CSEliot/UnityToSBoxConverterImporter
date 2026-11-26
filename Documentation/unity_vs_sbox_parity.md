@@ -55,6 +55,8 @@ conversion as separate tasks. Sources:
 The local HDRP package is 17.3.0:
 `C:/cseliot/1-Development/4-Unity/2-Projects/.old_school_model_Library_lfs_broken_2026-11-20/PackageCache/com.unity.render-pipelines.high-definition@2d37db618c5e/`.
 
+SCOPE NOTE (2026-11-26 23:17): this `17.3.0` is the local **HDRP** `old_school_model` fixture, which intentionally remains on `6000.3.29f1`; it is NOT a dangling URP 17.3 cache site. The Director's 22:27 1A re-pin (`6000.7.0b10 (4f3c1c5c4346)` / URP 17.7.0, caches @e9044f1f1f57 / @7aa87ac5532f / @767fc04a69c2) applies to the SyntyForest URP fixture and acceptance bars only. BIRP stays ignored: fact finder found no BIRP asset, shader, material, RP asset or setting necessary for SyntyForest to import; residual evidence retained for audit (not an import input): 22/24 `.shadergraph` carry an active `BuiltInTarget`, 125 `.mat` retain `_BUILTIN_*` properties, and 2 graphs reference BIRP-capable ShaderGUI scripts.
+
 ## 3. What the importer already covers
 
 From the verified HDRP census in the importer's HDRP notes (tasks 06-10 committed; task 11 open and

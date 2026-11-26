@@ -27,14 +27,21 @@ Work:
 ## Clarification Q&A
 An (Director 2026-11-26 03:57, 1A/3A/5A): "Unity 6.7 URP" is the session label for the on-disk 6000.3.29f1 / URP 17.3.0 fixture; target the URP 17.x surface, not one editor build. Visual fidelity only. No new tooling or fixture package.
 
+SUPERSEDED (2026-11-26 22:27, Director 1A re-pin; appended 23:17): the verbatim Q&A above stays byte-for-byte as history. Canonical target is Unity 6000.7.0b10 (4f3c1c5c4346) / URP 17.7.0 with caches `com.unity.render-pipelines.universal@e9044f1f1f57`, `com.unity.render-pipelines.core@7aa87ac5532f`, `com.unity.render-pipelines.universal-config@767fc04a69c2` under FIXTURE/Library/PackageCache/. The 6000.3.29f1 / 17.3.0 / @04369b574bc4 pins do not exist anywhere under 4-Unity (parent-verified). This note is the only SUPERSEDED note in this file; the binding re-ground is in `## Notes` below.
+
 ## Relevant History
 See eliots-agentics/tasks/urp-support-research.md sections 3-4 for the Volume census and engine effect-class citations. HEAD bfc189b; session-start harness compile gate green.
 
 ## Notes
+
+#### Master premise re-ground (2026-11-26 09:05, binding)
+The 6000.3.29f1 / URP 17.3.0 / cache `@04369b574bc4` pins in this task and in urp-support-research.md are SUPERSEDED. Verified on disk: SyntyForest is `6000.7.0b10 (4f3c1c5c4346)` / URP 17.7.0 with caches `com.unity.render-pipelines.universal@e9044f1f1f57` and `com.unity.render-pipelines.core@7aa87ac5532f`; unity_samples_oracle is the same version. Director 1A already targets the URP 17.x surface, not one editor build, so no clarification was raised. Re-resolve every guid/keyword against the CURRENT caches and re-derive EVERY line citation on disk: this task's Description cites `Demo.unity:371362`/`:371369`, but the on-disk guid is `:371225` and sharedProfile `:371232` (uniform -137 shift). Research sub-asset counts 5/6/29 are stale vs on-disk 6/6/33 (re-counted 23:17 with `grep -c '^--- !u!114 &'`). The Global Volume guid resolves to `UnityEngine.Rendering.Volume` (shared Core type), NOT a URP-only class: detect with `m_IsGlobal: 1` plus scene URP evidence and gate on `Pipeline == Urp`. A non-origin Global Volume DOES exist (Demo.unity GameObject &785097868, m_LocalPosition 61.38825 / -10.131328 / 41.147015), so acceptance #1 can be exercised with no new fixture; assert both the Demo and the origin SampleScene case. The DefaultVolumeProfile is active as the URP global default stack, not as a scene Volume. `Assets/imported/` is an untracked pre-existing artifact (mtime 01:29) - regenerate from fixed HEAD before any acceptance claim.
 Standing constraints: gate every URP rule on `Pipeline == Urp`; keep Editor/Core/*.cs BOM-less and LF; route new paths through UnityImport.DiskPath; any helper generating several components must return an unattached List<JsonObject> (a JsonNode cannot be added to two JsonArrays). Editor rounds follow the 4A conditions: before any editor round, check that no Director-owned editor is already open on that project; never close an editor this work did not launch; NTFY before each large round.
 
 ## Stylistic Task Notes:
 References to variables like X and Y automatically imply that these are to be exposed properties for developer tweaking.
 When programming, portability and DRY are a priority.
+
+
 
 ## Post-Task Follow Ups

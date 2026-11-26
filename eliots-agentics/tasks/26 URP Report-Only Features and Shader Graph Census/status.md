@@ -1,1 +1,1 @@
-## Status: STARTED? NO! CLARIFIED? YES! HISTORY? YES! REVIEWED? NO! DONE? NO! WORKER: NONE OTHER: Generated from urp-support-research.md; awaiting Master dispatch after the plan is reviewed and committed
+## Status: STARTED? YES! CLARIFIED? YES! HISTORY? YES! REVIEWED? NO! DONE? NO! WORKER: sa-3-20613bcd OTHER: Plan+premise phase dispatched 08:46 (deleg_2806f5c3); QUESTION-ONLY round 1, no Core edits yet

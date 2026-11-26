@@ -1,1 +1,1 @@
-## Status: STARTED? NO! CLARIFIED? YES! HISTORY? YES! REVIEWED? NO! DONE? NO! WORKER: NONE OTHER: Generated from urp-support-research.md; awaiting Master dispatch after the plan is reviewed and committed
+## Status: STARTED? YES! CLARIFIED? YES! HISTORY? YES! REVIEWED? NO! DONE? NO! WORKER: sa-0-af31cc8b OTHER: PERMISSION dispatched 23:55 (deleg_4c31c960); implementation round on 17.7.0 fixture, HEAD b828409; prior QUESTION-ONLY worker sa-1-3c05aebf plan accepted; Core owner this round: UnityVolume.cs + UnitySceneExport.cs + UnityUrp.cs additive

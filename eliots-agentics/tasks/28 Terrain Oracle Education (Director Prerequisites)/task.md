@@ -41,6 +41,13 @@ This task is step 1 of 2 and is half working. It CANNOT be started or closed whi
 6. Build provenance (Unity/URP versions, per-scene state) is recorded in the manifest and captures.
 7. If the Q6 ablation is in scope: a scene references `resource.terrain` via an `{Id, Path}` reference rather than embedded `Storage`.
 
+#### Master disposition (2026-11-26 23:59, from Director chat statement)
+Director (chat, verbatim): "C:\cseliot\1-Development\4-Unity\2-Projects\unity_samples_oracle and C:\cseliot\1-Development\1-SBox\2-Projects\sbox_samples_oracle are up to parity in terms of assiting w terrain importing. No further work by Director will be done on them. And no screenshots exist, I do not consider them helpful for comparing the 2 oracles."
+CONSEQUENCES (Master interpretation, change if wrong):
+- The Director's remaining oracle-side prerequisites are WITHDRAWN: P1 (numeric comparison manifest), P2 (matched captures / baked-lightmap neutralisation), P3 (one-axis variants), P5 (build provenance) and acceptance #2/#3/#4/#6/#7 no longer bind. P0c (canonical build) is already settled: both oracles and SyntyForest sit on 6000.7.0b10 / URP 17.7.0 (parent-verified). No screenshots will be produced or compared for the oracles.
+- P0a/P0b collapse into ONE remaining decision that gates step 2: extend the oracles further (no, per "no further work"), and add a terrain implementation task vs keep terrain report-only in task 26. Step 2 (binary TerrainData reader, TerrainStorage writer, verified mapping) stays UNSPECIFIED until that decision.
+- This task stays STARTED? NO! DONE? NO! (half working step 1/2): the only open item is the Director's terrain-implementation decision, asked in chat 23:59. Clutter / terrain detail painting / terrain trees remain OUT OF SCOPE per the Director Update in Post-Task Follow Ups.
+
 ### Work Review
 
 
@@ -51,10 +58,17 @@ An (Director 2026-11-26 08:47): "add a terrain task that requires a 'half workin
 `eliots-agentics/tasks/terrain-import-research.md` sections 7.1, 7.2, 8, 9, 10 (committed d583109). Read-only investigation reports `04-oracle-current-state.md` and `05-oracle-director-actions.md` under `C:/Users/Eliot/AppData/Local/hermes/profiles/hermes-sbox/cache/scratch/terrain-research/`. `session-latest.md` 08:28 note. Task 27 (research) is DONE; tasks 21 and 22 are DONE; 23-26 remain open and unstarted.
 
 ## Notes
+
+#### Master premise correction (2026-11-26 09:05, binding)
+The Standing constraints line below ("1A (6000.3.29f1 / URP 17.3.0 is the session fixture)") and Description P0c ("the comparison spans two different Unity/URP versions") are STALE. Verified on disk at 09:01-09:05: SyntyForest is `6000.7.0b10 (4f3c1c5c4346)` / URP 17.7.0 (dir mtime 09:01) and unity_samples_oracle is ALSO `6000.7.0b10` / 17.7.0; they are distinct directories. Both oracles now sit on the SAME Unity/URP build, so P0c's premise no longer holds and the canonical-build decision is effectively narrowed to "one build, 17.7.0". Director 1A already targets the URP 17.x surface rather than one editor build. This task remains BLOCKED on Director P0-P5 (step 1 of 2): no worker dispatched, no DONE? YES! until all prerequisites are verified on disk. HEAD is 0d31400 (remote main in sync), not eb48c7f. The next hourly archive is due around 09:15. SUPERSEDED (2026-11-26 22:27, Director 1A re-pin; appended 23:17): the verbatim Director brief above (including its `6000.3.29f1` / URP `17.3.0` statements at Description P0c and Standing constraints) is preserved byte-for-byte as history and is now superseded. Canonical Unity 6.7 = `6000.7.0b10 (4f3c1c5c4346)` / URP 17.7.0 with caches `com.unity.render-pipelines.universal@e9044f1f1f57`, `com.unity.render-pipelines.core@7aa87ac5532f`, `com.unity.render-pipelines.universal-config@767fc04a69c2` under FIXTURE/Library/PackageCache/; the 17.3 hashes and 6000.3.29f1 / 96d2fe17529c do not exist under 4-Unity (parent-verified). One SUPERSEDED note per file. BIRP is out of scope (Director 22:55); the remaining four-scene fixture is the baseline. Camera count PINNED by the read-only fact finder (Director 23:17): 7 `!u!20` Camera components over the four scenes (4 enabled, 3 disabled), 6 with a UniversalAdditionalCameraData sibling; the 7th is a plain camera at `PolygonGeneric/Scenes/Overview.unity:4277`.
 Standing constraints (Director 03:57): 1A (6000.3.29f1 / URP 17.3.0 is the session fixture), 3A (visual fidelity only, terrain visuals in scope), 4A (three editor conditions plus NTFY before each large round), 5A (no new tooling, no fixture package). Editor rounds follow the 4A conditions: before any editor round, check that no Director-owned editor is already open on that project; never close an editor this work did not launch; NTFY before each large round. No `Editor/Core/*.cs` change belongs to step 1.
 
 ## Stylistic Task Notes:
 References to variables like X and Y automatically imply that these are to be exposed properties for developer tweaking.
 When programming, portability and DRY are a priority.
 
+
+
 ## Post-Task Follow Ups
+Director Update:
+Clutter / terrain detail painting / terrain trees are out of scope. SyntyForest doesn't use it, so not importent for getitng into sbox.
