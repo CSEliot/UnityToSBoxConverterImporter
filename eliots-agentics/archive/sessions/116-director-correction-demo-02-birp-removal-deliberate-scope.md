@@ -1,0 +1,9 @@
+## 2026-11-26 22:56 - DIRECTOR CORRECTION: Demo_02_BIRP removal is deliberate scope, NOT a regression
+Director (chat 22:55, verbatim): "I deleted "Demo_02_BIRP.unity" because it stands for "BUILT IN RENDER PIPELINE" and we're not supporing that."
+SUPERSEDES the 22:54 note above in TWO places, original text kept intact as history:
+(1) "FIXTURE REGRESSION (real bug, flagged not patched)" is WRONG. It is a DELIBERATE removal of an out-of-scope Built-In Render Pipeline demo. Nothing needs restoring; nothing was lost.
+(2) "CAUSE UNVERIFIED: deliberate BIRP-demo cleanup ... or accidental loss" is RESOLVED: deliberate, with the Director's reason. Open item (1) above is CLOSED.
+STANDING SCOPE DECISION: BIRP (Built-In Render Pipeline) assets and scenes are OUT OF SCOPE for this project. Any plan/research citation into `Demo_02_BIRP.unity` is FALSIFIED and drops from scope, with this Director statement as the primary source. The current 4-scene fixture is the correct baseline, not a degraded one.
+CONSEQUENCES (not yet applied): stale citations remain in task 25 `01-plan.md:38,41,55,59,60`, task 26 `task.md:7,13` and `01-plan.md:11,27,28`, `terrain-import-research.md:44,155`, `urp-support-research.md:45,67`. These quote 5 scenes / 5 lights / 8 cameras / 2 Terrain / the BIRP scene. They must be marked FALSIFIED and dropped from scope BEFORE tasks 25/26 resume. PARENT DECISION (change if wrong): defer those per-file edits to each task's resume turn rather than editing six untracked worker-authored plan files mid-review; the re-ground report `reground-2228.md` and this note are cited in the briefs. Worker 23 does not depend on scene count, so this does not block it.
+CAMERA COUNT DISCREPANCY: child reported 6 cameras for task 25, PARENT measured 7 `!u!20` blocks across the 4 scenes. Still unresolved; re-derive when task 25 resumes.
+No commit, no critic, no DONE? YES! this turn.
