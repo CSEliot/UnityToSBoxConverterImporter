@@ -30,6 +30,9 @@ Candidate mechanisms (each needs a named falsifier that must actually be RUN and
 ## Clarification Q&A
 An (Director 2026-11-26 22:11 chat / 23:59 sequence order, verbatim): "Option A. And yes open a separate task for the pre-existing Shader Graph F_SELF_ILLUM residual." Full text of the constraint carried in: "keep Shader Graph materials report-only per task 26".
 
+An (Director 2026-11-27 00:46, chat, verbatim): "1A, 2A". This task is the Q2 answer: the Director chose option 2A. The text of option 2A AS POSED BY THE MASTER (not a Director quote) was: "approve the gate widening for the two report-only Shader Graph fire FX materials, scoped to suppressing a fabricated F_SELF_ILLUM where no valid emission keyword exists. This is not a conversion to URP/Lit; the report-only stance stays. Prove building/city byte-identical and the per-code Unresolved counts unchanged."
+CONSEQUENCE: the code phase is APPROVED under Option A's conditions but stays QUEUED behind task 25, because task 25's worker owns the shared harness build/gate this round (one gate owner at a time; concurrent builds corrupt the output dir). Scope: suppress F_SELF_ILLUM only where no valid emission keyword exists; no Shader Graph material becomes a URP/Lit conversion; report-only stance unchanged.
+
 ## Relevant History
 Task 23 `### Work Review` finding 5 (2026-11-26 21:13, deleg_02a4d048) - F_SELF_ILLUM residual correctly out of scope for task 23; parent corrections at session-latest.md 23:55 and 23:59. `eliots-agentics/tasks/23 URP Lit PBR and Emission Fidelity/task_journal/04-implementation-and-schema.md` holds the corrected keyword-state record. `eliots-agentics/tasks/urp-support-research.md` and `eliots-agentics/tasks/terrain-import-research.md` hold the version census. HEAD de1f01e.
 
