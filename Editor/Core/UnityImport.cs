@@ -152,6 +152,16 @@ public static class UnityImport
 		var channelTimer = new System.Diagnostics.Stopwatch();
 		var shaders = archive.Assets.Where( a => a.Path.EndsWith( ".shader", StringComparison.OrdinalIgnoreCase ) ).ToDictionary( a => a.Guid, StringComparer.OrdinalIgnoreCase );
 		var shaderText = new Dictionary<string, string>( StringComparer.OrdinalIgnoreCase );
+		// A .unitypackage carries no ShaderLab source for pipeline shaders, and a Shader Graph has no
+		// shader source at all. Resolve graph guids from their .shadergraph.meta sidecars: these
+		// materials are reported, never translated. New paths go through DiskPath for case fidelity.
+		var shaderGraphGuids = new HashSet<string>( StringComparer.OrdinalIgnoreCase );
+		foreach ( var graph in archive.Assets.Where( a => a.Path.EndsWith( ".shadergraph", StringComparison.OrdinalIgnoreCase ) ) )
+		{
+			var meta = archive.SourceDirectory != null ? DiskPath( archive.SourceDirectory, "Assets/" + graph.Path + ".meta" ) : graph.Metadata;
+			if ( meta == null || !File.Exists( meta ) ) continue;
+			if ( Regex.IsMatch( ReadText( meta ), @"guid:\s*" + Regex.Escape( graph.Guid ) ) ) shaderGraphGuids.Add( graph.Guid );
+		}
 		var convertedMaterials = new Dictionary<string, UnityMaterial>( StringComparer.OrdinalIgnoreCase );
 		var materialPaths = MaterialOutputPaths( plan, textureSources );
 		var generatedModels = new Dictionary<(string Guid, string Mesh), string>();
@@ -162,6 +172,12 @@ public static class UnityImport
 		// because an HDRP scene has hundreds of these components and a material line each would drown it.
 		var hdrpMaterials = 0;
 		var hdrpComponents = new HdrpCounts( 0, 0, 0, 0 );
+		// URP is report-only too. Dedupe every count by asset path, and only report once at least one
+		// material's shader guid resolves to a URP 17.x shader with serialized property/keyword evidence.
+		var urpMaterialPaths = new HashSet<string>( StringComparer.OrdinalIgnoreCase );
+		var urpLitPaths = new HashSet<string>( StringComparer.OrdinalIgnoreCase );
+		var allVmatPaths = new HashSet<string>( StringComparer.OrdinalIgnoreCase );
+		var materialShaderGuids = new List<(string Path, string Guid)>();
 		// HDRP Lit features the complex shader cannot express. They are grouped into one line at the end
 		// of the import rather than reported per material, because a real project has dozens.
 		var transmissionMaterials = new HashSet<string>( StringComparer.OrdinalIgnoreCase );
@@ -244,6 +260,16 @@ public static class UnityImport
 							material.ConfigureShader( source );
 						}
 						if ( material.Pipeline == UnityPipeline.Hdrp ) hdrpMaterials++;
+						if ( material.Pipeline == UnityPipeline.Urp && UnityUrp.HasShaderEvidence( material ) )
+						{
+							urpMaterialPaths.Add( asset.Path );
+							if ( material.ShaderName == UrpCounts.LitShaderName ) urpLitPaths.Add( asset.Path );
+						}
+						if ( planned.Vmat )
+						{
+							allVmatPaths.Add( asset.Path );
+							materialShaderGuids.Add( (asset.Path, material.ShaderGuid) );
+						}
 						if ( material.Transmission ) transmissionMaterials.Add( asset.Path );
 						if ( material.Subsurface ) subsurfaceMaterials.Add( asset.Path );
 						if ( extractChannel != null || extractChannels != null )
@@ -619,6 +645,22 @@ public static class UnityImport
 			}
 			var hdrp = hdrpComponents + new HdrpCounts( hdrpMaterials, 0, 0, 0 );
 			if ( hdrp.Total > 0 ) information.Add( hdrp.Report );
+			if ( urpMaterialPaths.Count > 0 )
+			{
+				// One grouping for the whole import. Materials that carry a graph guid are counted once
+				// by path; the 187th material with a graph file id but an unresolved shader guid is not
+				// a graph detection and stays in the unresolved count only.
+				var shaderGraphPaths = new HashSet<string>( StringComparer.OrdinalIgnoreCase );
+				foreach ( var (path, guid) in materialShaderGuids )
+					if ( shaderGraphGuids.Contains( guid ) ) shaderGraphPaths.Add( path );
+				// UnityAsset.Source is already the absolute on-disk source (Asset.Path is relative to
+				// Assets/, so rebuilding a path from it would lose the Assets/ segment).
+				var scenePaths = archive.Assets.Where( a => a.Kind == UnityAssetKind.Scene )
+					.Select( a => a.Source )
+					.Distinct( StringComparer.OrdinalIgnoreCase );
+				var urpComponents = UnityUrp.CountComponents( scenePaths );
+				information.Add( new UrpCounts( allVmatPaths.Count, urpLitPaths.Count, shaderGraphPaths.Count, urpComponents.Components ).Report );
+			}
 			if ( UnityHdrp.UnsupportedMaterials( transmissionMaterials, subsurfaceMaterials ) is string unsupportedSurface )
 				information.Add( unsupportedSurface );
 			var variants = mirroredPrefabs.Values.Count( v => v != null );

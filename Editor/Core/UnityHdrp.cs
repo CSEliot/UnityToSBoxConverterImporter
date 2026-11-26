@@ -10,6 +10,7 @@ public enum UnityPipeline
 {
 	Unknown,
 	Hdrp,
+	Urp,
 }
 
 /// <summary>
@@ -136,8 +137,10 @@ public static class UnityHdrp
 	/// <summary>The display name of a known pipeline shader; null when the shader is not in the table.</summary>
 	public static string ShaderName( string guid ) => Shader( guid )?.Name;
 
-	/// <summary>The pipeline a material's shader belongs to. Only the shader guid is consulted.</summary>
-	public static UnityPipeline PipelineOf( string shaderGuid ) => Shader( shaderGuid ) == null ? UnityPipeline.Unknown : UnityPipeline.Hdrp;
+	/// <summary>The pipeline a material's shader belongs to. Only the shader guid is consulted; the
+	/// URP table is checked first, so a URP material never falls through the Standard path.</summary>
+	public static UnityPipeline PipelineOf( string shaderGuid ) =>
+		UnityUrp.Shader( shaderGuid ) != null ? UnityPipeline.Urp : Shader( shaderGuid ) == null ? UnityPipeline.Unknown : UnityPipeline.Hdrp;
 
 	/// <summary>The known HDRP component <paramref name="scriptGuid"/> names, or null for any other script.</summary>
 	public static HdrpComponent Component( string scriptGuid ) =>

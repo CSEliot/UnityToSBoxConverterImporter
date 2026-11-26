@@ -28,6 +28,8 @@ public sealed class UnityMaterial
 	HashSet<string> declaredProperties;
 	static readonly string[] ColorProperties = { "_BaseMap", "_Diffuse", "_MainTex", "_Albedo", "_BaseColorMap" };
 	public IEnumerable<string> ColorTextureGuids => ColorProperties.Where( Textures.ContainsKey ).Select( p => Textures[p] );
+	/// <summary>Serialized valid/legacy shader keywords; pipeline tables use this as guid evidence.</summary>
+	public bool HasKeyword( string keyword ) => keywords.Contains( keyword );
 	bool Hdrp => Pipeline == UnityPipeline.Hdrp;
 	// HDRP writes its surface flags as a property pair plus a feature keyword; either one enables the
 	// feature, and the property is the authority when they disagree. A material from another pipeline
@@ -80,8 +82,9 @@ public sealed class UnityMaterial
 		result.ShaderGuid = Regex.Match( text, @"m_Shader:[^\r\n]*guid:\s*([a-fA-F0-9]{32})" ).Groups[1].Value;
 		// An HDRP shader is never in the archive, so it is recognised by guid and named from the table;
 		// ConfigureShader cannot run for it and its property parsing below stays exactly as it was.
+		// URP shaders are named the same way; neither pipeline has ShaderLab source to read.
 		result.Pipeline = UnityHdrp.PipelineOf( result.ShaderGuid );
-		if ( UnityHdrp.Shader( result.ShaderGuid ) is { } pipeline ) result.ShaderName = pipeline.Name;
+		if ( (UnityHdrp.Shader( result.ShaderGuid ) ?? UnityUrp.Shader( result.ShaderGuid )) is { } pipeline ) result.ShaderName = pipeline.Name;
 		ReadKeywords( text, result.keywords );
 		string property = null;
 		foreach ( var line in text.Split( '\n' ) )
