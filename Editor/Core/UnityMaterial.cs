@@ -20,7 +20,13 @@ public sealed class UnityMaterial
 	readonly Dictionary<string, string> channelImages = new();
 	readonly Dictionary<string, double[]> textureScale = new();
 	readonly Dictionary<string, double[]> textureOffset = new();
+	// Keyword state is THREE serialized forms. m_ValidKeywords and the older m_ShaderKeywords are ON;
+	// m_InvalidKeywords is explicitly OFF and is never merged into the ON sets. `keywords` stays the
+	// merged ON set used by the pipeline guid tables and by HDRP behaviour, so those stay unchanged.
 	readonly HashSet<string> keywords = new( StringComparer.Ordinal );
+	readonly HashSet<string> validKeywords = new( StringComparer.Ordinal );
+	readonly HashSet<string> invalidKeywords = new( StringComparer.Ordinal );
+	readonly HashSet<string> legacyKeywords = new( StringComparer.Ordinal );
 	bool shaderAlphaTest;
 	bool shaderBackfaces;
 	bool shaderTranslucent;
@@ -30,6 +36,10 @@ public sealed class UnityMaterial
 	public IEnumerable<string> ColorTextureGuids => ColorProperties.Where( Textures.ContainsKey ).Select( p => Textures[p] );
 	/// <summary>Serialized valid/legacy shader keywords; pipeline tables use this as guid evidence.</summary>
 	public bool HasKeyword( string keyword ) => keywords.Contains( keyword );
+	/// <summary>True only when the keyword was serialized ON (valid or legacy form), never from the OFF list.</summary>
+	public bool HasValidKeyword( string keyword ) => !invalidKeywords.Contains( keyword )
+		&& ( validKeywords.Contains( keyword ) || legacyKeywords.Contains( keyword ) );
+	public bool HasInvalidKeyword( string keyword ) => invalidKeywords.Contains( keyword );
 	bool Hdrp => Pipeline == UnityPipeline.Hdrp;
 	bool Urp => Pipeline == UnityPipeline.Urp;
 	// HDRP writes its surface flags as a property pair plus a feature keyword; either one enables the
@@ -63,6 +73,30 @@ public sealed class UnityMaterial
 	// min is 0; the caller reports the other case instead of pretending the channel holds it.
 	static double RemapSpan( double min, double max ) => Math.Clamp( max - min, 0, 1 );
 	static double Remap( double value, double min, double max ) => Math.Clamp( min + value * (max - min), 0, 1 );
+
+	// NEW MAPPING (URP Lit): packed-map channel selection. Every knob is developer-tweakable and is
+	// consulted only when Pipeline == Urp, so Standard/HDRP keep their original channel choices.
+	public int UrpMetallicChannel { get; set; } = 0;
+	public int UrpGlossChannel { get; set; } = 3;
+	public bool UrpGlossInvert { get; set; } = true;
+	public double UrpGlossScale { get; set; } = 1;
+	public int UrpOcclusionChannel { get; set; } = 1;
+	public int UrpParallaxChannel { get; set; } = 1;
+	public double UrpParallaxScale { get; set; } = 1;
+	public bool UrpParallaxInvert { get; set; } = false;
+
+	/// <summary>
+	/// URP/Lit emission that must be REPORTED, not converted: a real emission map and a nonzero colour
+	/// exist, but _EMISSION is not serialized ON. URP gates SampleEmission on that keyword, so a
+	/// colour-only glow would fabricate illumination the source does not have.
+	/// </summary>
+	public bool EmissionReportedNotConverted => Urp && ShaderName == UrpCounts.LitShaderName
+		&& Textures.ContainsKey( "_EmissionMap" )
+		&& Colors.TryGetValue( "_EmissionColor", out var tint ) && tint.Take( 3 ).Any( c => c > 0 )
+		&& !HasValidKeyword( "_EMISSION" );
+	/// <summary>The exact serialized emission colour, in source precision, for the report line.</summary>
+	public string EmissionSourceColor => Colors.TryGetValue( "_EmissionColor", out var tint )
+		? string.Join( "/", tint.Take( 3 ).Select( c => c.ToString( "G7", CultureInfo.InvariantCulture ) ) ) : "";
 	/// <summary>HDRP's transmission feature; s&box's complex shader has no equivalent. The keyword is
 	/// the only evidence: _TransmissionEnable is serialized as 1 on every HDRP Lit material, because
 	/// the shader declares it as a passed-in default, so reading it would flag all 98 corpus materials.</summary>
@@ -91,7 +125,7 @@ public sealed class UnityMaterial
 		// URP shaders are named the same way; neither pipeline has ShaderLab source to read.
 		result.Pipeline = UnityHdrp.PipelineOf( result.ShaderGuid );
 		if ( (UnityHdrp.Shader( result.ShaderGuid ) ?? UnityUrp.Shader( result.ShaderGuid )) is { } pipeline ) result.ShaderName = pipeline.Name;
-		ReadKeywords( text, result.keywords );
+		ReadKeywords( text, result.keywords, result.validKeywords, result.invalidKeywords, result.legacyKeywords );
 		string property = null;
 		foreach ( var line in text.Split( '\n' ) )
 		{
@@ -134,29 +168,50 @@ public sealed class UnityMaterial
 	/// m_ShaderKeywords line at all; older serializations write one space-separated m_ShaderKeywords
 	/// line. m_InvalidKeywords names features that are off, so it is never read.
 	/// </summary>
-	static void ReadKeywords( string text, HashSet<string> keywords )
+	static void ReadKeywords( string text, HashSet<string> keywords, HashSet<string> valid, HashSet<string> invalid, HashSet<string> legacy )
 	{
-		bool listed = false;
+		void Add( string token, HashSet<string> target, bool alsoMerged )
+		{
+			if ( token.Length == 0 ) return;
+			target?.Add( token );
+			if ( alsoMerged ) keywords.Add( token );
+		}
+		void Inline( string tail, HashSet<string> target, bool alsoMerged )
+		{
+			foreach ( var token in tail.Trim( '[', ']' ).Split( new[] { ' ', ',' }, StringSplitOptions.RemoveEmptyEntries ) )
+				Add( token, target, alsoMerged );
+		}
+		HashSet<string> list = null;
+		bool alsoMerged = false;
 		foreach ( var raw in text.Split( '\n' ) )
 		{
 			var line = raw.Trim();
 			if ( line.StartsWith( "m_ValidKeywords:", StringComparison.Ordinal ) )
 			{
-				listed = true;
-				foreach ( var keyword in line["m_ValidKeywords:".Length..].Trim( '[', ']' ).Split( new[] { ' ', ',' }, StringSplitOptions.RemoveEmptyEntries ) )
-					keywords.Add( keyword );
+				list = valid; alsoMerged = true;
+				Inline( line["m_ValidKeywords:".Length..], list, alsoMerged );
 				continue;
 			}
-			if ( listed && line.StartsWith( "- ", StringComparison.Ordinal ) )
+			if ( line.StartsWith( "m_InvalidKeywords:", StringComparison.Ordinal ) )
 			{
-				var keyword = line[2..].Trim();
-				if ( keyword.Length > 0 ) keywords.Add( keyword );
+				// Explicitly OFF: record it, but never let it enable a feature.
+				list = invalid; alsoMerged = false;
+				Inline( line["m_InvalidKeywords:".Length..], list, alsoMerged );
 				continue;
 			}
-			listed = false;
 			if ( line.StartsWith( "m_ShaderKeywords:", StringComparison.Ordinal ) )
-				foreach ( var keyword in line["m_ShaderKeywords:".Length..].Split( new[] { ' ', ',' }, StringSplitOptions.RemoveEmptyEntries ) )
-					keywords.Add( keyword );
+			{
+				list = legacy; alsoMerged = true;
+				Inline( line["m_ShaderKeywords:".Length..], list, alsoMerged );
+				continue;
+			}
+			if ( list != null && line.StartsWith( "- ", StringComparison.Ordinal ) )
+			{
+				Add( line[2..].Trim(), list, alsoMerged );
+				continue;
+			}
+			list = null;
+			alsoMerged = false;
 		}
 	}
 
@@ -183,7 +238,22 @@ public sealed class UnityMaterial
 			var path = extract( guid, channel, scale, invert );
 			if ( path != null ) channelImages[target] = path;
 		}
-		if ( Textures.TryGetValue( "_MetallicGlossMap", out var packed ) )
+		if ( Urp )
+		{
+			// NEW MAPPING (URP Lit): metalness in the selected _MetallicGlossMap channel,
+			// smoothness in its gloss channel, AO in _OcclusionMap and height in _ParallaxMap.
+			// Every channel/scale is developer-tweakable; Standard/HDRP never consult these knobs.
+			if ( Textures.TryGetValue( "_MetallicGlossMap", out var packed ) )
+			{
+				Channel( "metal", packed, UrpMetallicChannel );
+				Channel( "rough", packed, UrpGlossChannel,
+					Number( "_GlossMapScale", Number( "_Smoothness", 1 ) ) * UrpGlossScale, UrpGlossInvert );
+			}
+			if ( Textures.TryGetValue( "_OcclusionMap", out var urpAo ) ) Channel( "ao", urpAo, UrpOcclusionChannel );
+			if ( Textures.TryGetValue( "_ParallaxMap", out var height ) )
+				Channel( "height", height, UrpParallaxChannel, UrpParallaxScale, UrpParallaxInvert );
+		}
+		else if ( Textures.TryGetValue( "_MetallicGlossMap", out var packed ) )
 		{
 			Channel( "metal", packed, 0 );
 			Channel( "rough", packed, 3, Number( "_GlossMapScale", Number( "_Smoothness", 1 ) ), true );
@@ -203,7 +273,7 @@ public sealed class UnityMaterial
 			if ( MetalRemapMin > RemapEpsilon || SmoothRemapMin > RemapEpsilon )
 				Warnings.Add( "HDRP's mask remap minimum cannot be baked into the metalness or roughness channel; the remap was applied from 0. Raise the channel's floor in the material editor." );
 		}
-		if ( Textures.TryGetValue( "_OcclusionMap", out var ao ) ) Channel( "ao", ao, 1 );
+		if ( !Urp && Textures.TryGetValue( "_OcclusionMap", out var ao ) ) Channel( "ao", ao, 1 );
 		if ( AlphaTest || Translucent )
 		{
 			// HDRP keeps a _MainTex mirror of the base-colour map for GI baking; the base-colour alpha is
@@ -273,6 +343,10 @@ public sealed class UnityMaterial
 		var colorProperty = ColorProperties.FirstOrDefault( p => Textures.TryGetValue( p, out var guid ) && resolve( guid ) != null );
 		var metal = channelImages.GetValueOrDefault( "metal" );
 		var emission = Texture( resolve, "_EmissionMap", "_EmissiveColorMap" );
+		// URP gates SampleEmission on the _EMISSION keyword (Shaders/Utils/Emission.hlsl; the GUI
+		// derives that keyword from globalIlluminationFlags, not from _EmissionColor). A mask or a
+		// colour without the keyword cannot glow, so no Self Illum section and no F_SELF_ILLUM.
+		if ( Urp && emission != null && !HasValidKeyword( "_EMISSION" ) ) emission = null;
 		if ( metal != null ) Feature( "F_METALNESS_TEXTURE 1" );
 		if ( AlphaTest ) Feature( "F_ALPHA_TEST 1" );
 		if ( Backfaces ) Feature( "F_RENDER_BACKFACES 1" );

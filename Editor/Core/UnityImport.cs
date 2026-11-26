@@ -133,6 +133,9 @@ public static class UnityImport
 		var warnings = new List<string>( archive.Warnings );
 		var information = new List<string>();
 		var unresolved = new List<ImportIssue>( plan.Issues );
+		// URP/Lit emission that the source cannot actually light is collected per asset path and
+		// flushed as ONE grouped line after the conversion loop, never as per-material spam.
+		var emissionReported = new List<(string Path, string Color)>();
 		warnings.AddRange( plan.Issues.Select( i => $"{i.Asset}: {i.Message}" ) );
 		void Issue( string asset, string code, string message )
 		{
@@ -272,6 +275,7 @@ public static class UnityImport
 						}
 						if ( material.Transmission ) transmissionMaterials.Add( asset.Path );
 						if ( material.Subsurface ) subsurfaceMaterials.Add( asset.Path );
+						if ( material.EmissionReportedNotConverted ) emissionReported.Add( (asset.Path, material.EmissionSourceColor) );
 						if ( extractChannel != null || extractChannels != null )
 						{
 							material.PrepareChannels( (guid, channel, scale, invert) =>
@@ -659,6 +663,20 @@ public static class UnityImport
 					.Select( a => a.Source )
 					.Distinct( StringComparer.OrdinalIgnoreCase );
 				var urpComponents = UnityUrp.CountComponents( scenePaths );
+				// ONE grouped line for every emission-disabled URP/Lit asset, deduplicated by the
+				// archive asset path (never by material name). UnityImport owns the asset path; the
+				// material only reports the condition and the exact serialized colour.
+				if ( emissionReported.Count > 0 )
+				{
+					var grouped = emissionReported
+						.GroupBy( e => e.Path, StringComparer.OrdinalIgnoreCase )
+						.Select( g => g.First() )
+						.OrderBy( e => e.Path, StringComparer.OrdinalIgnoreCase )
+						.ToArray();
+					var names = string.Join( ", ", grouped.Select( e => Path.GetFileNameWithoutExtension( e.Path ) ) );
+					var colours = string.Join( ", ", grouped.Select( e => e.Color ).Distinct( StringComparer.Ordinal ) );
+					information.Add( $"{grouped.Length} emission-disabled URP/Lit material(s) reported, not converted: {names}; source _EmissionColor {colours}; _EMISSION is OFF in each source material." );
+				}
 				information.Add( new UrpCounts( allVmatPaths.Count, urpLitPaths.Count, shaderGraphPaths.Count, urpComponents.Components ).Report );
 			}
 			if ( UnityHdrp.UnsupportedMaterials( transmissionMaterials, subsurfaceMaterials ) is string unsupportedSurface )
