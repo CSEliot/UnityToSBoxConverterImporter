@@ -1,0 +1,1 @@
+## Status: STARTED? YES! CLARIFIED? YES! HISTORY? YES! REVIEWED? YES! DONE? YES! WORKER: MASTER OTHER: Terrain import research complete; critic 06:27 no further changes; deliverable plus task 27 records committed and pushed; backlog 22-26 remain open; task 22 held pending Director scope decision
