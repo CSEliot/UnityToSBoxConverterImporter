@@ -1,0 +1,2 @@
+## 2026-11-26 06:54 - Protocol correction: hourly session archive step
+master.md:23 was missed this session: the last archive run was at 00:29 and the current time is 06:54, more than six hours elapsed. Three note headings had been left as `## 2026-11-26 - ...` without the required HH:MM timestamp. A role-less subagent was spawned to move the 13 notes older than 05:54 into eliots-agentics/archive/sessions/ as files 080-092 and to normalize those three headings from Master-supplied observed event times.
