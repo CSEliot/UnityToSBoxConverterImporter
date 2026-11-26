@@ -934,8 +934,12 @@ internal static class UnitySceneExport
 	/// clear-colour mode picks between the sky and backgroundColorHDR, clearDepth drops the depth clear, and
 	/// the antialiasing mode maps to s&amp;box's single on/off flag. The volume mask and physical camera
 	/// settings have no CameraComponent counterpart and are reported by <see cref="UnityHdrpLighting.Report"/>.
+	/// A URP camera carries UniversalAdditionalCameraData (<paramref name="urp"/>, null on other pipelines):
+	/// m_RenderPostProcessing, m_Antialiasing and m_ClearDepth are NEW MAPPINGS, all developer-tweakable in
+	/// <see cref="UnityUrp"/> and only applied when the caller has gated on Pipeline == Urp. Every other
+	/// URP-only field is reported with its source value, never approximated.
 	/// The returned list holds the camera and the four engine-template post effects, all on this GameObject.</summary>
-	internal static List<JsonObject> Camera( Guid id, string body, string hd, bool enabled, bool main )
+	internal static List<JsonObject> Camera( Guid id, string body, string hd, string urp, string label, bool enabled, bool main, List<string> report )
 	{
 		var orthographic = Scalar( body, "orthographic" ) == "1";
 		// ClearColorMode: 0 Sky, 1 Color, 2 None. Only Color carries an authored background; HDRP stores it linear.
@@ -943,12 +947,17 @@ internal static class UnitySceneExport
 		var background = solid
 			? Vector( hd, "backgroundColorHDR", "r", "g", "b" )
 			: Vector( body, "m_BackGroundColor", "r", "g", "b" ).Select( Linear );
+		// ClearFlags "Color" clears colour but leaves depth, matching a clearDepth of 0 in either pipeline.
+		var colourOnly = hd != null && Scalar( hd, "clearDepth" ) == "0"
+			|| urp != null && UnityUrp.MapClearDepth && Scalar( urp, "m_ClearDepth" ) == "0";
+		var postProcessing = urp == null || !UnityUrp.MapRenderPostProcessing
+			? true
+			: UnityPrefabExport.Scalar( urp, "m_RenderPostProcessing" ) is { Length: > 0 } authored && authored != "0";
 		var properties = new Dictionary<string, JsonNode>
 		{
 			["BackgroundColor"] = Colour( background ),
-			// HDRP's clearDepth 0 leaves the depth buffer alone; s&amp;box clears the color buffer only then.
-			["ClearFlags"] = hd != null && Scalar( hd, "clearDepth" ) == "0" ? "Color" : "All",
-			["EnablePostProcessing"] = true,
+			["ClearFlags"] = colourOnly ? "Color" : "All",
+			["EnablePostProcessing"] = postProcessing,
 			["FieldOfView"] = Single( Math.Clamp( Scalar( body, "field of view" ).Length == 0 ? 60 : Number( body, "field of view" ), 1, 179 ) ),
 			["FovAxis"] = Scalar( body, "m_FOVAxisMode" ) == "1" ? "Horizontal" : "Vertical",
 			["IsMainCamera"] = main,
@@ -963,8 +972,17 @@ internal static class UnitySceneExport
 			["ZNear"] = Single( Math.Clamp( Number( body, "near clip plane" ) * UnitsPerMetre, 1, 1000 ) )
 		};
 		// AntialiasingMode: 0 None, 1 FXAA, 2 TAA, 3 SMAA. s&amp;box has one flag, so any non-zero mode enables it.
-		// Only an HDRP camera writes the key; a Unity camera keeps the editor's own property set byte for byte.
+		// Only an HDRP or a gated URP camera writes the key; a plain Unity camera keeps the editor's own set.
 		if ( hd != null ) properties["DisableAntiAliasing"] = Number( hd, "antialiasing" ) == 0;
+		else if ( urp != null && UnityUrp.MapAntialiasing ) properties["DisableAntiAliasing"] = Number( urp, "m_Antialiasing" ) == 0;
+		if ( urp != null && report != null )
+		{
+			UnityUrp.ReportUnmapped( urp, label, "Camera", report );
+			var antiAliasText = !UnityUrp.MapAntialiasing
+				? "DisableAntiAliasing not mapped (MapAntialiasing off)"
+				: (Number( urp, "m_Antialiasing" ) == 0).ToString();
+			report.Add( $"{label}: URP m_RenderPostProcessing={UnityPrefabExport.Scalar( urp, "m_RenderPostProcessing" )} -> EnablePostProcessing={postProcessing}; m_Antialiasing={UnityPrefabExport.Scalar( urp, "m_Antialiasing" )} -> DisableAntiAliasing={antiAliasText}; m_ClearDepth={UnityPrefabExport.Scalar( urp, "m_ClearDepth" )} -> ClearFlags={(colourOnly ? "Color" : "All")}." );
+		}
 		var components = new List<JsonObject> { Component( "Sandbox.CameraComponent", id, enabled, properties ) };
 		components.AddRange( CameraPostEffects( id.ToString() ) );
 		return components;
@@ -984,9 +1002,11 @@ internal static class UnitySceneExport
 	/// non-HDRP light. Area lights return null. The colour temperature stays baked into the tint so the
 	/// engine's 6500 K neutral default does not apply the curve twice.
 	/// </summary>
-	internal static JsonObject Light( Guid id, string body, string hd, bool enabled, out string tag, out UnityHdrpLighting.Converted converted )
+	internal static JsonObject Light( Guid id, string body, string hd, string urp, string label, bool enabled,
+		out string tag, out UnityHdrpLighting.Converted converted, List<string> report )
 	{
 		tag = null;
+		if ( urp != null && report != null ) UnityUrp.ReportUnmapped( urp, label, "Light", report );
 		var type = (int)Number( body, "m_Type" );
 		converted = UnityHdrpLighting.Read( hd, type );
 		if ( type is not (0 or 1 or 2) ) return null;

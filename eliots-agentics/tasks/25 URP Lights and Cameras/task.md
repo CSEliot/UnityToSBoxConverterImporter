@@ -25,6 +25,46 @@ The 6000.3.29f1 / URP 17.3.0 / cache `@04369b574bc4` pins are SUPERSEDED. On dis
 
 ### Work Review
 
+2026-11-27 00:59 - Verdict: changes required
+PARENT TRANSCRIPTION NOTE: the critic (sa-0-35abd44a) hit its 40-call cap after completing all attack areas and returning the full findings in its completion summary, before it could write them into this file. The entry below is transcribed verbatim from that summary by the Master; the Tree: hashes were re-derived by the Master with `git hash-object --path=` and match the on-disk files at transcription. The critic made no repo edits.
+
+Attack areas A-F complete. Two silent-drop defects break acceptance #3 (every unmapped URP field by name + value); all other reviewed gates passed.
+1. [High] UnityUrp.cs:216-219,240-246 - `UnmappedTaaFields` lists only legacy lowercase names; canonical serialisation is `m_Quality`/`m_FrameInfluence`/`m_JitterScale`/`m_MipBias`/`m_VarianceClampScale`/`m_ContrastAdaptiveSharpening` (URP 17.7.0 `Runtime/TemporalAA.cs:76-91`, `FormerlySerializedAs`). 5 of 6 camera bodies use the `m_` form; the report contains TAA lines for SampleScene only - 30 field/value pairs silently unreported. Fix: report both name variants and make `Section()` indentation-aware so `m_*` children are not treated as field terminators.
+2. [High] UnityUrp.cs:194,221-227 - `Section`'s `^\s*m_\w+:` lookahead stops at nested `m_Bits:`, so all 6 `m_VolumeLayerMask` and 2 Demo light mask lines report `{serializedVersion: 2}` / `{serializedVersion: 0}`, dropping `m_Bits: 1`. 03-verification.md:49 claims the opposite. Fix: read the full indented/braced block; correct the verification claim.
+3. [Low] UnitySceneExport.cs:953-954 - absent `m_RenderPostProcessing` falls back to `true`, but URP source `UniversalAdditionalCameraData.cs:501` declares `= false`. Fix: map only when authored; otherwise use the source default, never an invented `true`.
+4. [Low] UnitySceneExport.cs:980 - mapped line derives `DisableAntiAliasing` from emitted properties; with `MapAntialiasing=false` the key is absent and the line falsely prints `False`. Fix: compute from the source rule or print "not mapped".
+5. [Low] UnityUrp.cs:88-96 / UnityPrefabExport.cs:16-19 - `OrderBy(b=>b.Id).First()` tie-break is undocumented (only the worker journal says "orders by block id"); class check via `.Split('.').Last()` handles the three authored `Assembly::Namespace.Class` bodies but would skip a `Namespace.Class, Assembly` form. Fix: document the tie-break and tolerate the `, Assembly` suffix; no duplicate candidates exist in the fixture.
+6. [Info] Fixture gaps: no `m_ClearDepth: 0` body (Color half unproven; `&&`-before-`||` precedence and hd path are correct); all 4 lights directional (`Range->Radius` unproven); no URP guids outside top-level `!u!114` blocks, so prefab patch path unproven; 3 volumetric light entries are documented absent (harmless).
+7. [Info] Duplicate scan: 0 duplicate `(file, component, field, object)` triples in 172 URP-only lines; 6 mapped lines, one per camera. Counts 31/122/7216 (+178); building/city 0-byte diffs; scene diff camera-only, PPV subtrees identical. Source-explicit `m_RenderPostProcessing: 0` on Demo Cameras 2/3/4 and PNB Overview (no fallback involved); Demo Main Camera (1) has `m_Antialiasing: 2`. Post off on 3 Demo cameras + 1 overview and AA on Demo Main Camera (1) are visible changes - Director must judge perceptually in the editor; not an agent call.
+8. [Info] Hygiene passed: engine properties `EnablePostProcessing` (PostProcess.cs:35) and `DisableAntiAliasing` (CameraComponent.cs:143) exist; generated keys deserialise; no BOM/markers; both call sites updated (UnityPrefabExport.cs:1529,1540); HDRP/Unknown pass null.
+
+PARENT VERIFICATION of the two High findings: TemporalAA.cs:76-91 does carry `[FormerlySerializedAs("quality")] m_Quality` ... for all six fields; Demo.unity has 4 `m_TaaSettings:` blocks with `m_Quality: 3` at :525941, :664087, :707115, :1008541 and PNB Overview 1 at :4939, while SampleScene:215-258 uses the lowercase form - so the lowercase-only list does miss 5 bodies. after-report.json confirms `m_VolumeLayerMask={serializedVersion: 2}` (m_Bits dropped) on Main Camera. `UniversalAdditionalCameraData.cs:501` is `[SerializeField] bool m_RenderPostProcessing = false;`.
+
+Tree:
+- Editor/Core/UnityUrp.cs: `git hash-object --path="Editor/Core/UnityUrp.cs" "Editor/Core/UnityUrp.cs"` -> 4ddb0b3776281fa8e7f0047672c8714781f456e1
+- Editor/Core/UnitySceneExport.cs: `git hash-object --path="Editor/Core/UnitySceneExport.cs" "Editor/Core/UnitySceneExport.cs"` -> ecfdc558477b49c47e53bf4b232bb6f1dc5ace87
+- Editor/Core/UnityPrefabExport.cs: `git hash-object --path="Editor/Core/UnityPrefabExport.cs" "Editor/Core/UnityPrefabExport.cs"` -> e864c1a8a9349b86aa63af8e977d6cf669652646
+
+Verdict: changes required
+
+#### Re-check 2026-11-27 01:11
+
+Scoped to findings 1-5 and new regressions; Info 6-8 and previously passed bars not re-opened. No imports re-run; parent gates re-derived where cheap.
+
+1. [High] FIXED - UnityUrp.cs:220-230 holds canonical `m_*` names first with lowercase `[FormerlySerializedAs]` aliases; :251-259 emits one authored variant then `break`. `after2-report.json` re-derived: 36 TAA lines, exactly 6 per camera body (SampleScene lowercase x6; the 5 `m_*` bodies x6 each), names 1 canonical-set + 5 canonical form, 0 duplicate `(file, component, field, object)` triples across 202 URP-only lines. Information 7216 -> 7246 = +30. No double emission.
+2. [High] FIXED - UnityPrefabExport.cs:183-209 is indentation-aware: nested `m_Bits` stays in the block, same-indent `-` YAML items stay, only same-or-shallower non-item lines terminate. All 8 mask lines now carry `m_Bits: 1` (6 camera `{serializedVersion: 2 m_Bits: 1}`, 2 Demo light `{serializedVersion: 0 m_Bits: 1}`). Caller audit: the only `Section` callers are `m_AddedComponents` (:1351), `m_Materials` (:1418,:1443), `FieldValue` and the TAA block (UnityUrp.cs:237,:251). Fixture `m_Materials:` / `m_AddedComponents:` sequence items are written at the field's indent (`  - ...`), so the explicit dash exception preserves them; no caller relied on the old any-indent `m_*` termination. 03-verification.md:43-57 corrected with the 2026-11-27 01:15 note.
+3. [Low] FIXED - UnitySceneExport.cs:953-955 uses the authored value when present and source-default `false` when absent; `urp == null` remains `true` for HDRP/Standard. All six fixture bodies author `m_RenderPostProcessing` (1,0,0,0,1,0), so the default branch is unreachable here; after/after2 whole-tree diff is 0 lines, confirming zero change to authored bodies.
+4. [Low] FIXED - UnitySceneExport.cs:981-984 derives `DisableAntiAliasing` from `Number(urp,"m_Antialiasing") == 0` when mapped and prints `DisableAntiAliasing not mapped (MapAntialiasing off)` otherwise. All 6 mapped lines remain single and correct (AA on only for Demo Main Camera (1), `m_Antialiasing: 2`).
+5. [Low] FIXED - UnityUrp.cs:95-99 strips a `, Assembly` suffix before taking the last dot segment; `Assembly::Namespace.Class` bodies still pass (no comma). Unity doesn't serialize generic MonoBehaviours with a comma-bearing class name, and the check is reached only after the URP script guid matches, so no legitimate identifier is truncated here. UnityPrefabExport.cs:846-852 documents lowest-block-id as the tie-break.
+
+No new silent drop or fabricated value found. Parent gates on final bytes: build 0/0, verify 1627/0, counts 31/122/7246, URP-only 202 + mapped 6, imported-tree diff 0 lines, building/city 0 bytes against urp23 baselines.
+
+Tree:
+- Editor/Core/UnityUrp.cs: `git hash-object --path="Editor/Core/UnityUrp.cs" "Editor/Core/UnityUrp.cs"` -> d755b96e61df19a7ee8a4e8077ea6924e0735cf0
+- Editor/Core/UnitySceneExport.cs: `git hash-object --path="Editor/Core/UnitySceneExport.cs" "Editor/Core/UnitySceneExport.cs"` -> a8f0bbb09f72853f4eec9f0f9e0788d61faefe96
+- Editor/Core/UnityPrefabExport.cs: `git hash-object --path="Editor/Core/UnityPrefabExport.cs" "Editor/Core/UnityPrefabExport.cs"` -> de982affbc10ef780222125ef43c89ca264aa989
+
+Verdict: no further changes
 
 ## Clarification Q&A
 An (Director 2026-11-26 03:57, 1A/3A/5A): "Unity 6.7 URP" is the session label for the on-disk 6000.3.29f1 / URP 17.3.0 fixture; target the URP 17.x surface, not one editor build. Visual fidelity only. No new tooling or fixture package.

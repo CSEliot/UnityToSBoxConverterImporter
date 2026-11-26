@@ -73,6 +73,32 @@ public static class UnityUrp
 	// Developer-tweakable default for a URP/Lit alpha-clipped material that has no serialized _Cutoff.
 	public static double AlphaTestReferenceDefault { get; set; } = 0.5;
 
+	// NEW MAPPINGS (task 25). URP's additional camera data has three fields with a grounded s&box
+	// counterpart; each mapping is gated on Pipeline == Urp and stays tweakable here.
+	// m_RenderPostProcessing -> CameraComponent.PostProcess.cs:35 EnablePostProcessing.
+	public static bool MapRenderPostProcessing { get; set; } = true;
+	// m_Antialiasing != 0 -> CameraComponent.cs:143 DisableAntiAliasing = false (same rule as HDRP).
+	public static bool MapAntialiasing { get; set; } = true;
+	// m_ClearDepth: 0 clears colour only -> CameraComponent.cs:27 ClearFlags = Color.
+	public static bool MapClearDepth { get; set; } = true;
+
+	/// <summary>A URP sibling is eligible when its script guid maps to the wanted kind and it is enabled.
+	/// Unity 6000.7 serializes an empty m_EditorClassIdentifier for package MonoBehaviours, so that field
+	/// can only narrow an eligible body when it is actually authored. A "Namespace.Class, Assembly"
+	/// identifier is accepted by stripping the assembly suffix before taking the class name.</summary>
+	public static bool IsEnabledSibling( string body, UrpComponentKind kind )
+	{
+		if ( string.IsNullOrEmpty( body ) ) return false;
+		if ( UnityPrefabExport.Scalar( body, "m_Enabled" ) == "0" ) return false;
+		var script = UnityPrefabExport.GuidOf( UnityPrefabExport.Field( body, "m_Script" ) );
+		if ( Component( script ) is not { } component || component.Kind != kind ) return false;
+		var identifier = UnityPrefabExport.Scalar( body, "m_EditorClassIdentifier" );
+		var comma = identifier.IndexOf( ',' );
+		if ( comma >= 0 ) identifier = identifier[..comma];
+		var className = identifier.Split( '.' ).LastOrDefault();
+		return string.IsNullOrEmpty( className ) || className == component.Name;
+	}
+
 	static readonly UrpComponent[] ComponentTable =
 	{
 		new( "a79441f348de89743a2939f4d699eac1", "UniversalAdditionalCameraData", UrpComponentKind.Camera ),
@@ -170,5 +196,66 @@ public static class UnityUrp
 			}
 		}
 		return new( 0, 0, 0, cameras + lights + volumes );
+	}
+
+	// URP-only fields with no Sandbox counterpart (task 25 P4). They are reported with their source
+	// value, never approximated; shadow tier, soft quality and cookie size have no engine equivalent.
+	static readonly string[] UnmappedLightFields =
+	{
+		"m_Version", "m_UsePipelineSettings", "m_AdditionalLightsShadowResolutionTier", "m_CustomShadowLayers",
+		"m_LightCookieSize", "m_LightCookieOffset", "m_SoftShadowQuality", "m_RenderingLayersMask",
+		"m_ShadowRenderingLayersMask", "m_LightLayerMask", "m_RenderingLayers", "m_ShadowLayerMask",
+		"m_ShadowRenderingLayers", "m_AffectsVolumetricFog", "m_VolumetricMultiplier", "m_VolumetricShadowDimmer"
+	};
+
+	static readonly string[] UnmappedCameraFields =
+	{
+		"m_RenderShadows", "m_RequiresDepthTextureOption", "m_RequiresOpaqueTextureOption", "m_CameraType",
+		"m_Cameras", "m_RendererIndex", "m_VolumeLayerMask", "m_VolumeTrigger",
+		"m_VolumeFrameworkUpdateModeOption", "m_AntialiasingQuality", "m_StopNaN", "m_Dithering",
+		"m_AllowXRRendering", "m_AllowHDROutput", "m_UseScreenCoordOverride", "m_ScreenSizeOverride",
+		"m_ScreenCoordScaleBias", "m_RequiresDepthTexture", "m_RequiresColorTexture", "m_Version"
+	};
+
+	static readonly string[][] UnmappedTaaFields =
+	{
+		// URP 17.7 TemporalAA.cs:76-91 uses the m_ names; the lowercase names are the
+		// [FormerlySerializedAs] aliases still written by older bodies (SampleScene).
+		new[] { "m_Quality", "quality" },
+		new[] { "m_FrameInfluence", "frameInfluence" },
+		new[] { "m_JitterScale", "jitterScale" },
+		new[] { "m_MipBias", "mipBias" },
+		new[] { "m_VarianceClampScale", "varianceClampScale" },
+		new[] { "m_ContrastAdaptiveSharpening", "contrastAdaptiveSharpening" }
+	};
+
+	static string FieldValue( string body, string name )
+	{
+		var scalar = UnityPrefabExport.Scalar( body, name );
+		if ( scalar.Length > 0 ) return scalar;
+		var inline = UnityPrefabExport.Field( body, name );
+		var section = inline.Length > 0 ? inline : UnityPrefabExport.Section( body, name );
+		return section.Length == 0 ? "" : "{" + Regex.Replace( section.Trim(), @"\s+", " " ) + "}";
+	}
+
+	/// <summary>One report line per authored URP-only field, naming its source value verbatim.</summary>
+	public static void ReportUnmapped( string body, string objectName, string component, ICollection<string> lines )
+	{
+		if ( string.IsNullOrEmpty( body ) ) return;
+		foreach ( var name in component == "Camera" ? UnmappedCameraFields : UnmappedLightFields )
+		{
+			var value = FieldValue( body, name );
+			if ( value.Length > 0 )
+				lines.Add( $"URP-only {name}={value} on {objectName} ({component}) has no Sandbox counterpart; reported, not converted." );
+		}
+		var taa = UnityPrefabExport.Section( body, "m_TaaSettings" );
+		foreach ( var names in UnmappedTaaFields )
+			foreach ( var name in names )
+			{
+				var value = UnityPrefabExport.Scalar( taa, name );
+				if ( value.Length == 0 ) continue;
+				lines.Add( $"URP-only m_TaaSettings.{name}={value} on {objectName} ({component}) has no Sandbox counterpart; reported, not converted." );
+				break; // one value may have two serialized names; never report it twice
+			}
 	}
 }

@@ -181,7 +181,33 @@ internal static class UnityPrefabExport
 	internal static string Scalar( string text, string name ) => Unquote( Regex.Match( text, @"(?m)^\s*" + Regex.Escape( name ) + @":[ \t]*([^\r\n]*?)[ \t]*\r?$" ).Groups[1].Value );
 
 	/// <summary>The text of a YAML list under <paramref name="name"/>, up to the next field at any indent.</summary>
-	internal static string Section( string text, string name ) => Regex.Match( text, @"(?ms)^\s*" + Regex.Escape( name ) + @":(.*?)(?=^\s*m_\w+:|\z)" ).Groups[1].Value;
+	/// <summary>The indented YAML block under <paramref name="name"/>, from that field's line until the next
+	/// non-blank line whose indentation is the same or shallower. Nested fields (for example m_Bits inside
+	/// m_VolumeLayerMask) stay inside the block; a sibling field ends it. Flat scalar/list callers keep the
+	/// text after the colon exactly as before.</summary>
+	internal static string Section( string text, string name )
+	{
+		if ( string.IsNullOrEmpty( text ) ) return "";
+		var match = Regex.Match( text, @"(?m)^(?<indent>[ 	]*)" + Regex.Escape( name ) + @":[ 	]*(?<rest>.*)$" );
+		if ( !match.Success ) return "";
+		var indent = match.Groups["indent"].Value.Length;
+		var lines = new List<string>();
+		var rest = match.Groups["rest"].Value.TrimEnd( '\r' );
+		if ( rest.Trim().Length > 0 ) lines.Add( rest );
+		foreach ( var line in text[(match.Index + match.Length)..].Split( '\n' ) )
+		{
+			var raw = line.TrimEnd( '\r' );
+			if ( raw.Trim().Length == 0 ) { lines.Add( raw ); continue; }
+			var trimmedStart = raw.TrimStart( ' ', '	' );
+			var current = raw.Length - trimmedStart.Length;
+			// Unity writes sequence items at the SAME indentation as their field ("  m_Roots:\n  - ..."):
+			// they belong to the block; only a same-or-shallower NON-item line ends it.
+			if ( current <= indent && !trimmedStart.StartsWith( "-" ) ) break;
+			lines.Add( raw );
+		}
+		return string.Join( "\n", lines );
+	}
+
 
 	/// <summary>YAML scalars with special characters are single- or double-quoted; the quotes are not part of the value.</summary>
 	internal static string Unquote( string value )
@@ -811,6 +837,21 @@ internal static class UnityPrefabExport
 		/// <summary>HDAdditionalReflectionData blocks by GameObject fileID: HDRP keeps a reflection probe's
 		/// influence shape, blend distances, multiplier and fade distance there, not on the Unity probe.</summary>
 		public readonly Dictionary<long, Block> HdProbes;
+		/// <summary>True when this file's own MonoBehaviour census says URP. Every new URP rule is gated on it.</summary>
+		public readonly bool UrpScene;
+		/// <summary>UniversalAdditionalCameraData / UniversalAdditionalLightData by GameObject fileID.</summary>
+		public readonly Dictionary<long, Block> UrpCameras = new();
+		public readonly Dictionary<long, Block> UrpLights = new();
+
+		/// <summary>Every candidate MonoBehaviour is checked for kind, guid, enabled state and class before one wins.
+		/// When several eligible siblings share one GameObject the LOWEST block id wins (explicit OrderBy before
+		/// First; never an unfiltered First()).</summary>
+		Dictionary<long, Block> UrpComponents( UrpComponentKind kind ) => Blocks
+			.Where( b => !b.Stripped && b.Type == "114" && UnityUrp.IsEnabledSibling( b.Body, kind ) )
+			.GroupBy( b => IdOf( Field( b.Body, "m_GameObject" ) ) )
+			.ToDictionary( g => g.Key, g => g.OrderBy( b => b.Id ).First() );
+
+		static string UrpBody( Dictionary<long, Block> map, long objectId ) => map.TryGetValue( objectId, out var block ) ? block.Body : null;
 		/// <summary>The grouped HDRP light and camera lines this file owes: one area-light line and one unit
 		/// line, not one report line per light.</summary>
 		internal readonly UnityHdrpLighting.Report Hdrp = new();
@@ -883,6 +924,13 @@ internal static class UnityPrefabExport
 			HdLights = HdComponents( HdrpComponentKind.Light );
 			HdCameras = HdComponents( HdrpComponentKind.Camera );
 			HdProbes = HdComponents( HdrpComponentKind.ReflectionProbe );
+			UrpScene = UnityVolume.ScenePipeline( Blocks ) == UnityPipeline.Urp;
+			if ( UrpScene )
+			{
+				UrpCameras = UrpComponents( UrpComponentKind.Camera );
+				UrpLights = UrpComponents( UrpComponentKind.Light );
+			}
+
 			var unconverted = Blocks.Where( b => !b.Stripped ).Select( b => b.Type switch { "154" => "TerrainCollider", "146" => "WheelCollider", "143" => "CharacterController", _ => null } )
 				.Where( n => n != null ).Distinct().ToArray();
 			if ( unconverted.Length > 0 ) result.Information.Add( $"{string.Join( ", ", unconverted )} not converted." );
@@ -1504,7 +1552,9 @@ internal static class UnityPrefabExport
 				{
 					var hdCamera = Hd( HdCameras, objectId );
 					Hdrp.AddCamera( hdCamera );
-					foreach ( var cameraComponent in UnitySceneExport.Camera( id, component.Body, hdCamera, enabled, component.Id == mainCamera ) ) list.Add( cameraComponent );
+					// URP data is only read on a file-level URP scene; every other pipeline keeps the old call.
+					var urpCamera = UrpScene ? UrpBody( UrpCameras, objectId ) : null;
+					foreach ( var cameraComponent in UnitySceneExport.Camera( id, component.Body, hdCamera, urpCamera, name, enabled, component.Id == mainCamera, Result.Information ) ) list.Add( cameraComponent );
 				}
 				if ( component.Type == "81" ) list.Add( UnitySceneExport.AudioListener( id, enabled ) );
 				// A reflection probe is a rendered object, not a light: its Unity box/resolution/importance and
@@ -1514,7 +1564,8 @@ internal static class UnityPrefabExport
 				{
 					// HDRP keeps the physical intensity, unit and dimmer in HDAdditionalLightData on this
 					// GameObject; the grouped report carries the unit scale and the area lights it drops.
-					var light = UnitySceneExport.Light( id, component.Body, Hd( HdLights, objectId ), enabled, out var tag, out var converted );
+					var urpLight = UrpScene ? UrpBody( UrpLights, objectId ) : null;
+				var light = UnitySceneExport.Light( id, component.Body, Hd( HdLights, objectId ), urpLight, name, enabled, out var tag, out var converted, Result.Information );
 					Hdrp.Add( name, converted );
 					if ( light != null ) { list.Add( light ); tags.Add( tag ); }
 				}
