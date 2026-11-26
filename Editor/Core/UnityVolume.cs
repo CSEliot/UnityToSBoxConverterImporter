@@ -155,7 +155,60 @@ internal static class UnityVolume
 		/// <summary>One entry per global Volume whose profile resolved, in scene order: the scene export writes a
 		/// Sandbox.PostProcessVolume for it. Local volumes have no entry and are only reported.</summary>
 		public List<VolumePost> PostVolumes { get; } = new();
+		/// <summary>URP global Volumes, read only when the scene's pipeline is Urp.</summary>
+		public List<UrpPost> UrpPostVolumes { get; } = new();
 		public List<string> Information { get; } = new();
+	}
+
+	/// <summary>
+	/// A URP global Volume's post-processing. URP keeps overrides in a VolumeProfile .asset and applies
+	/// them through a shared Core Volume component; this is deliberately separate from
+	/// <see cref="VolumePost"/> so the HDRP path is not touched. Every override is enumerated with its
+	/// m_OverrideState before any of it is mapped.
+	/// </summary>
+	internal sealed class UrpPost
+	{
+		public long ObjectId;
+		public string Name;
+		public string ProfileName;
+		public string ProfilePath;
+		public string ProfileGuid;
+		public int Priority;
+		public double Weight;
+		/// <summary>URP 17.7 TonemappingMode: None 0, Neutral 1, ACES 2, AgX 3.</summary>
+		public int TonemapMode = -1;
+		public bool Bloom, Vignette, Ao, ColorAdjustments;
+		/// <summary>Null means the profile did not override the field: no value is invented for it.</summary>
+		public double? BloomStrength, BloomThreshold, VignetteIntensity, VignetteSmoothness, VignetteRounded, AoIntensity, ColorContrast, ColorSaturation;
+		public double[] BloomTint, VignetteColor, VignetteCenter;
+		public List<string> Enumeration { get; } = new();
+		public List<string> Dropped { get; } = new();
+		public List<string> Unsupported { get; } = new();
+		/// <summary>Mapped override components with active: 0; URP does not apply them.</summary>
+		public List<string> Inactive { get; } = new();
+	}
+
+	/// <summary>
+	/// The URP-only additional camera/light MonoBehaviours are positive evidence. The shared Core Volume
+	/// guid is deliberately NEUTRAL (it is also in HDRP's table), so a Volume alone never flips a scene;
+	/// any other HDRP component wins and keeps that scene on its existing path. New URP rules only run
+	/// when this returns Urp.
+	/// </summary>
+	internal static UnityPipeline ScenePipeline( IReadOnlyList<Block> blocks )
+	{
+		var urp = false;
+		foreach ( var block in blocks )
+		{
+			if ( block.Stripped || block.Type != "114" ) continue;
+			var guid = GuidOf( Field( block.Body, "m_Script" ) );
+			// The Core Volume guid is shared with HDRP (UnityHdrp.cs:117): NEUTRAL for classification
+			// and for the HDRP-evidence early-return. Only URP camera/light siblings decide Urp.
+			if ( guid.Equals( UnityUrp.VolumeScriptGuid, StringComparison.OrdinalIgnoreCase ) ) continue;
+			if ( UnityHdrp.Component( guid ) != null ) return UnityPipeline.Unknown;
+			if ( UnityUrp.Component( guid ) is not { } component ) continue;
+			if ( component.Kind is UrpComponentKind.Camera or UrpComponentKind.Light ) urp = true;
+		}
+		return urp ? UnityPipeline.Urp : UnityPipeline.Unknown;
 	}
 
 	/// <summary>Reads a profile's overrides. A profile with no override list reads as empty, never as an error.</summary>
@@ -440,6 +493,221 @@ internal static class UnityVolume
 		// Every override the environment does not read is named per volume by AddPostNotes, including the ones
 		// the post-processing step does not map, so no override goes unmentioned and none is listed twice.
 		return motion;
+	}
+
+	// ---- URP post-processing (only called when ScenePipeline == Urp) ---------------------------------------
+
+	/// <summary>The URP override component names with an s&amp;box effect counterpart.</summary>
+	static readonly string[] UrpMapped =
+	{
+		"Bloom", "Vignette", "Tonemapping", "ScreenSpaceAmbientOcclusionVolumeOverride", "ScreenSpaceAmbientOcclusion", "ColorAdjustments"
+	};
+
+	/// <summary>Fields of a mapped override that the matching s&amp;box effect actually carries.</summary>
+	static readonly Dictionary<string, string[]> UrpCarried = new( StringComparer.OrdinalIgnoreCase )
+	{
+		["Bloom"] = new[] { "intensity", "threshold", "tint" },
+		["Vignette"] = new[] { "intensity", "color", "center", "smoothness", "rounded" },
+		["Tonemapping"] = new[] { "mode" },
+		["ScreenSpaceAmbientOcclusionVolumeOverride"] = new[] { "m_Intensity" },
+		["ScreenSpaceAmbientOcclusion"] = new[] { "m_Intensity" },
+		["ColorAdjustments"] = new[] { "contrast", "saturation" },
+	};
+
+	static string UrpName( string type ) => type == "ScreenSpaceAmbientOcclusionVolumeOverride" ? "ScreenSpaceAmbientOcclusion" : type;
+
+	/// <summary>Every candidate override field with its serialized m_OverrideState and m_Value, including
+	/// inactive ones: the report must show what was present and what won, not just what was mapped.</summary>
+	static void EnumerateUrp( Profile profile, List<string> lines )
+	{
+		foreach ( var item in profile.Overrides )
+		{
+			var active = Regex.Match( item.Body, @"(?m)^  active:[ 	]*([^\r\n]*)" );
+			if ( active.Success ) lines.Add( $"{UrpName( item.Type )}.active {active.Groups[1].Value.Trim()}" );
+			foreach ( Match field in Regex.Matches( item.Body, @"(?m)^  (?<name>[A-Za-z_][A-Za-z0-9_]*):[ 	]*\r?\n(?<body>(?:    [^\r\n]*\r?\n?)+)" ) )
+			{
+				var state = Regex.Match( field.Groups["body"].Value, @"m_OverrideState:\s*([01])" );
+				if ( !state.Success ) continue;
+				var value = Regex.Match( field.Groups["body"].Value, @"m_Value:[ 	]*([^\r\n]*)" );
+				lines.Add( $"{UrpName( item.Type )}.{field.Groups["name"].Value} m_OverrideState:{state.Groups[1].Value} m_Value:{(value.Success ? value.Groups[1].Value.Trim() : "<none>")}" );
+			}
+		}
+	}
+
+	/// <summary>A URP Vignette center / URP colour vector: {x: 0.5, y: 0.5}.</summary>
+	static double[] Vector2( Override source, string field )
+	{
+		var value = Value( source, field );
+		if ( string.IsNullOrEmpty( value ) ) return null;
+		return new[] { "x", "y" }.Select( axis =>
+		{
+			var match = Regex.Match( value, @"\b" + axis + @":\s*([-+0-9.eE]+)" );
+			return match.Success && double.TryParse( match.Groups[1].Value, NumberStyles.Float, CultureInfo.InvariantCulture, out var number ) ? number : 0;
+		} ).ToArray();
+	}
+
+	/// <summary>URP applies an override component only when active: 1. Older profiles omit the field;
+	/// those are active by default.</summary>
+	static bool Active( Override source )
+	{
+		var match = Regex.Match( source.Body, @"(?m)^  active:[ 	]*([01])" );
+		return !match.Success || match.Groups[1].Value == "1";
+	}
+
+	/// <summary>Builds one URP PostProcessVolume's data. Only m_OverrideState: 1 values become effects;
+	/// everything else is enumerated and either explicitly reported as dropped/unmapped or left absent.</summary>
+	static UrpPost UrpVolumePost( long objectId, string name, string path, string guid, int priority, double weight, Profile profile )
+	{
+		var post = new UrpPost
+		{
+			ObjectId = objectId, Name = name, ProfileName = profile.Name, ProfilePath = path,
+			ProfileGuid = guid, Priority = priority, Weight = weight
+		};
+		EnumerateUrp( profile, post.Enumeration );
+		if ( profile.Get( "Tonemapping" ) is { } tone && Overridden( tone.Body ) )
+		{
+			if ( Active( tone ) ) post.TonemapMode = (int)Number( tone, "mode", 0 );
+			else post.Inactive.Add( "Tonemapping" );
+		}
+		if ( profile.Get( "Bloom" ) is { } bloom && Overridden( bloom.Body ) )
+		{
+			if ( !Active( bloom ) ) post.Inactive.Add( "Bloom" );
+			else
+			{
+				post.Bloom = true;
+				if ( Value( bloom, "intensity" ) != null ) post.BloomStrength = Number( bloom, "intensity", 0 );
+				if ( Value( bloom, "threshold" ) != null ) post.BloomThreshold = Number( bloom, "threshold", 0 );
+				if ( Value( bloom, "tint" ) != null ) post.BloomTint = Colour( bloom, "tint", 1, 1, 1 );
+			}
+		}
+		if ( profile.Get( "Vignette" ) is { } vignette && Overridden( vignette.Body ) )
+		{
+			if ( !Active( vignette ) ) post.Inactive.Add( "Vignette" );
+			else
+			{
+				post.Vignette = true;
+				if ( Value( vignette, "intensity" ) != null ) post.VignetteIntensity = Number( vignette, "intensity", 0 );
+				if ( Value( vignette, "color" ) != null ) post.VignetteColor = Colour( vignette, "color", 0, 0, 0 );
+				if ( Value( vignette, "center" ) != null ) post.VignetteCenter = Vector2( vignette, "center" );
+				if ( Value( vignette, "smoothness" ) != null ) post.VignetteSmoothness = Number( vignette, "smoothness", 0 );
+				if ( Value( vignette, "rounded" ) != null ) post.VignetteRounded = Number( vignette, "rounded", 0 );
+			}
+		}
+		var ao = profile.Get( "ScreenSpaceAmbientOcclusionVolumeOverride" ) ?? profile.Get( "ScreenSpaceAmbientOcclusion" );
+		if ( ao != null && Overridden( ao.Body ) )
+		{
+			if ( !Active( ao ) ) post.Inactive.Add( "ScreenSpaceAmbientOcclusion" );
+			else
+			{
+				post.Ao = true;
+				if ( Value( ao, "m_Intensity" ) != null ) post.AoIntensity = Number( ao, "m_Intensity", 0 );
+			}
+		}
+		if ( profile.Get( "ColorAdjustments" ) is { } color && Overridden( color.Body ) )
+		{
+			if ( !Active( color ) ) post.Inactive.Add( "ColorAdjustments" );
+			else
+			{
+				post.ColorAdjustments = true;
+				if ( Value( color, "contrast" ) != null ) post.ColorContrast = Number( color, "contrast", 0 );
+				if ( Value( color, "saturation" ) != null ) post.ColorSaturation = Number( color, "saturation", 0 );
+			}
+		}
+		foreach ( var item in profile.Overrides )
+		{
+			if ( UrpMapped.Contains( item.Type, StringComparer.OrdinalIgnoreCase ) ) continue;
+			if ( !Overridden( item.Body ) ) continue;
+			post.Unsupported.Add( UrpName( item.Type ) );
+		}
+		foreach ( var item in profile.Overrides )
+		{
+			if ( !UrpCarried.TryGetValue( item.Type, out var carried ) ) continue;
+			foreach ( Match field in Regex.Matches( item.Body, @"(?m)^  (?<name>[A-Za-z_][A-Za-z0-9_]*):[ \t]*\r?\n(?<body>(?:    [^\r\n]*\r?\n?)+)" ) )
+			{
+				var fieldName = field.Groups["name"].Value;
+				if ( fieldName == "active" || carried.Contains( fieldName, StringComparer.OrdinalIgnoreCase ) ) continue;
+				if ( !Regex.IsMatch( field.Groups["body"].Value, @"m_OverrideState:\s*1" ) ) continue;
+				var value = Regex.Match( field.Groups["body"].Value, @"m_Value:[ \t]*([^\r\n]*)" );
+				var text = value.Success ? value.Groups[1].Value.Trim() : "";
+				if ( text.Length == 0 || text == "{fileID: 0}" ) continue;
+				post.Dropped.Add( $"{UrpName( item.Type )}.{fieldName} {text}" );
+			}
+		}
+		return post;
+	}
+
+	/// <summary>
+	/// URP volumes use the same Core Volume component as HDRP, so the guid alone cannot discriminate.
+	/// This reader is called only for a scene whose MonoBehaviours show URP evidence; local Volumes and
+	/// profiles that cannot be read stay report-only. URP's project-wide DefaultVolumeProfile is a base
+	/// stack rather than a scene Volume: it is named once, never emitted as a second volume.
+	/// </summary>
+	internal static Motion ReadUrp( IReadOnlyList<Block> blocks, IReadOnlyDictionary<string, UnityAsset> byGuid )
+	{
+		var motion = new Motion();
+		var byId = blocks.GroupBy( b => b.Id ).ToDictionary( g => g.Key, g => g.First() );
+		string Owner( string body )
+		{
+			var objectId = IdOf( Field( body, "m_GameObject" ) );
+			return byId.TryGetValue( objectId, out var go ) ? Scalar( go.Body, "m_Name" ) : "";
+		}
+
+		var unresolved = new List<string>();
+		var locals = 0;
+		foreach ( var block in blocks )
+		{
+			if ( block.Stripped || block.Type != "114" ) continue;
+			if ( UnityUrp.Component( GuidOf( Field( block.Body, "m_Script" ) ) ) is not { Kind: UrpComponentKind.GlobalVolume } ) continue;
+			var name = Owner( block.Body );
+			if ( name.Length == 0 ) name = $"Volume {block.Id}";
+			if ( Scalar( block.Body, "m_IsGlobal" ) != "1" ) { locals++; continue; }
+			var guid = ProfileGuid( block.Body );
+			if ( guid.Length == 0 || !byGuid.TryGetValue( guid, out var asset ) )
+			{
+				unresolved.Add( guid.Length == 0 ? $"{name} has no profile" : $"{name} names profile {guid}, which is not in the package" );
+				continue;
+			}
+			string text;
+			try { text = UnityImport.ReadText( asset.Source ); }
+			catch ( InvalidDataException ex ) { unresolved.Add( $"{name}: {asset.Path} could not be read ({ex.Message})" ); continue; }
+			double ScalarNumber( string field, double fallback ) =>
+				double.TryParse( Scalar( block.Body, field ), NumberStyles.Float, CultureInfo.InvariantCulture, out var value ) ? value : fallback;
+			var profile = Parse( text, Path.GetFileNameWithoutExtension( asset.Path ) );
+			var post = UrpVolumePost( IdOf( Field( block.Body, "m_GameObject" ) ), name, asset.Path, guid,
+				(int)ScalarNumber( "priority", 0 ), ScalarNumber( "weight", 1 ), profile );
+			motion.UrpPostVolumes.Add( post );
+		}
+		if ( motion.UrpPostVolumes.Count > 0 )
+			motion.Information.Add( $"Environment read from {motion.UrpPostVolumes.Count} URP global Volume(s): {string.Join( ", ", motion.UrpPostVolumes.Select( v => $"{v.Name} (winning profile {v.ProfileName}, guid {v.ProfileGuid})" ) )}." );
+		if ( locals > 0 )
+			motion.Information.Add( $"{locals} local URP Volume(s) affect only part of the scene; their overrides are enumerated as report-only and no PostProcessVolume was written for them." );
+		if ( unresolved.Count > 0 )
+			motion.Information.Add( $"URP volume(s) that could not be read: {string.Join( "; ", unresolved.Take( 4 ) )}{(unresolved.Count > 4 ? ", …" : "")}." );
+		if ( byGuid.Values.Any( a => a.Path.EndsWith( "DefaultVolumeProfile.asset", StringComparison.OrdinalIgnoreCase ) ||
+			a.Guid.Equals( UnityUrp.DefaultVolumeProfileGuid, StringComparison.OrdinalIgnoreCase ) ) )
+			motion.Information.Add( "URP's project-wide DefaultVolumeProfile is the base stack referenced by UniversalRenderPipelineGlobalSettings, not a scene Volume. It is not emitted a second time: the scene global Volume's profile wins; overrides it supplies that the scene profile does not override stay at engine defaults." );
+		motion.Information.Add( "Sandbox.ScreenSpaceReflections is obsolete and a no-op in this engine checkout; no URP override is converted into it. Baked/lightmap data is not converted." );
+		return motion;
+	}
+
+	/// <summary>One report block per emitted URP volume: the winning profile, every candidate override
+	/// with its m_OverrideState, the source values actually mapped, and everything left behind.</summary>
+	internal static void AddUrpPostNotes( UrpPost post, List<string> information )
+	{
+		var mapped = new List<string>();
+		if ( post.TonemapMode >= 0 ) mapped.Add( $"Tonemapping mode {post.TonemapMode}" );
+		if ( post.Bloom ) mapped.Add( $"Bloom Strength {post.BloomStrength?.ToString( "R", CultureInfo.InvariantCulture ) ?? "not overridden"}" );
+		if ( post.Vignette ) mapped.Add( $"Vignette Intensity {post.VignetteIntensity?.ToString( "R", CultureInfo.InvariantCulture ) ?? "not overridden"}" );
+		if ( post.Ao ) mapped.Add( $"AmbientOcclusion Intensity {post.AoIntensity?.ToString( "R", CultureInfo.InvariantCulture ) ?? "not overridden"}" );
+		if ( post.ColorAdjustments ) mapped.Add( $"ColorAdjustments contrast {post.ColorContrast?.ToString( "R", CultureInfo.InvariantCulture ) ?? "not overridden"} / saturation {post.ColorSaturation?.ToString( "R", CultureInfo.InvariantCulture ) ?? "not overridden"}" );
+		information.Add( $"{post.Name} ({post.ProfileName}): URP global Volume converted at priority {post.Priority}, blend weight {post.Weight.ToString( "R", CultureInfo.InvariantCulture )}; winning profile {post.ProfileName} ({post.ProfileGuid}). Mapped SOURCE values: {string.Join( "; ", mapped.Count > 0 ? mapped : new[] { "none" } )}." );
+		information.Add( $"{post.Name}: URP override enumeration from winning profile {post.ProfileName} ({post.Enumeration.Count} entries): {string.Join( "; ", post.Enumeration )}." );
+		foreach ( var dropped in post.Dropped )
+			information.Add( $"{post.Name}: URP override {dropped} is overridden in the source but has no same-unit s&box field; reported, not mapped." );
+		foreach ( var type in post.Unsupported.Distinct() )
+			information.Add( $"{post.Name}: URP override {type} has no s&box effect counterpart; reported, not converted." );
+		foreach ( var type in post.Inactive.Distinct() )
+			information.Add( $"{post.Name}: URP override {type} has active: 0, so URP does not apply it; reported, not mapped." );
 	}
 
 	/// <summary>The post-processing one global Volume's profile supplies. Only the fields whose meaning is the

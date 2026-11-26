@@ -38,6 +38,16 @@ public sealed record UrpCounts( int Materials, int Lit, int ShaderGraphs, int Co
 /// </summary>
 public static class UnityUrp
 {
+	/// <summary>
+	/// UnityEngine.Rendering.Volume (shared Core type, also used by HDRP). A URP Volume is this guid
+	/// PLUS m_IsGlobal: 1 PLUS scene-level URP evidence: the guid alone does not discriminate.
+	/// Re-resolved against SyntyForest's URP 17.7.0 package cache:
+	/// com.unity.render-pipelines.core@7aa87ac5532f/Runtime/Volume/Volume.cs.meta:2.
+	/// </summary>
+	public const string VolumeScriptGuid = "172515602e62fb746b5d573b38a5fe58";
+
+	/// <summary>URP's project-wide default stack, referenced by UniversalRenderPipelineGlobalSettings.</summary>
+	public const string DefaultVolumeProfileGuid = "ab09877e2e707104187f6f83e2f62510";
 	// Properties and keywords URP 17's Lit/Unlit shaders declare. A package has no ShaderLab source,
 	// so the guid and this serialized evidence are the only available discriminator; tags are not.
 	static readonly string[] LitEvidence =

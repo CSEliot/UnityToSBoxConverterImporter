@@ -78,6 +78,27 @@ internal static class UnitySceneExport
 	internal static double TonemappingExposureCompensation { get; set; } = 0.0;
 	internal static string TonemappingMode { get; set; } = "AgX";
 
+	/// <summary>
+	/// NEW MAPPINGS for URP global Volumes. Every number/choice below is a deliberate approximation of
+	/// a URP override into an s&amp;box engine effect, not a recovered source value:
+	/// - URP Tonemapping Neutral (mode 1) -> HableFilmic plus this measured +1.58 EV (unity_6_7_to_sbox.md:38).
+	/// - URP Tonemapping None (mode 0) -> this s&amp;box mode (doc:37), with auto exposure off.
+	/// - URP SSAO m_Intensity (0..1) -> engine AmbientOcclusion.Intensity, scaled by this factor.
+	/// - URP ColorAdjustments contrast/saturation (-100..100, neutral 0) -> engine 0..2, neutral 1,
+	///   by 1 + source / this divisor (doc:48).
+	/// - Engine-range clamps below are the documented engine property ranges; a source value outside
+	///   them would be altered, so each bound is developer-tweakable and named here as a NEW MAPPING.
+	/// The source value itself is always reported verbatim alongside the emitted value.
+	/// </summary>
+	internal static double UrpNeutralExposureCompensationEv { get; set; } = 1.58;
+	internal static string UrpNoneTonemapMode { get; set; } = "Linear";
+	internal static bool UrpTonemapAutoExposureEnabled { get; set; } = false;
+	internal static double UrpSsaoIntensityScale { get; set; } = 1.0;
+	internal static double UrpColorAdjustmentDivisor { get; set; } = 100.0;
+	internal static double UrpBloomStrengthMax { get; set; } = 10.0;
+	internal static double UrpBloomThresholdMax { get; set; } = 2.0;
+	internal static double UrpNeutralExposureClampEv { get; set; } = 5.0;
+
 	/// <summary>Unity's built-in resources (Default-Skybox among them) share this guid.</summary>
 	const string BuiltInGuid = "0000000000000000f000000000000000";
 
@@ -332,7 +353,20 @@ internal static class UnitySceneExport
 				skips.Loss( instance.Id, SkipCause.Unreached, c.InstanceName( instance ) );
 
 		// 6. Sky, ambient light and fog: HDRP's Volume overrides first, then Unity's RenderSettings.
-		var environment = UnityVolume.Read( c.Blocks, byGuid );
+		var pipeline = UnityVolume.ScenePipeline( c.Blocks );
+		// The shared Core Volume guid is in HDRP's component table too. On a URP scene the HDRP reader
+		// must not consume those MonoBehaviours (sky/fog/exposure are HDRP profile overrides); the URP
+		// reader below owns them. HDRP and Unknown scenes keep the exact unfiltered call.
+		var hdrpBlocks = pipeline == UnityPipeline.Urp
+			? c.Blocks.Where( b => !GuidOf( Field( b.Body, "m_Script" ) ).Equals( UnityUrp.VolumeScriptGuid, StringComparison.OrdinalIgnoreCase ) ).ToList()
+			: c.Blocks;
+		var environment = UnityVolume.Read( hdrpBlocks, byGuid );
+		if ( pipeline == UnityPipeline.Urp )
+		{
+			var urpEnvironment = UnityVolume.ReadUrp( c.Blocks, byGuid );
+			environment.UrpPostVolumes.AddRange( urpEnvironment.UrpPostVolumes );
+			environment.Information.AddRange( urpEnvironment.Information );
+		}
 		result.Information.AddRange( environment.Information );
 		// Exposure is a Volume override, so its EV range belongs to the scene's report, not to a camera.
 		if ( environment.Exposure != null ) result.Information.Add( environment.Exposure.Note );
@@ -443,6 +477,55 @@ internal static class UnitySceneExport
 			}
 		}
 
+		// 6a-URP. URP global Volumes: one PostProcessVolume per distinct profile, with nested effects that
+		// carry the SOURCE override values. This branch is entered only when the scene itself shows URP
+		// evidence, so HDRP and non-URP scenes keep their existing byte-for-byte output.
+		if ( pipeline == UnityPipeline.Urp )
+		{
+			var urpPosts = new List<UnityVolume.UrpPost>();
+			foreach ( var post in environment.UrpPostVolumes )
+				if ( !urpPosts.Any( p => p.ProfilePath.Equals( post.ProfilePath, StringComparison.OrdinalIgnoreCase ) ) ) urpPosts.Add( post );
+			for ( var index = 0; index < urpPosts.Count; index++ )
+			{
+				var post = urpPosts[index];
+				var key = $"{c.Key}:urppostprocessing:{index}";
+				var volume = Component( "Sandbox.PostProcessVolume", StableGuid( $"{key}:component" ), true, new()
+				{
+					["BlendWeight"] = Single( Math.Clamp( post.Weight, 0, 1 ) ),
+					["Priority"] = post.Priority,
+					["SceneVolume"] = new JsonObject { ["Type"] = "Infinite" }
+				} );
+				// The Volume's GameObject already exists in the output; its fileID (not the MonoBehaviour's)
+				// keys c.Transforms, so attaching there keeps Unity's authored placement exactly.
+				var node = Find( objects, StableGuid( $"{c.Key}:{post.ObjectId}" ).ToString() );
+				if ( node is { } existing && existing["__PrefabInstancePatch"] == null && existing["Components"] is JsonArray existingComponents )
+				{
+					existingComponents.Add( volume );
+					if ( string.IsNullOrEmpty( existing["Tags"]?.GetValue<string>() ) ) existing["Tags"] = "postprocess";
+				}
+				else
+				{
+					var place = c.Transforms.GetValueOrDefault( post.ObjectId ) is Block volumeTransform ? ToSbox( Local( volumeTransform.Body ) ) : ToSbox( NoTransform );
+					node = SceneObject( key, post.Name, "postprocess", volume, place );
+					objects.Add( node );
+				}
+				var children = (JsonArray)node["Children"];
+				foreach ( var effect in UrpEffects( $"{key}:effect", post ) )
+				{
+					var type = effect["__type"]?.GetValue<string>();
+					children.Add( SceneObject( $"{key}:effect:{type}", type[(type.LastIndexOf( '.' ) + 1)..], "", (JsonObject)effect ) );
+				}
+				result.Information.Add( $"Post-process volume {post.Name} ({post.ProfileName}) emits URP SOURCE override values on nested effect objects: " +
+					$"Bloom Strength {post.BloomStrength?.ToString( "R", CultureInfo.InvariantCulture ) ?? "not overridden"} (engine Camera.prefab template default 1), " +
+					$"Vignette Intensity {post.VignetteIntensity?.ToString( "R", CultureInfo.InvariantCulture ) ?? "not overridden"}, " +
+					$"AmbientOcclusion Intensity {post.AoIntensity?.ToString( "R", CultureInfo.InvariantCulture ) ?? "not overridden"} (template default 1), " +
+					$"{( post.TonemapMode >= 0
+						? $"Tonemapping mode {post.TonemapMode} -> {UrpTonemap( post.TonemapMode )} with {UrpNeutralExposureCompensationEv} EV for Neutral (template {TonemappingMode} / {TonemappingExposureCompensation} EV)"
+						: "Tonemapping not overridden" )}. Template values were NOT copied onto this volume." );
+				UnityVolume.AddUrpPostNotes( post, result.Information );
+			}
+		}
+
 		// 6b. Post-processing: one PostProcessVolume per distinct global profile, with the mapped effects on child
 		// objects. PostProcessSystem collects effects from the volume object and its descendants, so the volume
 		// itself carries only Priority, BlendWeight and an infinite (global) SceneVolume.
@@ -512,6 +595,9 @@ internal static class UnitySceneExport
 			// StaticLightingSky by the environment step, and planar probes and decal projectors by the HDRP
 			// report, which name them in their own lines; counting them here would report them twice as
 			// anonymous scripts.
+			// URP volumes are read by the environment step above; without this they would also appear
+			// as anonymous "MonoBehaviour (script)" components on the same object. HDRP counts unchanged.
+			if ( pipeline == UnityPipeline.Urp && GuidOf( Field( block.Body, "m_Script" ) ).Equals( UnityUrp.VolumeScriptGuid, StringComparison.OrdinalIgnoreCase ) ) continue;
 			if ( block.Type == "114" && UnityHdrp.Component( GuidOf( Field( block.Body, "m_Script" ) ) )?.Kind is HdrpComponentKind.Volume or HdrpComponentKind.StaticLightingSky or HdrpComponentKind.Light or HdrpComponentKind.Camera or HdrpComponentKind.PlanarReflectionProbe or HdrpComponentKind.DecalProjector or HdrpComponentKind.ReflectionProbe ) continue;
 			if ( c.ById.GetValueOrDefault( IdOf( Field( block.Body, "m_GameObject" ) ) ) is not { Type: "1", Stripped: false } go ) continue;
 			var name = TypeName( block.Type, block.Body );
@@ -631,6 +717,78 @@ internal static class UnitySceneExport
 		var halfTurn = ( SkyRotationDegrees + SkyRotationOffsetDegrees ) * Math.PI / 360.0;
 		return new UnityTransform( new double[3],
 			new[] { 0d, 0d, Math.Sin( halfTurn ), Math.Cos( halfTurn ) }, new[] { 1d, 1d, 1d } );
+	}
+
+	/// <summary>URP 17.7 TonemappingMode -> s&amp;box Tonemapping.Mode (unity_6_7_to_sbox.md:37-40).
+	/// All four cases are NEW MAPPINGS: only ACES/AgX are name matches; Neutral and None are the
+	/// documented closest s&amp;box curves, not recovered source values.</summary>
+	static string UrpTonemap( int mode ) => mode switch
+	{
+		0 => UrpNoneTonemapMode,
+		1 => "HableFilmic",
+		2 => "ACES",
+		3 => "AgX",
+		_ => "HableFilmic"
+	};
+
+	/// <summary>
+	/// The engine effect components for one URP profile. Returns a FRESH UNPARENTED list: JsonNode has
+	/// exactly one parent, and the caller adds each component to a generated GameObject. A field whose
+	/// m_OverrideState was 0 is absent from the source and is NOT written here; the engine's own default
+	/// applies and the report says the field was not overridden.
+	/// </summary>
+	static List<JsonObject> UrpEffects( string key, UnityVolume.UrpPost post )
+	{
+		var effects = new List<JsonObject>();
+		if ( post.Bloom )
+		{
+			var properties = new Dictionary<string, JsonNode>();
+			if ( post.BloomStrength.HasValue ) properties["Strength"] = Single( Math.Clamp( post.BloomStrength.Value, 0, UrpBloomStrengthMax ) );
+			if ( post.BloomThreshold.HasValue ) properties["Threshold"] = Single( Math.Clamp( post.BloomThreshold.Value, 0, UrpBloomThresholdMax ) );
+			if ( post.BloomTint != null ) properties["Tint"] = Colour( post.BloomTint );
+			effects.Add( Component( "Sandbox.Bloom", StableGuid( $"{key}:bloom" ), true, properties ) );
+		}
+		if ( post.Vignette )
+		{
+			var properties = new Dictionary<string, JsonNode>();
+			if ( post.VignetteIntensity.HasValue ) properties["Intensity"] = Single( Math.Clamp( post.VignetteIntensity.Value, 0, 1 ) );
+			if ( post.VignetteColor != null ) properties["Color"] = Colour( post.VignetteColor );
+			if ( post.VignetteCenter != null ) properties["Center"] = Join( post.VignetteCenter );
+			// NEW MAPPING: engine Smoothness/Roundness share URP's 0..1 units; URP's rounded is 0/1.
+			if ( post.VignetteSmoothness.HasValue ) properties["Smoothness"] = Single( Math.Clamp( post.VignetteSmoothness.Value, 0, 1 ) );
+			if ( post.VignetteRounded.HasValue ) properties["Roundness"] = Single( Math.Clamp( post.VignetteRounded.Value, 0, 1 ) );
+			effects.Add( Component( "Sandbox.Vignette", StableGuid( $"{key}:vignette" ), true, properties ) );
+		}
+		if ( post.Ao )
+		{
+			var properties = new Dictionary<string, JsonNode>();
+			// NEW MAPPING: URP SSAO intensity is already 0..1 and means the same thing as the engine's;
+			// the scale factor exists so a developer can retune it without touching source reading.
+			if ( post.AoIntensity.HasValue ) properties["Intensity"] = Single( Math.Clamp( post.AoIntensity.Value * UrpSsaoIntensityScale, 0, 1 ) );
+			effects.Add( Component( "Sandbox.AmbientOcclusion", StableGuid( $"{key}:ao" ), true, properties ) );
+		}
+		if ( post.ColorAdjustments )
+		{
+			var properties = new Dictionary<string, JsonNode>();
+			var divisor = Math.Max( 1e-9, UrpColorAdjustmentDivisor );
+			// NEW MAPPING range remap: URP -100..100 (neutral 0) -> engine 0..2 (neutral 1).
+			if ( post.ColorContrast.HasValue ) properties["Contrast"] = Single( Math.Clamp( 1 + post.ColorContrast.Value / divisor, 0, 2 ) );
+			if ( post.ColorSaturation.HasValue ) properties["Saturation"] = Single( Math.Clamp( 1 + post.ColorSaturation.Value / divisor, 0, 2 ) );
+			effects.Add( Component( "Sandbox.ColorAdjustments", StableGuid( $"{key}:coloradjustments" ), true, properties ) );
+		}
+		if ( post.TonemapMode >= 0 )
+		{
+			var properties = new Dictionary<string, JsonNode>
+			{
+				["Mode"] = UrpTonemap( post.TonemapMode ),
+				["AutoExposureEnabled"] = UrpTonemapAutoExposureEnabled,
+				["ExposureMethod"] = "RGB"
+			};
+			// NEW MAPPING from unity_6_7_to_sbox.md:38: Neutral matches with +1.58 EV.
+			if ( post.TonemapMode == 1 ) properties["ExposureCompensation"] = Single( Math.Clamp( UrpNeutralExposureCompensationEv, -UrpNeutralExposureClampEv, UrpNeutralExposureClampEv ) );
+			effects.Add( Component( "Sandbox.Tonemapping", StableGuid( $"{key}:tonemapping" ), true, properties ) );
+		}
+		return effects;
 	}
 
 	/// <summary>The engine Camera.prefab's four post effects, with identical values on the camera and on
