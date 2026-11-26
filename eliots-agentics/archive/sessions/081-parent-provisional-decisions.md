@@ -1,0 +1,6 @@
+## 2026-11-26 03:52 - Parent decisions (provisional; change if wrong)
+- P1: "first urp research" is a PLANNING task = Master work (unityimporterplus skill), not a Task Worker job. Master runs 2-3 read-only research subagents, writes a <topic>-research.md plus numbered backlog task folders, commits only research + task files by explicit path. No importer code during the planning phase. status.md WORKER: MASTER.
+- P2: Director archive deletions under tasks/, the modified Libraries/based.pathtool build record, this file's prior edit, and untracked unityimporterplus_branch_2.sbproj stay UNSTAGED and are never committed by us.
+- P3: Q4 provisional = headless only. No editor/browser/CLI bridge, no harness import run, no screenshot round during research. NTFY before any large testing round.
+- P4: Provisional defaults adopted: 1A (on-disk 6000.3.29f1 + URP 17.3.0 is the "Unity 6.7 URP" label), 2A (research + backlog then implement in the same loop, BUT implementation workers HELD until Q2 answered), 3A (visual fidelity only), 4B (headless only, least authority), 5A (no extra tooling). None of these is consent; a late Director answer overrides them and is a re-plan, not a footnote.
+- P5: Terminal verdict requires REVIEWED? YES!, a real commit, a Tree: manifest matching `git rev-parse HEAD:<path>`, and clean git status on committed paths.

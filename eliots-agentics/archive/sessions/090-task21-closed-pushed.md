@@ -1,0 +1,4 @@
+## 2026-11-26 05:22 - Task 21 CLOSED (DONE? YES!) and pushed
+Review: critic 05:12 `no further changes`, REVIEWED? YES!, DONE? YES!. Commit 69056f0 "Add URP 17.x detection, guid tables and grouped report line" (8 files, 285 insertions, 4 deletions): Editor/Core/UnityHdrp.cs, UnityImport.cs, UnityMaterial.cs, new UnityUrp.cs, plus 21/status.md, task.md and journal notes 01/02. All six stable Tree hashes match `git rev-parse HEAD:<path>`; status.md/task.md are self-referential as noted. Committed paths clean.
+Push: `git push origin HEAD:refs/heads/main` -> 77eca25..69056f0; verified `git ls-remote origin refs/heads/main` = 69056f05a224ab53af64c61c88a23c475addf2fd. NTFY HTTP 200, Signal exit 0.
+Next: Task Worker sa-0-0a97a8d6 (deleg_10250793) for 22 URP Lit Surface Semantics dispatched (serialised; exactly one worker at a time). Tasks 23-26 remain HELD. The H2 wording item above stays open for the Director but does not block any task.
