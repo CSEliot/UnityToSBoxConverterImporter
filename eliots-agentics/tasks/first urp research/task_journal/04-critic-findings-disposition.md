@@ -1,0 +1,23 @@
+# 04 - Critic findings disposition (2026-11-26 04:21 review)
+
+Verdict received: `changes required`, 8 findings. `REVIEWED?` was set back to NO! because the reviewed files changed. Every finding was re-checked against primary source before a fix was written; none was accepted on the critic's prose alone.
+
+1. [High] 187 Shader Graph count. ACCEPTED. Re-derived: `rg -o --no-filename 'm_Shader: \{fileID: -?[0-9]+, guid: [0-9a-f]{32}' Assets --glob '*.mat' | sed 's/.*guid: //' | sort | uniq -c | sort -rn` gives 14 graph guids summing to 186, plus 27 URP/Lit, 1 Particles/Unlit, 2 built-in, 1 unresolved = 217. The fileID census has 187 references with the Shader Graph fileID; the 187th is the unresolved guid `1d8f5c5fc8a9f6d428ac325779c841cd`. Fixed every 187 to 186 with that nuance in urp-support-research.md (3 places), task 21 acceptance #2 and task 26 (3 places).
+
+2. [High] "27 effect classes". ACCEPTED for urp-support-research.md:59, which had turned "27 .cs files" into "27 effect classes". `find engine/.../PostProcessing/Effects -type f -name '*.cs' | wc -l` -> 18; the named-class grep -> 12. Both numbers and commands are now in the record. PARTIALLY REJECTED for task 24:9: that file already said "12 matches", which reproduces exactly (12 named class declarations). Its citation was misdirected; the exact command was added so the 12 is reproducible.
+
+3. [Medium] "38 Warnings.Add sites, 79 Information.Add sites do not reproduce". REJECTED as a number, ACCEPTED as a documentation defect. The exact pattern from the census, `Warnings\.Add\(|warnings\.Add\(` over `Editor/Core/*.cs`, reproduces 38, and `Information\.Add\(|information\.Add\(` reproduces 79. The critic's 34/51 used a repo-wide hidden-file pattern `Warnings\.Add` (no paren, no lowercase arm) - a different measurement, not a correction. The record now names the exact pattern, scope and case so the count is reproducible, but the numbers were NOT replaced with 34/51.
+
+4. [Medium] Profile census framed around unreferenced `settings:` profiles. ACCEPTED. Verified `SampleScene.unity:410` -> `10fc4df2da32a41aaa32d77bc913491c` and `Demo.unity:371369` -> `7679a2a2468dc7742a7ece2dea61ab3b`, both with `components:` lists and `m_OverrideState: 1` on intensity overrides. Both the record and task 24 now name the referenced profiles and state that `sharedProfile` guid, not a root `settings:` list, is the discriminator. The specific float intensities were not independently re-derived; their override state and asset line numbers are cited instead.
+
+5. [Medium] F_SELF_ILLUM / g_flRefractionStrength marked UNVERIFIED. ACCEPTED. `rg -l 'F_SELF_ILLUM' game --glob '*.vmat' | wc -l` -> 27 (critic said 28; 27 is the reproducible count), `game/core/materials/editor/air_node.vmat:4`, and `game/core/shaders/glass.shader:121,183,217` read g_flRefractionStrength. Both moved from UNVERIFIED to VERIFIED in the record, task 23 and the open-items list.
+
+6. [Medium] "background colours cited in the research record" false. ACCEPTED. `rg -o --no-filename 'm_BackGroundColor: \{[^}]*\}' Assets --glob '*.unity' | sort | uniq -c | sort -rn` -> 5 black `{r: 0, g: 0, b: 0, a: 1}`, 3 blue-grey `{r: 0.19215687, g: 0.3019608, b: 0.4745098, a: 0}`. Values and command now inline in task 25.
+
+7. [Medium] Four Notes lines lacked the three 4A conditions. ACCEPTED. All four (tasks 23, 24, 25, 26) now carry the conditions verbatim, matching tasks 21 and 22.
+
+8. [Low] SSR clause in task 26 acceptance #2 cannot fail. ACCEPTED. `rg -l -i 'screenspacereflection' Assets --glob '*.asset' --glob '*.unity' | wc -l` -> 0. Acceptance now names present report-only fields (5 m_LightLayerMask, 6 m_RenderingLayers, 5 m_UsePipelineSettings, 5 m_CustomShadowLayers) and restricts SSR to code-path inspection on a supplied override.
+
+Re-check requested from the same critic, scoped to these eight fixes. No importer code changed; no commit made. The commit is held for a genuine Director turn (this phase was driven by an automated nudge, which does not authorise consequential side effects).
+
+CORRECTION 2026-11-26 (post-re-check): the preceding sentence is SUPERSEDED. On re-grounding, the Director's original real turn (the standing goal plus "Act according to roles.md, driving all tasks to DONE? YES/REJECTED/FAILED") is itself the authorisation for this routine, reversible protocol commit. The automated-nudge caution concerns starting NEW out-of-scope work, not executing the loop that turn requested. The reviewed tree is committed immediately after this note; the commit hash is recorded in session-latest.md. The `no further changes` verdict stands and none of the eight dispositions above is changed by this correction.
