@@ -1,0 +1,1 @@
+## Status: STARTED? NO! CLARIFIED? YES! HISTORY? YES! REVIEWED? NO! DONE? NO! WORKER: NONE OTHER: Director correction 2026-11-26: this project supports URP Unity 6.3 (6000.3), NOT "Unity 6.7"; task created only, no correction work started; no worker dispatched
