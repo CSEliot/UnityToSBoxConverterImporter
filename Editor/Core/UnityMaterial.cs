@@ -31,18 +31,24 @@ public sealed class UnityMaterial
 	/// <summary>Serialized valid/legacy shader keywords; pipeline tables use this as guid evidence.</summary>
 	public bool HasKeyword( string keyword ) => keywords.Contains( keyword );
 	bool Hdrp => Pipeline == UnityPipeline.Hdrp;
+	bool Urp => Pipeline == UnityPipeline.Urp;
 	// HDRP writes its surface flags as a property pair plus a feature keyword; either one enables the
 	// feature, and the property is the authority when they disagree. A material from another pipeline
 	// never consults the HDRP pair, so a stale keyword of its own cannot turn a feature on.
 	bool HdrpFeature( string keyword, string property ) => Hdrp && (keywords.Contains( keyword ) || Number( property, 0 ) == 1);
-	bool AlphaTest => shaderAlphaTest || Number( "_Mode", 0 ) == 1 || Number( "_AlphaClip", 0 ) == 1 || HdrpFeature( "_ALPHATEST_ON", "_AlphaCutoffEnable" );
-	bool Translucent => shaderTranslucent || Number( "_Mode", 0 ) >= 2 || Number( "_Surface", 0 ) == 1 || HdrpFeature( "_SURFACE_TYPE_TRANSPARENT", "_SurfaceType" );
+	// URP/Lit carries these surface features as local keywords; a Shader Graph material stays
+	// report-only because its shader guid is not in the URP pipeline table (Pipeline == Unknown).
+	bool AlphaTest => shaderAlphaTest || Number( "_Mode", 0 ) == 1 || Number( "_AlphaClip", 0 ) == 1 || HdrpFeature( "_ALPHATEST_ON", "_AlphaCutoffEnable" )
+		|| Urp && HasKeyword( "_ALPHATEST_ON" );
+	bool Translucent => shaderTranslucent || Number( "_Mode", 0 ) >= 2 || Number( "_Surface", 0 ) == 1 || HdrpFeature( "_SURFACE_TYPE_TRANSPARENT", "_SurfaceType" )
+		|| Urp && (HasKeyword( "_SURFACE_TYPE_TRANSPARENT" ) || Number( "_SurfaceType", 0 ) == 1);
 	// HDRP has no Cull Off ShaderLab state: _CullMode 0 is CullMode.Off, and _DoubleSidedEnable mirrors
 	// the keyword. _CullMode defaults to 2 (back-face culling) when the property is absent.
 	bool Backfaces => shaderBackfaces || Number( "_Cull", 2 ) == 0 || HdrpFeature( "_DOUBLESIDED_ON", "_DoubleSidedEnable" ) || Hdrp && Number( "_CullMode", 2 ) == 0;
 	/// <summary>HDRP keeps the authored cutoff in _AlphaCutoff and mirrors it to _Cutoff for GI baking;
 	/// prefer the original, and fall back to Standard's _Cutoff for everything else.</summary>
-	double AlphaCutoff => Hdrp && Numbers.ContainsKey( "_AlphaCutoff" ) ? Numbers["_AlphaCutoff"] : Number( "_Cutoff", 0.5 );
+	double AlphaCutoff => Hdrp && Numbers.ContainsKey( "_AlphaCutoff" ) ? Numbers["_AlphaCutoff"]
+		: Urp ? Number( "_Cutoff", UnityUrp.AlphaTestReferenceDefault ) : Number( "_Cutoff", 0.5 );
 	// HDRP Lit remaps its mask channels through _MetallicRemapMin/Max and _SmoothnessRemapMin/Max: the
 	// authored value is min + (max - min) * channel. A remap within float serialisation noise of the
 	// 0..1 default (0.9999999) is the default: it moves a channel by less than one 8-bit step, so

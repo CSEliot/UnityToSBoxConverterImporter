@@ -60,6 +60,9 @@ public static class UnityUrp
 		new( "0406db5a14f94604a8c57ccfbc9f3b46", "URP/Particles/Unlit", ParticlesUnlitEvidence ),
 	};
 
+	// Developer-tweakable default for a URP/Lit alpha-clipped material that has no serialized _Cutoff.
+	public static double AlphaTestReferenceDefault { get; set; } = 0.5;
+
 	static readonly UrpComponent[] ComponentTable =
 	{
 		new( "a79441f348de89743a2939f4d699eac1", "UniversalAdditionalCameraData", UrpComponentKind.Camera ),
